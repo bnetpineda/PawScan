@@ -12,7 +12,8 @@
         {
           "origin": "https://n"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "name": "PawScan",
     "slug": "PawScan"
