@@ -1,31 +1,46 @@
-import React, { use } from "react";
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import React from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  useColorScheme,
+  StatusBar,
+} from "react-native";
 import { router } from "expo-router";
+
 const GetStartedScreen = () => {
+  const colorScheme = useColorScheme();
+  const tintColor = colorScheme === "dark" ? "#fff" : "#000";
+
   const handleGetStarted = () => {
     router.push("/(auth)/login");
   };
 
   return (
-    <View className="flex-1 items-center justify-center bg-background dark:bg-background p-6 dark">
-      <View className="w-full max-w-md bg-card dark:bg-card rounded-lg p-8 items-center">
+    <View className="flex-1 items-center justify-center bg-white dark:bg-black p-6 ">
+      <StatusBar
+        barStyle={colorScheme === "dark" ? "light-content" : "dark-content"}
+        backgroundColor={colorScheme === "dark" ? "#000" : "#fff"}
+      />
+      <View className="w-full max-w-md rounded-lg p-8 items-center">
         <Image
           source={require("../assets/images/logo.png")}
           className="w-64 h-64 rounded-full mb-6 mt-24"
+          style={{ tintColor }}
           accessibilityLabel="PawScan App Logo"
           onError={(e) => console.log("Image load error:", e.nativeEvent.error)}
         />
-
-        <Text className="text-lg font-inter text-muted-foreground dark:text-muted-foreground mb-8 text-center leading-relaxed">
+        <Text className="text-lg font-inter-italic text-black dark:text-white mb-8 text-center leading-relaxed">
           Your ultimate companion for pet care and management. Let's begin!
         </Text>
       </View>
       <View className="flex-1 justify-end w-full max-w-md p-6 mb-10">
         <TouchableOpacity
           onPress={handleGetStarted}
-          className="w-full bg-primary dark:bg-primary py-4 px-6 rounded-md shadow-sm"
+          className="w-full bg-primary dark:bg-white py-4 px-6 rounded-2xl shadow-sm"
         >
-          <Text className="text-primary-foreground dark:text-primary-foreground text-xl font-inter-semibold text-center">
+          <Text className="text-white dark:text-black text-xl font-inter-semibold text-center">
             Get Started
           </Text>
         </TouchableOpacity>

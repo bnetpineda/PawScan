@@ -30,10 +30,16 @@
       "backgroundColor": "#ffffff"
     },
     "extra": {
-      "openaiApiKey": "REMOVED_SECRET"
+      "router": {
+        "origin": "https://n"
+      },
+      "eas": {
+        "projectId": "811df3d6-1d27-4436-bef0-e87848db2296"
+      }
     },
     "android": {
-      "package": "com.markbennettpineda.PawScan"
+      "package": "com.markbennettpineda.PawScan",
+      "permissions": ["android.permission.RECORD_AUDIO"]
     }
   }
 }

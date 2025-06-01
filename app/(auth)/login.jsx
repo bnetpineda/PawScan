@@ -11,16 +11,27 @@ import {
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome } from "@expo/vector-icons";
+import { supabase } from "../../lib/supabase"; // Adjust the import path as necessary
+import { useColorScheme } from "react-native";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const colorScheme = useColorScheme();
 
   const handleLogin = async () => {
     try {
-      Alert.alert("Success", "Logged in successfully!");
-      router.push("/(tabs)/home");
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        Alert.alert("Login Failed", error.message);
+        return;
+      }
+    Alert.alert("Success", "Logged in successfully!");
+    router.push("/(tabs)/home");
     } catch (error) {
       Alert.alert("Error", error.message);
     }
@@ -38,8 +49,8 @@ export default function LoginScreen() {
   return (
     <SafeAreaView className="flex-1 items-center justify-center bg-white dark:bg-black p-4">
       <StatusBar
-        backgroundColor="#fff"
-        barStyle="dark-content"
+        barStyle={colorScheme === "dark" ? "light-content" : "dark-content"}
+        backgroundColor={colorScheme === "dark" ? "#000" : "#fff"}
       />
       <View className="flex-1 w-full max-w-md p-5">
         <TouchableOpacity
@@ -85,14 +96,16 @@ export default function LoginScreen() {
 
         <TouchableOpacity
           className={`mb-4 items-center rounded-lg py-3 ${
-            isEmailPasswordValid()
-              ? "bg-black"
-              : "bg-gray-200"
+            isEmailPasswordValid() ? "bg-black" : "bg-gray-200"
           }`}
           onPress={handleLogin}
           disabled={!isEmailPasswordValid()}
         >
-          <Text className={`font-bold text-base ${isEmailPasswordValid() ? "text-white" : "text-gray-400"}`}>
+          <Text
+            className={`font-bold text-base ${
+              isEmailPasswordValid() ? "text-white" : "text-gray-400"
+            }`}
+          >
             Sign In
           </Text>
         </TouchableOpacity>
@@ -100,9 +113,7 @@ export default function LoginScreen() {
         <View className="flex-1 p-5 justify-end">
           <TouchableOpacity className="mb-4 flex-row items-center justify-center gap-x-2 rounded-lg py-3 bg-gray-900">
             <FontAwesome name="google" size={20} color="#fff" />
-            <Text className="font-bold text-sm text-white">
-              GOOGLE
-            </Text>
+            <Text className="font-bold text-sm text-white">GOOGLE</Text>
           </TouchableOpacity>
 
           <Text className="text-center text-xs text-black dark:text-white">
