@@ -8,7 +8,7 @@ const home = () => {
   return (
     <SafeAreaView>
       <TouchableOpacity onPress={() => router.push("/")}>
-        <Text>home</Text>
+        <Text>Back</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => router.push("/(tabs)/camera")}>
         <Text>camera</Text>
