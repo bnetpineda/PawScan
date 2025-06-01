@@ -13,9 +13,27 @@
           "origin": "https://n"
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends."
+        }
+      ],
       "expo-font"
     ],
     "name": "PawScan",
-    "slug": "PawScan"
+    "slug": "PawScan",
+    "icon": "./assets/images/logo.png",
+    "splash": {
+      "image": "./assets/images/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "extra": {
+      "openaiApiKey": "REMOVED_SECRET"
+    },
+    "android": {
+      "package": "com.markbennettpineda.PawScan"
+    }
   }
 }

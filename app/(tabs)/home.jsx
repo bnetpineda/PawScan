@@ -10,6 +10,9 @@ const home = () => {
       <TouchableOpacity onPress={() => router.push("/")}>
         <Text>home</Text>
       </TouchableOpacity>
+      <TouchableOpacity onPress={() => router.push("/(tabs)/camera")}>
+        <Text>camera</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };

@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import {
   View,
   TextInput,
-  Button,
   Alert,
   Text,
   StatusBar,
@@ -21,50 +20,52 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     try {
       Alert.alert("Success", "Logged in successfully!");
-      router.push("/(tabs)/home"); // Redirect to home screen after successful login}');
+      router.push("/(tabs)/home");
     } catch (error) {
       Alert.alert("Error", error.message);
     }
   };
 
   const isEmailPasswordValid = () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Basic email format validationa
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email.trim()) && password.trim().length >= 6;
   };
+
   const registerButton = async () => {
     router.replace("/(auth)/register");
   };
-  1;
 
   return (
-    <SafeAreaView className="flex-1 bg-[#132026]">
-      <StatusBar backgroundColor="#132026" barStyle="light-content" />
-
-      <View className="flex-1 p-5">
+    <SafeAreaView className="flex-1 items-center justify-center bg-white dark:bg-black p-4">
+      <StatusBar
+        backgroundColor="#fff"
+        barStyle="dark-content"
+      />
+      <View className="flex-1 w-full max-w-md p-5">
         <TouchableOpacity
           className="absolute left-5 top-5 z-10"
           onPress={() => router.replace("/")}
         >
-          <Text className="text-2xl text-[#5a696e]">✕</Text>
+          <Text className="text-2xl text-gray-400">✕</Text>
         </TouchableOpacity>
 
-        <Text className="mb-8 text-center font-chakrapetch-bold text-2xl text-[#5a696e]">
+        <Text className="mb-8 text-center font-bold text-2xl text-black dark:text-white">
           Enter your details
         </Text>
 
-        <View className="mb-5 rounded-2xl border border-gray-700 bg-[#212f36]">
+        <View className="mb-5 rounded-2xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-neutral-900">
           <TextInput
-            className="h-14 border-b border-gray-700 px-4 font-chakrapetch-bold text-white"
+            className="h-14 border-b border-gray-200 dark:border-gray-700 px-4 font-bold text-black dark:text-white bg-transparent"
             placeholder="Username or email"
-            placeholderTextColor="#5a696e"
+            placeholderTextColor="#888"
             value={email}
             onChangeText={setEmail}
           />
           <View className="flex-row items-center">
             <TextInput
-              className="h-14 flex-1 px-4 font-chakrapetch-bold text-white"
+              className="h-14 flex-1 px-4 font-bold text-black dark:text-white bg-transparent"
               placeholder="Password"
-              placeholderTextColor="#5a696e"
+              placeholderTextColor="#888"
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!passwordVisible}
@@ -76,7 +77,7 @@ export default function LoginScreen() {
               <FontAwesome
                 name={passwordVisible ? "eye" : "eye-slash"}
                 size={24}
-                color="#A0AEC0"
+                color={passwordVisible ? "#000" : "#888"}
               />
             </TouchableOpacity>
           </View>
@@ -84,32 +85,29 @@ export default function LoginScreen() {
 
         <TouchableOpacity
           className={`mb-4 items-center rounded-lg py-3 ${
-            isEmailPasswordValid() ? "bg-[#1db1f7]" : "bg-gray-700"
+            isEmailPasswordValid()
+              ? "bg-black"
+              : "bg-gray-200"
           }`}
           onPress={handleLogin}
-          disabled={!isEmailPasswordValid()} // Button remains disabled if input is invalid
+          disabled={!isEmailPasswordValid()}
         >
-          <Text className="font-chakrapetch-bold text-base text-white">
-            SIGN IN
+          <Text className={`font-bold text-base ${isEmailPasswordValid() ? "text-white" : "text-gray-400"}`}>
+            Sign In
           </Text>
         </TouchableOpacity>
 
-        <View className="flex-1 p-5">
-          {/* Other UI Elements (Inputs, Sign-in Button, etc.) */}
-
-          <View className="flex-1 justify-end">
-            <TouchableOpacity className="mb-4 flex-row items-center justify-center gap-x-2 rounded-lg bg-gray-700 py-3">
-              <FontAwesome name="google" size={20} color="white" />
-              <Text className="font-chakrapetch-bold text-sm text-white">
-                GOOGLE
-              </Text>
-            </TouchableOpacity>
-
-            <Text className="text-center text-xs text-gray-400">
-              By signing in to Pawdex, you agree to our Terms and Privacy
-              Policy.
+        <View className="flex-1 p-5 justify-end">
+          <TouchableOpacity className="mb-4 flex-row items-center justify-center gap-x-2 rounded-lg py-3 bg-gray-900">
+            <FontAwesome name="google" size={20} color="#fff" />
+            <Text className="font-bold text-sm text-white">
+              GOOGLE
             </Text>
-          </View>
+          </TouchableOpacity>
+
+          <Text className="text-center text-xs text-black dark:text-white">
+            By signing in to PawScan, you agree to our Terms and Privacy Policy.
+          </Text>
         </View>
       </View>
     </SafeAreaView>
