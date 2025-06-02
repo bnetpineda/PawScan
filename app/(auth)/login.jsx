@@ -46,6 +46,9 @@ export default function LoginScreen() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
+        options: {
+          redirectTo: "https://auth.expo.io/@markbennettpineda/PawScan",
+        }, // Adjust this to your app's URL scheme
       });
       if (error) {
         Alert.alert("Google Sign-In Failed", error.message);

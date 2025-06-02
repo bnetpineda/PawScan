@@ -1,6 +1,6 @@
 {
   "expo": {
-    "scheme": "acme",
+    "scheme": "pawscanapp",
     "userInterfaceStyle": "automatic",
     "orientation": "default",
     "web": {
@@ -8,18 +8,13 @@
     },
     "plugins": [
       [
-        "expo-router",
-        {
-          "origin": "https://n"
-        }
-      ],
-      [
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you share them with your friends."
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-web-browser"
     ],
     "name": "PawScan",
     "slug": "PawScan",
@@ -30,9 +25,6 @@
       "backgroundColor": "#ffffff"
     },
     "extra": {
-      "router": {
-        "origin": "https://n"
-      },
       "eas": {
         "projectId": "811df3d6-1d27-4436-bef0-e87848db2296"
       }

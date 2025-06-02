@@ -16,6 +16,7 @@ import * as MediaLibrary from "expo-media-library";
 import { SafeAreaView } from "react-native-safe-area-context";
 import OpenAI from "openai";
 import * as FileSystem from "expo-file-system";
+import { supabase } from "../../lib/supabase";
 
 const COLORS = {
   primary: "#007AFF",
@@ -35,7 +36,7 @@ const openai = new OpenAI({
     "REMOVED_SECRET",
 });
 
-async function analyzePetImage(imageUri) {
+async function analyzePetImage(imageUri, userId) {
   try {
     // Read image as base64
     const base64 = await FileSystem.readAsStringAsync(imageUri, {
@@ -44,25 +45,23 @@ async function analyzePetImage(imageUri) {
     const imageData = `data:image/jpeg;base64,${base64}`;
 
     const prompt = `
-Give direct and specific information only, Don’t give additional information.
+You are a pet health assistant AI. Analyze the provided image of a cat or dog and answer **only** the following points. If you are uncertain, make your **best guess** based on the image.
 
-What is the breed of this pet?
-What disease has been detected in this pet?
-What is the confidence score of the diagnosis?
-What are up to three suggested treatments?
-What is the suggested urgency level? (low, medium, emergency)
-What are the essential first aid care steps?
-What are the indicators that a veterinarian should be contacted?
+1. Breed of the pet
+2. Diseases detected (if any) — guess if unsure
+3. Confidence score (e.g., 60%, 80%)
+4. Three suggested treatments — even speculative ones
+5. Urgency level: low / medium / emergency — choose one
+6. Essential first aid care steps
+7. Recommended medication (if applicable)
+8. Indicators that a veterinarian should be contacted
+
+Respond strictly with just the answers to these points. Do not write explanations, disclaimers, or recommendations to consult a veterinarian. It's okay to be speculative — just give your best possible answer.
     `;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
-        {
-          role: "system",
-          content:
-            "You are a veterinary assistant AI. Answer only with direct, specific information.",
-        },
         {
           role: "user",
           content: [
@@ -71,11 +70,26 @@ What are the indicators that a veterinarian should be contacted?
           ],
         },
       ],
-      max_tokens: 500,
+      max_tokens: 400,
+      temperature: 0.8, // 🔥 more creative and speculative
     });
+    const analysisResult =
+      response.choices[0]?.message?.content || "No analysis result returned.";
 
-    // Extract and return the answer
-    return response.choices[0]?.message?.content || "No response.";
+    // Save to Supabase
+    const { error } = await supabase.from("analysis_history").insert([
+      {
+        user_id: userId,
+        image_url: imageUri, // or upload and use public URL
+        analysis_result: analysisResult,
+        created_at: new Date().toISOString(),
+      },
+    ]);
+
+    if (error) {
+      console.error("Supabase insert failed:", error.message);
+    }
+    return analysisResult;
   } catch (err) {
     console.error("Image analysis failed:", err);
     return "Image analysis failed.";
@@ -136,11 +150,10 @@ export default function CameraScreen() {
       setImageUri(null);
       try {
         const photo = await cameraRef.current.takePictureAsync({
-          quality: 0.7,
+          quality: 1,
         });
         // Save to media library and use the asset URI
         const asset = await MediaLibrary.createAssetAsync(photo.uri);
-        console.log("Saved Photo URI:", asset.uri);
         await handleImageSelected(asset.uri);
       } catch (error) {
         console.error("Failed to take picture:", error);
@@ -203,51 +216,49 @@ export default function CameraScreen() {
 
     if (imageUri) {
       return (
-        <SafeAreaView className="flex-1 bg-[#F8F9FA]">
-          <ScrollView
-            contentContainerStyle={{
-              alignItems: "center",
-              paddingTop: 40,
-              minHeight: "100%",
-            }}
-            showsVerticalScrollIndicator={false}
-            className="bg-[#F8F9FA]"
-          >
-            <Image
-              source={{ uri: imageUri }}
-              className="w-10/12 aspect-square rounded-2xl mb-8 bg-black dark:bg-white"
-              resizeMode="contain"
-            />
-            <View className="flex-row justify-center w-full px-6 gap-4">
-              <TouchableOpacity
-                onPress={handleRetake}
-                className="flex-row items-center bg-black dark:bg-white rounded-full py-3 px-6"
-                activeOpacity={0.8}
+        <SafeAreaView className="flex-1 bg-[#F8F9FA] items-center mt-4">
+          <Image
+            source={{ uri: imageUri }}
+            className="w-10/12 aspect-square rounded-2xl mb-8 bg-black dark:bg-white"
+            resizeMode="contain"
+          />
+          <View className="flex-row justify-center w-full px-6 gap-4">
+            <TouchableOpacity
+              onPress={handleRetake}
+              className="flex-row items-center bg-black dark:bg-white rounded-full py-3 px-6"
+              activeOpacity={0.8}
+            >
+              <FontAwesome name="camera" size={18} color="#fff" />
+              <Text className="font-inter-bold text-white dark:text-black text-base ml-3">
+                Retake
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={pickImage}
+              className="flex-row items-center bg-black dark:bg-white rounded-full py-3 px-6"
+              activeOpacity={0.8}
+            >
+              <FontAwesome name="image" size={18} color="#fff" />
+              <Text className="font-inter-bold text-white dark:text-black text-base ml-3">
+                Choose New
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {analysisResult ? (
+            <View
+              className="w-11/12 mt-4 p-4 bg-white dark:bg-black rounded-xl shadow"
+              style={{ maxHeight: 600 }}
+            >
+              <ScrollView
+                className="max-h-80"
+                showsVerticalScrollIndicator={true}
               >
-                <FontAwesome name="camera" size={18} color="#fff" />
-                <Text className="font-inter-bold text-white dark:text-black text-base ml-3">
-                  Retake
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={pickImage}
-                className="flex-row items-center bg-black dark:bg-white rounded-full py-3 px-6"
-                activeOpacity={0.8}
-              >
-                <FontAwesome name="image" size={18} color="#fff" />
-                <Text className="font-inter-bold text-white dark:text-black text-base ml-3">
-                  Choose New
-                </Text>
-              </TouchableOpacity>
-            </View>
-            {analysisResult ? (
-              <View className="w-11/12 mt-4 p-4 bg-white dark:bg-black rounded-xl shadow">
                 <Text className="text-black font-inter-semibold text-base mb-2">
                   {analysisResult}
                 </Text>
-              </View>
-            ) : null}
-          </ScrollView>
+              </ScrollView>
+            </View>
+          ) : null}
         </SafeAreaView>
       );
     }
@@ -258,7 +269,14 @@ export default function CameraScreen() {
   async function handleImageSelected(uri) {
     setImageUri(uri);
     setIsLoading(true);
-    const result = await analyzePetImage(uri);
+
+    // Get the current user from Supabase
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const userId = user?.id || null;
+
+    const result = await analyzePetImage(uri, userId);
     setIsLoading(false);
     setAnalysisResult(result);
   }
