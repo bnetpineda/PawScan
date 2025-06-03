@@ -11,7 +11,7 @@ import {
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome } from "@expo/vector-icons";
-import { supabase } from "../../lib/supabase"; // Adjust the import path as necessary
+import { useAuth } from "../../providers/AuthProvider";
 import { useColorScheme } from "react-native";
 
 export default function LoginScreen() {
@@ -21,19 +21,16 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { signInWithEmail } = useAuth();
 
   const handleLogin = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await signInWithEmail(email, password);
       if (error) {
         Alert.alert("Login Failed", error.message);
         return;
       }
-      router.push("/(tabs)/home");
     } catch (error) {
       Alert.alert("Error", error.message || "An unexpected error occurred");
     } finally {
@@ -42,22 +39,7 @@ export default function LoginScreen() {
   };
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: "https://auth.expo.io/@markbennettpineda/PawScan",
-        }, // Adjust this to your app's URL scheme
-      });
-      if (error) {
-        Alert.alert("Google Sign-In Failed", error.message);
-      }
-    } catch (error) {
-      Alert.alert("Error", error.message || "Failed to sign in with Google");
-    } finally {
-      setIsLoading(false);
-    }
+    console.log("Google Sign-In feature coming soon!");
   };
 
   const navigateToRegister = () => {

@@ -8,14 +8,21 @@ import {
   StatusBar,
 } from "react-native";
 import { router } from "expo-router";
+import { useAuth } from "../providers/AuthProvider";
+import { Redirect } from "expo-router";
 
 const GetStartedScreen = () => {
   const colorScheme = useColorScheme();
   const tintColor = colorScheme === "dark" ? "#fff" : "#000";
+  const { user, loading } = useAuth();
 
   const handleGetStarted = () => {
     router.push("/(auth)/login");
   };
+
+  if (loading) return null; // Show nothing while loading
+
+  if (user) return <Redirect href="/(tabs)" />;
 
   return (
     <View className="flex-1 items-center justify-center bg-white dark:bg-black p-6 ">

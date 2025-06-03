@@ -1,7 +1,16 @@
-import { Tabs } from "expo-router";
+import { Tabs, Redirect } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
+import { useAuth } from "../../providers/AuthProvider";
 
 export default function TabsLayout() {
+  const { user, loading } = useAuth();
+
+  if (loading) return null; // Or a loading spinner
+
+  if (!user) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
   return (
     <Tabs
       screenOptions={{
@@ -29,7 +38,6 @@ export default function TabsLayout() {
           ),
         }}
       />
-
       <Tabs.Screen
         name="profile"
         options={{
@@ -39,7 +47,6 @@ export default function TabsLayout() {
           ),
         }}
       />
-      {/* Add more tabs as needed */}
     </Tabs>
   );
 }

@@ -1,8 +1,9 @@
 import "../global.css";
-import { Stack } from "expo-router";
+import { Slot } from "expo-router";
 import React, { useEffect } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
+import { AuthProvider } from "../providers/AuthProvider";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -37,10 +38,8 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-    </Stack>
+    <AuthProvider>
+      <Slot />
+    </AuthProvider>
   );
 }
