@@ -10,11 +10,12 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Switch,
 } from "react-native";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome } from "@expo/vector-icons";
-import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../providers/AuthProvider";
 import { useColorScheme } from "react-native";
 
 export default function RegisterScreen() {
@@ -25,8 +26,10 @@ export default function RegisterScreen() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isVet, setIsVet] = useState(false); // <-- Add this state
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { signUpWithEmail } = useAuth();
 
   const handleRegister = async () => {
     if (!isFormValid().valid) {
@@ -36,15 +39,9 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      // Register the user with Supabase
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username,
-          },
-        },
+      const { error } = await signUpWithEmail(email, password, {
+        username,
+        role: isVet ? "veterinarian" : "user",
       });
 
       if (error) {
@@ -67,51 +64,26 @@ export default function RegisterScreen() {
     router.replace("/(auth)/login");
   };
 
-  const handleGoogleSignUp = async () => {
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-      });
-
-      if (error) {
-        Alert.alert("Error", error.message);
-      }
-    } catch (error) {
-      Alert.alert("Error", error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const isFormValid = () => {
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
       return { valid: false, message: "Please enter a valid email address." };
     }
-
-    // Username validation
     if (username.trim().length < 3) {
       return {
         valid: false,
         message: "Username must be at least 3 characters.",
       };
     }
-
-    // Password validation
     if (password.trim().length < 6) {
       return {
         valid: false,
         message: "Password must be at least 6 characters.",
       };
     }
-
-    // Password match validation
     if (password !== confirmPassword) {
       return { valid: false, message: "Passwords don't match." };
     }
-
     return { valid: true };
   };
 
@@ -222,6 +194,19 @@ export default function RegisterScreen() {
               </View>
             </View>
 
+            {/* Role Switch */}
+            <View className="flex-row items-center mb-5">
+              <Text className="text-base font-inter text-black dark:text-white mr-4">
+                Register as Veterinarian
+              </Text>
+              <Switch
+                value={isVet}
+                onValueChange={setIsVet}
+                thumbColor={isVet ? "#007AFF" : "#ccc"}
+                trackColor={{ false: "#ccc", true: "#007AFF" }}
+              />
+            </View>
+
             <TouchableOpacity
               className={`mb-4 items-center justify-center rounded-lg py-4 ${
                 isFormValid().valid && !loading
@@ -253,21 +238,6 @@ export default function RegisterScreen() {
               </Text>
               <View className="flex-1 h-px bg-gray-300 dark:bg-gray-700" />
             </View>
-
-            <TouchableOpacity
-              className="mb-6 flex-row items-center justify-center py-3.5 rounded-lg border border-gray-300 dark:border-gray-700"
-              onPress={handleGoogleSignUp}
-              disabled={loading}
-            >
-              <FontAwesome
-                name="google"
-                size={18}
-                color={isDark ? "#fff" : "#000"}
-              />
-              <Text className="ml-2 font-inter-bold text-black dark:text-white">
-                Continue with Google
-              </Text>
-            </TouchableOpacity>
 
             <View className="flex-row justify-center mt-4 mb-6">
               <Text className="text-gray-600 dark:text-gray-400">

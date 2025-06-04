@@ -14,9 +14,7 @@ import { useState, useRef } from "react";
 import { FontAwesome } from "@expo/vector-icons"; // <-- Add this import
 import * as MediaLibrary from "expo-media-library";
 import { SafeAreaView } from "react-native-safe-area-context";
-import OpenAI from "openai";
-import * as FileSystem from "expo-file-system";
-import { supabase } from "../../lib/supabase";
+import { analyzePetImage } from "../utils/analyzePetImage";
 
 const COLORS = {
   primary: "#007AFF",
@@ -30,71 +28,6 @@ const COLORS = {
   black: "#000000",
   lightGray: "#E9ECEF",
 };
-
-const openai = new OpenAI({
-  apiKey:
-    "REMOVED_SECRET",
-});
-
-async function analyzePetImage(imageUri, userId) {
-  try {
-    // Read image as base64
-    const base64 = await FileSystem.readAsStringAsync(imageUri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-    const imageData = `data:image/jpeg;base64,${base64}`;
-
-    const prompt = `
-You are a pet health assistant AI. Analyze the provided image of a cat or dog and answer **only** the following points. If you are uncertain, make your **best guess** based on the image.
-
-1. Breed of the pet
-2. Diseases detected (if any) — guess if unsure
-3. Confidence score (e.g., 60%, 80%)
-4. Three suggested treatments — even speculative ones
-5. Urgency level: low / medium / emergency — choose one
-6. Essential first aid care steps
-7. Recommended medication (if applicable)
-8. Indicators that a veterinarian should be contacted
-
-Respond strictly with just the answers to these points. Do not write explanations, disclaimers, or recommendations to consult a veterinarian. It's okay to be speculative — just give your best possible answer.
-    `;
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: prompt },
-            { type: "image_url", image_url: { url: imageData } },
-          ],
-        },
-      ],
-      max_tokens: 400,
-      temperature: 0.8, // 🔥 more creative and speculative
-    });
-    const analysisResult =
-      response.choices[0]?.message?.content || "No analysis result returned.";
-
-    // Save to Supabase
-    const { error } = await supabase.from("analysis_history").insert([
-      {
-        user_id: userId,
-        image_url: imageUri, // or upload and use public URL
-        analysis_result: analysisResult,
-        created_at: new Date().toISOString(),
-      },
-    ]);
-
-    if (error) {
-      console.error("Supabase insert failed:", error.message);
-    }
-    return analysisResult;
-  } catch (err) {
-    console.error("Image analysis failed:", err);
-    return "Image analysis failed.";
-  }
-}
 
 export default function CameraScreen() {
   const [facing, setFacing] = useState("back");

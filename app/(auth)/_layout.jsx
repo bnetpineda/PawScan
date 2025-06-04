@@ -8,12 +8,16 @@ export default function AuthLayout() {
 
   useEffect(() => {
     if (user && !loading) {
-      router.replace("/(tabs)/home");
+      const role = user.user_metadata?.role;
+      if (role === "veterinarian") {
+        router.replace("/(vet)/home");
+      } else {
+        router.replace("/(user)/home");
+      }
     }
   }, [user, loading]);
 
   if (loading) return null; // Or a loading spinner
 
-  // Don't block rendering if user is present, just let the effect handle navigation
   return <Slot />;
 }

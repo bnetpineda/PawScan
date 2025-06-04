@@ -2,7 +2,7 @@ import { Tabs, Redirect } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
 import { useAuth } from "../../providers/AuthProvider";
 
-export default function TabsLayout() {
+export default function UserLayout() {
   const { user, loading } = useAuth();
 
   if (loading) return null; // Or a loading spinner

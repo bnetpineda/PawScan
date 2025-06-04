@@ -22,7 +22,14 @@ const GetStartedScreen = () => {
 
   if (loading) return null; // Show nothing while loading
 
-  if (user) return <Redirect href="/(tabs)" />;
+  if (user && !loading) {
+    const role = user.user_metadata?.role;
+    if (role === "veterinarian") {
+      <Redirect href="/(vet)/home" />;
+    } else {
+      <Redirect href="/(user)/home" />;
+    }
+  }
 
   return (
     <View className="flex-1 items-center justify-center bg-white dark:bg-black p-6 ">

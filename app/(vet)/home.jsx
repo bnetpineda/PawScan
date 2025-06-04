@@ -5,14 +5,15 @@ import { router } from "expo-router";
 import { useAuth } from "../../providers/AuthProvider";
 
 const home = () => {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
 
   return (
-    <SafeAreaView>
-      <TouchableOpacity onPress={() => router.push("/")}>
+    <SafeAreaView className="flex-1 items-center justify-center">
+      <Text className="text-2xl font-bold mb-4">Vet Home</Text>
+      <TouchableOpacity onPress={() => router.back()}>
         <Text>Back</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => router.push("/(tabs)/camera")}>
+      <TouchableOpacity onPress={() => router.push("camera")}>
         <Text>camera</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => logout()}>

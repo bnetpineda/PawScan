@@ -38,10 +38,6 @@ export default function LoginScreen() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    console.log("Google Sign-In feature coming soon!");
-  };
-
   const navigateToRegister = () => {
     router.replace("/(auth)/register");
   };
@@ -144,21 +140,6 @@ export default function LoginScreen() {
           <Text className="mx-4 text-gray-700 dark:text-gray-600">or</Text>
           <View className="flex-1 h-0.5 bg-gray-400 dark:bg-gray-900" />
         </View>
-
-        <TouchableOpacity
-          className="mb-4 flex-row items-center justify-center gap-x-2 rounded-lg py-3.5 bg-transparent border border-gray-300 dark:border-gray-700"
-          onPress={handleGoogleSignIn}
-          disabled={isLoading}
-        >
-          <FontAwesome
-            name="google"
-            size={20}
-            color={isDark ? "#fff" : "#000"}
-          />
-          <Text className="font-inter-bold text-sm text-black dark:text-white">
-            Continue with Google
-          </Text>
-        </TouchableOpacity>
 
         <View className="mt-6">
           <View className="flex-row justify-center">
