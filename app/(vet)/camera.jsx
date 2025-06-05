@@ -14,7 +14,8 @@ import { useState, useRef } from "react";
 import { FontAwesome } from "@expo/vector-icons"; // <-- Add this import
 import * as MediaLibrary from "expo-media-library";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { analyzePetImage } from "../utils/analyzePetImage";
+import { analyzePetImage } from "../../utils/analyzePetImage";
+import { supabase } from "../../lib/supabase";
 
 const COLORS = {
   primary: "#007AFF",
@@ -114,7 +115,7 @@ export default function CameraScreen() {
 
     try {
       let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         quality: 1,
       });

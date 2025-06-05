@@ -14,8 +14,8 @@ import { useState, useRef } from "react";
 import { FontAwesome } from "@expo/vector-icons"; // <-- Add this import
 import * as MediaLibrary from "expo-media-library";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { analyzePetImage } from "../utils/analyzePetImage";
-
+import { analyzePetImage } from "../../utils/analyzePetImage";
+import { supabase } from "../../lib/supabase";
 const COLORS = {
   primary: "#007AFF",
   primaryLight: "#E0F0FF",

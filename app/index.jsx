@@ -25,9 +25,9 @@ const GetStartedScreen = () => {
   if (user && !loading) {
     const role = user.user_metadata?.role;
     if (role === "veterinarian") {
-      <Redirect href="/(vet)/home" />;
+      return <Redirect href="/(vet)/home" />;
     } else {
-      <Redirect href="/(user)/home" />;
+      return <Redirect href="/(user)/home" />;
     }
   }
 
