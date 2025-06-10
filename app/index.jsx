@@ -23,7 +23,10 @@ const GetStartedScreen = () => {
   if (loading) return null; // Show nothing while loading
 
   if (user && !loading) {
-    const role = user.user_metadata?.role;
+    const role = user.user_metadata?.options?.data?.role;
+    const displayName = user.user_metadata?.options?.data?.display_name; // You might want this too!
+    console.log("User role:", role);
+    console.log("User Display Name:", displayName); // Log display name for verification
     if (role === "veterinarian") {
       return <Redirect href="/(vet)/home" />;
     } else {

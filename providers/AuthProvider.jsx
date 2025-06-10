@@ -2,7 +2,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase"; // make sure this points to your client
 import { Session, User } from "@supabase/supabase-js";
-import { router } from "expo-router";
 
 const AuthContext = createContext(null);
 

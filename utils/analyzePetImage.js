@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import * as FileSystem from "expo-file-system";
 import { supabase } from "../lib/supabase"; // Adjust the import path as needed
-import { Buffer } from "buffer"; // Ensure you have buffer polyfill for React Native\
+import { Buffer } from "buffer"; // Ensure you have buffer polyfill for React Native
 
 global.Buffer = Buffer; // Set global Buffer for React Native
 
@@ -65,6 +65,59 @@ async function uploadImageToSupabase(imageUri, userId) {
     return publicUrlData.publicUrl;
   } catch (error) {
     console.error("Upload error:", error);
+    throw error;
+  }
+}
+
+// Helper function to share analysis to newsfeed
+export async function shareToNewsfeed(analysisId, petName = null, isAnonymous = false) {
+  try {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (!user || authError) {
+      throw new Error("User not authenticated");
+    }
+
+    // Get the analysis record
+    const { data: analysisData, error: analysisError } = await supabase
+      .from("analysis_history")
+      .select("*")
+      .eq("id", analysisId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (analysisError || !analysisData) {
+      throw new Error("Analysis not found");
+    }
+
+    // Create newsfeed post
+    const { data: postData, error: postError } = await supabase
+      .from("newsfeed_posts")
+      .insert([
+        {
+          user_id: user.id,
+          analysis_id: analysisId,
+          image_url: analysisData.image_url,
+          analysis_result: analysisData.analysis_result,
+          pet_name: petName,
+          is_anonymous: isAnonymous,
+        },
+      ])
+      .select()
+      .single();
+
+    if (postError) {
+      console.error("Failed to share to newsfeed:", postError);
+      throw new Error("Failed to share to newsfeed");
+    }
+
+    console.log("Successfully shared to newsfeed:", postData.id);
+    return postData;
+  } catch (error) {
+    console.error("Share to newsfeed error:", error);
     throw error;
   }
 }
@@ -135,33 +188,52 @@ Respond strictly with just the answers to these points. No explanations, no disc
     console.log("OpenAI analysis completed");
 
     // 3. Save to Supabase (with the Supabase imageUrl for storage reference)
-    const { error } = await supabase.from("analysis_history").insert([
-      {
-        user_id: userId,
-        image_url: imageUrl, // Store the Supabase URL for reference
-        analysis_result: analysisResult,
-        created_at: new Date().toISOString(),
-      },
-    ]);
+    const { data: analysisData, error } = await supabase
+      .from("analysis_history")
+      .insert([
+        {
+          user_id: userId,
+          image_url: imageUrl, // Store the Supabase URL for reference
+          analysis_result: analysisResult,
+          created_at: new Date().toISOString(),
+        },
+      ])
+      .select()
+      .single();
 
     if (error) {
       console.error("Supabase insert failed:", error.message);
       // Don't throw here, still return the analysis
+      return {
+        analysis: analysisResult,
+        analysisId: null,
+      };
     } else {
       console.log("Analysis saved to database");
+      return {
+        analysis: analysisResult,
+        analysisId: analysisData.id,
+      };
     }
-
-    return analysisResult;
   } catch (err) {
     console.error("Image analysis failed:", err);
 
     // More specific error handling
     if (err.message?.includes("OpenAI")) {
-      return "OpenAI analysis failed. Please try again.";
+      return {
+        analysis: "OpenAI analysis failed. Please try again.",
+        analysisId: null,
+      };
     } else if (err.message?.includes("upload")) {
-      return "Image upload failed. Please check your connection.";
+      return {
+        analysis: "Image upload failed. Please check your connection.",
+        analysisId: null,
+      };
     } else {
-      return "Image analysis failed. Please try again.";
+      return {
+        analysis: "Image analysis failed. Please try again.",
+        analysisId: null,
+      };
     }
   }
 }

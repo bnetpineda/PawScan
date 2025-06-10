@@ -8,13 +8,13 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome } from "@expo/vector-icons";
 import { useAuth } from "../../providers/AuthProvider";
 import { useColorScheme } from "react-native";
 
-export default function LoginScreen() {
+export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -22,6 +22,7 @@ export default function LoginScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const { signInWithEmail } = useAuth();
+  const router = useRouter();
 
   const handleLogin = async () => {
     setIsLoading(true);
@@ -73,7 +74,7 @@ export default function LoginScreen() {
         <View className="mb-5 rounded-2xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-neutral-900">
           <TextInput
             className="h-14 border-b border-gray-200 dark:border-gray-700 px-4 font-inter-bold text-black dark:text-white bg-transparent"
-            placeholder="Username or email"
+            placeholder="Email"
             placeholderTextColor="#888"
             value={email}
             onChangeText={setEmail}
@@ -114,11 +115,12 @@ export default function LoginScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          className={`mb-4 items-center rounded-lg py-3.5 ${
-            isEmailPasswordValid()
-              ? "bg-black dark:bg-white"
-              : "bg-gray-200 dark:bg-black"
-          }`}
+          className={`mb-4 items-center rounded-lg py-3.5
+    ${
+      isEmailPasswordValid()
+        ? "bg-black dark:bg-white"
+        : "bg-gray-300 dark:bg-gray-700"
+    }`}
           onPress={handleLogin}
           disabled={!isEmailPasswordValid() || isLoading}
         >
@@ -127,7 +129,9 @@ export default function LoginScreen() {
           ) : (
             <Text
               className={`font-inter-bold text-base ${
-                isEmailPasswordValid() ? "text-white" : "text-gray-400"
+                isEmailPasswordValid()
+                  ? "text-white dark:text-black"
+                  : "text-gray-600 dark:text-gray-400"
               }`}
             >
               Sign In
@@ -136,9 +140,9 @@ export default function LoginScreen() {
         </TouchableOpacity>
 
         <View className="flex-row items-center my-6">
-          <View className="flex-1 h-0.5 bg-gray-400 dark:bg-gray-900" />
+          <View className="flex-1 h-0.5 bg-gray-900 dark:bg-gray-500" />
           <Text className="mx-4 text-gray-700 dark:text-gray-600">or</Text>
-          <View className="flex-1 h-0.5 bg-gray-400 dark:bg-gray-900" />
+          <View className="flex-1 h-0.5 bg-gray-900 dark:bg-gray-500" />
         </View>
 
         <View className="mt-6">
