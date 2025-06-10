@@ -70,7 +70,11 @@ async function uploadImageToSupabase(imageUri, userId) {
 }
 
 // Helper function to share analysis to newsfeed
-export async function shareToNewsfeed(analysisId, petName = null, isAnonymous = false) {
+export async function shareToNewsfeed(
+  analysisId,
+  petName = null,
+  isAnonymous = false
+) {
   try {
     const {
       data: { user },
@@ -104,6 +108,9 @@ export async function shareToNewsfeed(analysisId, petName = null, isAnonymous = 
           analysis_result: analysisData.analysis_result,
           pet_name: petName,
           is_anonymous: isAnonymous,
+          display_name: isAnonymous
+            ? "Anonymous"
+            : user.user_metadata?.options?.data?.display_name || "Pet Owner",
         },
       ])
       .select()

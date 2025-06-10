@@ -19,6 +19,7 @@ import * as MediaLibrary from "expo-media-library";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { analyzePetImage, shareToNewsfeed } from "../../utils/analyzePetImage";
 import { supabase } from "../../lib/supabase";
+import ShareModal from "../../assets/components/ShareModal";
 
 const COLORS = {
   primary: "#007AFF",
@@ -191,87 +192,6 @@ export default function CameraScreen() {
     }
   };
 
-  const ShareModal = () => (
-    <Modal
-      visible={showShareModal}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setShowShareModal(false)}
-    >
-      <View className="flex-1 justify-center items-center bg-black/50">
-        <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 mx-6 w-11/12">
-          <Text className="text-xl font-inter-bold text-center mb-4 text-black dark:text-white">
-            Share to Newsfeed
-          </Text>
-
-          <Text className="text-gray-600 dark:text-gray-300 mb-2">
-            Pet Name (Optional)
-          </Text>
-          <TextInput
-            className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 mb-4 text-black dark:text-white"
-            placeholder="Enter your pet's name"
-            placeholderTextColor={
-              isDark ? COLORS.textSecondary : COLORS.textSecondary
-            } // Ensure placeholder is visible
-            value={petName}
-            onChangeText={setPetName}
-            maxLength={50}
-          />
-
-          <TouchableOpacity
-            className={`flex-row items-center p-3 rounded-lg mb-6 ${
-              isAnonymous
-                ? "bg-blue-100 dark:bg-blue-900"
-                : "bg-gray-100 dark:bg-gray-700"
-            }`}
-            onPress={() => setIsAnonymous(!isAnonymous)}
-          >
-            <FontAwesome
-              name={isAnonymous ? "check-square" : "square-o"}
-              size={20}
-              color={
-                isAnonymous
-                  ? COLORS.primary
-                  : isDark
-                  ? COLORS.white
-                  : COLORS.textSecondary
-              }
-            />
-            <Text className="ml-3 text-gray-700 dark:text-gray-300">
-              Share anonymously
-            </Text>
-          </TouchableOpacity>
-
-          <View className="flex-row gap-3">
-            <TouchableOpacity
-              className="flex-1 bg-gray-200 dark:bg-gray-700 py-3 rounded-lg"
-              onPress={() => setShowShareModal(false)}
-              disabled={isSharing}
-            >
-              <Text className="text-center text-gray-700 dark:text-white font-semibold">
-                Cancel
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="flex-1 bg-blue-500 py-3 rounded-lg"
-              onPress={handleShareSubmit}
-              disabled={isSharing}
-            >
-              {isSharing ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <Text className="text-center text-white font-semibold">
-                  Share
-                </Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-
   const renderPreview = () => {
     if (isLoading) {
       return (
@@ -409,7 +329,9 @@ export default function CameraScreen() {
             <TouchableOpacity
               className="justify-center items-center bg-white rounded-full w-20 h-20"
               onPress={takePicture}
-            ></TouchableOpacity>
+            >
+              <FontAwesome name="camera" size={36} color={COLORS.primary} />
+            </TouchableOpacity>
             <TouchableOpacity onPress={toggleCameraFacing}>
               <FontAwesome name="refresh" size={28} color="#fff" />
             </TouchableOpacity>
@@ -417,7 +339,18 @@ export default function CameraScreen() {
         )}
         {imageUri && renderPreview()}
       </View>
-      <ShareModal />
+      <ShareModal
+        visible={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        petName={petName}
+        setPetName={setPetName}
+        isAnonymous={isAnonymous}
+        setIsAnonymous={setIsAnonymous}
+        isSharing={isSharing}
+        onShare={handleShareSubmit}
+        isDark={isDark}
+        COLORS={COLORS}
+      />
     </View>
   );
 }

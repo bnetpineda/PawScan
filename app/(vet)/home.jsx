@@ -1,594 +1,663 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  FlatList,
-  Image,
-  RefreshControl,
-  Alert,
-  TouchableOpacity,
-  TextInput,
-  Modal,
   ScrollView,
+  Image,
+  TouchableOpacity,
+  RefreshControl,
+  ActivityIndicator,
+  Alert,
+  StatusBar,
+  useColorScheme,
+  Modal,
+  Dimensions,
+  Share,
+  Platform,
+  TextInput,
+  KeyboardAvoidingView,
+  FlatList,
 } from "react-native";
-import { supabase } from "../../lib/supabase"; // Adjust path to your supabase config
 import { SafeAreaView } from "react-native-safe-area-context";
+import { FontAwesome } from "@expo/vector-icons";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../providers/AuthProvider";
 
-const REACTION_EMOJIS = ["❤️", "👍", "😂", "😮", "😢", "😡"];
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
-const PetNewsfeed = () => {
-  const [analysisData, setAnalysisData] = useState([]);
+const NewsFeedScreen = () => {
+  const isDark = useColorScheme() === "dark";
+
+  const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [comments, setComments] = useState({});
-  const [reactions, setReactions] = useState({});
-  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [commentsModalVisible, setCommentsModalVisible] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState(null);
-  const [commentText, setCommentText] = useState("");
-  const [expandedComments, setExpandedComments] = useState({});
-  const [showReactionPicker, setShowReactionPicker] = useState(null);
-  const [currentUser] = useState("1b4cf268-51b6-4a48-9705-d41b10c7917f"); // Replace with actual user auth
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [postingComment, setPostingComment] = useState(false);
+  const { user } = useAuth();
 
-  // Parse analysis result text into structured data
-  const parseAnalysisResult = (analysisText) => {
-    const lines = analysisText.split("\n").filter((line) => line.trim());
-    const result = {};
+  useEffect(() => {
+    setCurrentUser(user || null);
+    loadPosts();
+  }, []);
 
-    lines.forEach((line) => {
-      if (line.includes("Breed of the pet:")) {
-        result.breed = line.split(":")[1]?.trim();
-      } else if (line.includes("Diseases detected")) {
-        result.diseases = line.split(":")[1]?.trim();
-      } else if (line.includes("Confidence score:")) {
-        result.confidence = line.split(":")[1]?.trim();
-      } else if (line.includes("Urgency level:")) {
-        result.urgency = line.split(":")[1]?.trim();
-      } else if (line.includes("Three suggested treatments:")) {
-        result.treatments = line.split(":")[1]?.trim();
-      }
-    });
-
-    return result;
-  };
-
-  // Fetch analysis history from Supabase
-  const fetchAnalysisHistory = async () => {
+  const loadPosts = async () => {
     try {
-      const { data, error } = await supabase
-        .from("analysis_history")
+      // Get posts first
+      const { data: postsData, error: postsError } = await supabase
+        .from("newsfeed_posts")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(20);
 
-      if (error) {
-        throw error;
-      }
+      if (postsError) throw postsError;
 
-      setAnalysisData(data || []);
+      // Get likes count and user's like status for each post
+      const processedPosts = await Promise.all(
+        (postsData || []).map(async (post) => {
+          // Get total likes count for this post
+          const { count: likesCount } = await supabase
+            .from("newsfeed_likes")
+            .select("*", { count: "exact", head: true })
+            .eq("post_id", post.id);
 
-      // Fetch comments and reactions for each post
-      if (data && data.length > 0) {
-        await fetchCommentsAndReactions(data.map((item) => item.id));
-      }
-    } catch (error) {
-      console.error("Error fetching analysis history:", error);
-      Alert.alert("Error", "Failed to load analysis history");
+          // Check if current user has liked this post
+          let userHasLiked = false;
+          if (currentUser) {
+            const { data: userLike } = await supabase
+              .from("newsfeed_likes")
+              .select("id")
+              .eq("post_id", post.id)
+              .eq("user_id", currentUser.id)
+              .single();
+
+            userHasLiked = !!userLike;
+          }
+
+          return {
+            ...post,
+            likes_count: likesCount || 0,
+            user_has_liked: userHasLiked,
+            comments_count: 0, // You can implement this similarly if needed
+          };
+        })
+      );
+
+      setPosts(processedPosts);
+    } catch (err) {
+      console.error("Failed to load posts:", err);
+      Alert.alert("Error", "Could not fetch posts.");
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  // Fetch comments and reactions for posts
-  const fetchCommentsAndReactions = async (postIds) => {
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadPosts();
+    setRefreshing(false);
+  }, []);
+
+  const toggleLike = async (postId, isLiked) => {
+    if (!currentUser) {
+      Alert.alert("Sign In Required", "Please sign in to like posts.");
+      return;
+    }
+
+    // Optimistic update
+    setPosts((prev) =>
+      prev.map((post) =>
+        post.id === postId
+          ? {
+              ...post,
+              likes_count: post.likes_count + (isLiked ? -1 : 1),
+              user_has_liked: !isLiked,
+            }
+          : post
+      )
+    );
+
     try {
-      // Fetch comments
-      const { data: commentsData, error: commentsError } = await supabase
-        .from("post_comments")
-        .select("*")
-        .in("post_id", postIds)
-        .order("created_at", { ascending: true });
+      if (isLiked) {
+        const { error } = await supabase
+          .from("newsfeed_likes")
+          .delete()
+          .eq("post_id", postId)
+          .eq("user_id", currentUser.id);
 
-      if (commentsError) throw commentsError;
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("newsfeed_likes").insert([
+          {
+            post_id: postId,
+            user_id: currentUser.id,
+            created_at: new Date().toISOString(),
+          },
+        ]);
 
-      // Group comments by post_id
-      const commentsByPost = {};
-      commentsData?.forEach((comment) => {
-        if (!commentsByPost[comment.post_id]) {
-          commentsByPost[comment.post_id] = [];
-        }
-        commentsByPost[comment.post_id].push(comment);
-      });
-      setComments(commentsByPost);
+        if (error) throw error;
+      }
+    } catch (err) {
+      console.error("Error updating like:", err);
 
-      // Fetch reactions
-      const { data: reactionsData, error: reactionsError } = await supabase
-        .from("post_reactions")
-        .select("*")
-        .in("post_id", postIds);
+      // Revert optimistic update on error
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                likes_count: post.likes_count + (isLiked ? 1 : -1),
+                user_has_liked: isLiked,
+              }
+            : post
+        )
+      );
 
-      if (reactionsError) throw reactionsError;
-
-      // Group reactions by post_id and emoji
-      const reactionsByPost = {};
-      reactionsData?.forEach((reaction) => {
-        if (!reactionsByPost[reaction.post_id]) {
-          reactionsByPost[reaction.post_id] = {};
-        }
-        if (!reactionsByPost[reaction.post_id][reaction.emoji]) {
-          reactionsByPost[reaction.post_id][reaction.emoji] = [];
-        }
-        reactionsByPost[reaction.post_id][reaction.emoji].push(reaction);
-      });
-      setReactions(reactionsByPost);
-    } catch (error) {
-      console.error("Error fetching comments and reactions:", error);
+      Alert.alert("Error", "Could not update like. Please try again.");
     }
   };
 
-  // Add a comment
-  const addComment = async () => {
-    if (!commentText.trim() || !selectedPostId) return;
+  const handleShare = async (post) => {
+    try {
+      const shareContent = {
+        message: `Check out this pet health analysis: ${post.analysis_result}`,
+        url: post.image_url, // You might want to create a proper sharing URL
+        title: "Pet Health Analysis from Pet Community",
+      };
 
+      if (Platform.OS === "ios") {
+        await Share.share({
+          message: shareContent.message,
+          url: shareContent.url,
+          title: shareContent.title,
+        });
+      } else {
+        await Share.share({
+          message: `${shareContent.message}\n${shareContent.url}`,
+          title: shareContent.title,
+        });
+      }
+    } catch (error) {
+      console.error("Error sharing:", error);
+      Alert.alert("Error", "Could not share post.");
+    }
+  };
+
+  const loadComments = async (postId) => {
+    setLoadingComments(true);
     try {
       const { data, error } = await supabase
-        .from("post_comments")
+        .from("newsfeed_comments")
+        .select("*")
+        .eq("post_id", postId)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      setComments(data || []);
+    } catch (err) {
+      console.error("Failed to load comments:", err);
+      Alert.alert("Error", "Could not fetch comments.");
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const openCommentsModal = (postId) => {
+    setSelectedPostId(postId);
+    setCommentsModalVisible(true);
+    loadComments(postId);
+  };
+
+  const closeCommentsModal = () => {
+    setCommentsModalVisible(false);
+    setSelectedPostId(null);
+    setComments([]);
+    setNewComment("");
+  };
+
+  const postComment = async () => {
+    if (!currentUser) {
+      Alert.alert("Sign In Required", "Please sign in to comment.");
+      return;
+    }
+
+    if (!newComment.trim()) {
+      Alert.alert("Empty Comment", "Please write a comment before posting.");
+      return;
+    }
+
+    setPostingComment(true);
+    try {
+      const { data, error } = await supabase
+        .from("newsfeed_comments")
         .insert([
           {
             post_id: selectedPostId,
-            user_id: currentUser,
-            comment_text: commentText.trim(),
+            user_id: currentUser.id,
+            comment_text: newComment.trim(),
+            display_name:
+              currentUser.user_metadata?.options?.data?.display_name ||
+              "Pet Owner", // Use email prefix as display name
+            created_at: new Date().toISOString(),
           },
         ])
-        .select();
+        .select()
+        .single();
 
       if (error) throw error;
 
-      // Update local state
-      setComments((prev) => ({
-        ...prev,
-        [selectedPostId]: [...(prev[selectedPostId] || []), data[0]],
-      }));
+      // Add the new comment to the list
+      setComments((prev) => [...prev, data]);
 
-      setCommentText("");
-      setShowCommentModal(false);
-    } catch (error) {
-      console.error("Error adding comment:", error);
-      Alert.alert("Error", "Failed to add comment");
+      // Update the comments count in posts
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === selectedPostId
+            ? { ...post, comments_count: post.comments_count + 1 }
+            : post
+        )
+      );
+
+      setNewComment("");
+    } catch (err) {
+      console.error("Error posting comment:", err);
+      Alert.alert("Error", "Could not post comment. Please try again.");
+    } finally {
+      setPostingComment(false);
     }
   };
 
-  // Add or remove reaction (only 1 reaction per user per post)
-  const toggleReaction = async (postId, emoji) => {
-    try {
-      // Find any existing reaction by this user on this post
-      let existingUserReaction = null;
-      let existingEmoji = null;
-
-      if (reactions[postId]) {
-        for (const [emojiKey, reactionList] of Object.entries(
-          reactions[postId]
-        )) {
-          const userReaction = reactionList.find(
-            (r) => r.user_id === currentUser
-          );
-          if (userReaction) {
-            existingUserReaction = userReaction;
-            existingEmoji = emojiKey;
-            break;
-          }
-        }
-      }
-
-      // If clicking the same emoji they already reacted with, remove it
-      if (existingUserReaction && existingEmoji === emoji) {
-        const { error } = await supabase
-          .from("post_reactions")
-          .delete()
-          .eq("id", existingUserReaction.id);
-
-        if (error) throw error;
-
-        // Update local state - remove reaction
-        setReactions((prev) => {
-          const newReactions = { ...prev };
-          if (newReactions[postId] && newReactions[postId][emoji]) {
-            newReactions[postId][emoji] = newReactions[postId][emoji].filter(
-              (r) => r.id !== existingUserReaction.id
-            );
-            if (newReactions[postId][emoji].length === 0) {
-              delete newReactions[postId][emoji];
-            }
-          }
-          return newReactions;
-        });
-      } else {
-        // Replace existing reaction or add new one
-        if (existingUserReaction) {
-          // Update existing reaction to new emoji
-          const { data, error } = await supabase
-            .from("post_reactions")
-            .update({ emoji: emoji })
-            .eq("id", existingUserReaction.id)
-            .select();
-
-          if (error) throw error;
-
-          // Create updated reaction object with all necessary fields
-          const updatedReaction = {
-            ...existingUserReaction,
-            emoji: emoji,
-            ...(data && data[0] ? data[0] : {}),
-          };
-
-          // Update local state - move reaction from old emoji to new emoji
-          setReactions((prev) => {
-            const newReactions = { ...prev };
-
-            // Remove from old emoji
-            if (newReactions[postId] && newReactions[postId][existingEmoji]) {
-              newReactions[postId][existingEmoji] = newReactions[postId][
-                existingEmoji
-              ].filter((r) => r.id !== existingUserReaction.id);
-              if (newReactions[postId][existingEmoji].length === 0) {
-                delete newReactions[postId][existingEmoji];
-              }
-            }
-
-            // Add to new emoji
-            if (!newReactions[postId]) newReactions[postId] = {};
-            if (!newReactions[postId][emoji]) newReactions[postId][emoji] = [];
-            newReactions[postId][emoji].push(updatedReaction);
-
-            return newReactions;
-          });
-        } else {
-          // Add new reaction
-          const { data, error } = await supabase
-            .from("post_reactions")
-            .insert([
-              {
-                post_id: postId,
-                user_id: currentUser,
-                emoji: emoji,
-              },
-            ])
-            .select();
-
-          if (error) throw error;
-
-          // Update local state - add new reaction
-          setReactions((prev) => {
-            const newReactions = { ...prev };
-            if (!newReactions[postId]) newReactions[postId] = {};
-            if (!newReactions[postId][emoji]) newReactions[postId][emoji] = [];
-            newReactions[postId][emoji].push(data[0]);
-            return newReactions;
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Error toggling reaction:", error);
-      Alert.alert("Error", "Failed to update reaction");
-    }
-    setShowReactionPicker(null);
+  const openImageModal = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setImageModalVisible(true);
   };
 
-  useEffect(() => {
-    fetchAnalysisHistory();
-  }, []);
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchAnalysisHistory();
+  const closeImageModal = () => {
+    setImageModalVisible(false);
+    setSelectedImage(null);
   };
 
-  const getUrgencyColor = (urgency) => {
-    switch (urgency?.toLowerCase()) {
-      case "high":
-        return "#FF4444";
-      case "medium":
-        return "#FFA500";
-      case "low":
-        return "#4CAF50";
-      default:
-        return "#757575";
-    }
+  const formatTimeAgo = (timestamp) => {
+    const now = new Date();
+    const postTime = new Date(timestamp);
+    const secondsAgo = Math.floor((now - postTime) / 1000);
+
+    if (secondsAgo < 60) return "Just now";
+    if (secondsAgo < 3600) return `${Math.floor(secondsAgo / 60)}m ago`;
+    if (secondsAgo < 86400) return `${Math.floor(secondsAgo / 3600)}h ago`;
+    if (secondsAgo < 604800) return `${Math.floor(secondsAgo / 86400)}d ago`;
+
+    return postTime.toLocaleDateString();
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const renderComments = (postId) => {
-    const postComments = comments[postId] || [];
-    const isExpanded = expandedComments[postId];
-    const displayComments = isExpanded
-      ? postComments
-      : postComments.slice(0, 2);
+  const PostCard = ({ post }) => {
+    const isAnonymous = post.is_anonymous;
+    // Since we don't have profiles table, we'll use a simple display name
+    const userDisplayName = isAnonymous
+      ? "Anonymous User"
+      : post.display_name || "Pet Owner";
 
     return (
-      <View className="px-4 pb-4">
-        {displayComments.map((comment) => (
-          <View
-            key={comment.id}
-            className="bg-gray-100 dark:bg-neutral-800 p-3 rounded-lg mb-2"
-          >
-            <Text className="text-base text-black dark:text-white mb-1">
-              {comment.comment_text}
-            </Text>
-            <Text className="text-xs text-gray-500 dark:text-gray-400">
-              {formatDate(comment.created_at)}
-            </Text>
-          </View>
-        ))}
-        {postComments.length > 2 && (
-          <TouchableOpacity
-            onPress={() =>
-              setExpandedComments((prev) => ({
-                ...prev,
-                [postId]: !prev[postId],
-              }))
-            }
-            className="items-center py-2"
-          >
-            <Text className="text-green-600 font-medium">
-              {isExpanded
-                ? "Show Less"
-                : `View ${postComments.length - 2} more comments`}
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  };
-
-  const renderReactions = (postId) => {
-    const postReactions = reactions[postId] || {};
-    const hasReactions = Object.keys(postReactions).length > 0;
-
-    return (
-      <View className="px-4 pb-2">
-        {hasReactions && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="flex-row"
-          >
-            {Object.entries(postReactions).map(([emoji, reactionList]) => (
-              <TouchableOpacity
-                key={emoji}
-                className={`flex-row items-center bg-gray-100 px-2 py-1 rounded-2xl mr-2 ${
-                  reactionList.some((r) => r.user_id === currentUser)
-                    ? "bg-blue-100"
-                    : ""
-                }`}
-                onPress={() => toggleReaction(postId, emoji)}
-              >
-                <Text className="text-lg mr-1">{emoji}</Text>
-                <Text className="text-xs text-gray-600 font-medium">
-                  {reactionList.length}
+      <View
+        key={post.id}
+        className="mx-4 my-2 rounded-2xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 3,
+        }}
+      >
+        {/* Header */}
+        <View className="flex-row justify-between items-center p-4">
+          <View className="flex-row items-center flex-1">
+            <View className="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 justify-center items-center mr-3">
+              <FontAwesome
+                name={isAnonymous ? "user" : "user-circle"}
+                size={isAnonymous ? 20 : 32}
+                color={
+                  isAnonymous ? (isDark ? "#8E8E93" : "#6C757D") : "#007AFF"
+                }
+              />
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-inter-semibold text-black dark:text-white">
+                {userDisplayName}
+              </Text>
+              {post.pet_name && (
+                <Text className="text-sm font-inter text-gray-500 dark:text-gray-400">
+                  Pet: {post.pet_name}
                 </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        )}
-      </View>
-    );
-  };
-
-  const renderReactionPicker = (postId) => {
-    if (showReactionPicker !== postId) return null;
-
-    return (
-      <View className="px-4 pb-2">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {REACTION_EMOJIS.map((emoji) => (
-            <TouchableOpacity
-              key={emoji}
-              className="px-3 py-2 mr-2 bg-gray-100 rounded-full"
-              onPress={() => toggleReaction(postId, emoji)}
-            >
-              <Text className="text-2xl">{emoji}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-    );
-  };
-
-  const renderAnalysisItem = ({ item }) => {
-    const parsedResult = parseAnalysisResult(item.analysis_result);
-    const postComments = comments[item.id] || [];
-
-    return (
-      <View className="bg-white rounded-xl mb-4 shadow dark:bg-neutral-900">
-        <View className="flex-row justify-between items-center px-4 pt-4 pb-2">
-          <Text className="text-sm text-gray-500 font-medium">
-            {formatDate(item.created_at)}
-          </Text>
-          {parsedResult.urgency && (
-            <View
-              className={`px-2 py-1 rounded-xl ${
-                parsedResult.urgency.toLowerCase() === "high"
-                  ? "bg-red-500"
-                  : parsedResult.urgency.toLowerCase() === "medium"
-                  ? "bg-yellow-500"
-                  : parsedResult.urgency.toLowerCase() === "low"
-                  ? "bg-green-600"
-                  : "bg-gray-400"
-              }`}
-            >
-              <Text className="text-white text-xs font-bold uppercase">
-                {parsedResult.urgency}
+              )}
+              <Text className="text-xs font-inter text-gray-400 dark:text-gray-500">
+                {formatTimeAgo(post.created_at)}
               </Text>
             </View>
-          )}
+          </View>
+          <TouchableOpacity className="p-2">
+            <FontAwesome
+              name="ellipsis-h"
+              size={16}
+              color={isDark ? "#8E8E93" : "#6C757D"}
+            />
+          </TouchableOpacity>
         </View>
 
-        <Image
-          source={{ uri: item.image_url }}
-          className="w-full h-52 rounded-b-none rounded-t-xl"
-          resizeMode="cover"
-        />
-
-        <View className="px-4 py-4">
-          {parsedResult.breed && (
-            <View className="flex-row mb-2">
-              <Text className="font-semibold text-gray-800 dark:text-white w-20">
-                Breed:
-              </Text>
-              <Text className="text-gray-700 dark:text-gray-200 flex-1">
-                {parsedResult.breed}
-              </Text>
-            </View>
-          )}
-          {parsedResult.diseases && (
-            <View className="flex-row mb-2">
-              <Text className="font-semibold text-gray-800 dark:text-white w-20">
-                Condition:
-              </Text>
-              <Text className="text-gray-700 dark:text-gray-200 flex-1">
-                {parsedResult.diseases}
-              </Text>
-            </View>
-          )}
-          {parsedResult.confidence && (
-            <View className="flex-row mb-2">
-              <Text className="font-semibold text-gray-800 dark:text-white w-20">
-                Confidence:
-              </Text>
-              <Text className="text-green-600 font-semibold flex-1">
-                {parsedResult.confidence}
-              </Text>
-            </View>
-          )}
-          {parsedResult.treatments && (
-            <View className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-              <Text className="font-semibold text-gray-800 dark:text-white">
-                Suggested Treatments:
-              </Text>
-              <Text className="text-gray-700 dark:text-gray-200 mt-1 leading-5">
-                {parsedResult.treatments}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* Reactions */}
-        {renderReactions(item.id)}
-        {renderReactionPicker(item.id)}
+        {/* Image - Now clickable */}
+        <TouchableOpacity
+          onPress={() => openImageModal(post.image_url)}
+          activeOpacity={0.9}
+        >
+          <Image
+            source={{ uri: post.image_url }}
+            className="w-full h-72"
+            resizeMode="cover"
+          />
+        </TouchableOpacity>
 
         {/* Action Buttons */}
-        <View className="flex-row px-4 py-2 border-t border-gray-200 dark:border-gray-700">
+        <View className="flex-row items-center px-4 py-3">
           <TouchableOpacity
-            className="flex-1 items-center py-2"
-            onPress={() =>
-              setShowReactionPicker(
-                showReactionPicker === item.id ? null : item.id
-              )
-            }
+            className="flex-row items-center mr-6"
+            onPress={() => toggleLike(post.id, post.user_has_liked)}
+            activeOpacity={0.7}
           >
-            <Text className="text-gray-600 font-medium">😊 React</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="flex-1 items-center py-2"
-            onPress={() => {
-              setSelectedPostId(item.id);
-              setShowCommentModal(true);
-            }}
-          >
-            <Text className="text-gray-600 font-medium">
-              💬 Comment ({postComments.length})
+            <FontAwesome
+              name={post.user_has_liked ? "heart" : "heart-o"}
+              size={20}
+              color={
+                post.user_has_liked ? "#FF3B30" : isDark ? "#8E8E93" : "#6C757D"
+              }
+            />
+            <Text className="ml-2 text-sm font-inter text-gray-600 dark:text-gray-400">
+              {post.likes_count || 0}
             </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="flex-row items-center mr-6"
+            onPress={() => openCommentsModal(post.id)}
+            activeOpacity={0.7}
+          >
+            <FontAwesome
+              name="comment-o"
+              size={20}
+              color={isDark ? "#8E8E93" : "#6C757D"}
+            />
+            <Text className="ml-2 text-sm font-inter text-gray-600 dark:text-gray-400">
+              {post.comments_count || 0}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="flex-row items-center"
+            onPress={() => handleShare(post)}
+            activeOpacity={0.7}
+          >
+            <FontAwesome
+              name="share"
+              size={20}
+              color={isDark ? "#8E8E93" : "#6C757D"}
+            />
           </TouchableOpacity>
         </View>
 
-        {/* Comments */}
-        {renderComments(item.id)}
+        {/* Analysis */}
+        <View className="px-4 pb-4">
+          <Text className="text-base font-inter-semibold text-black dark:text-white mb-2">
+            Pet Health Analysis
+          </Text>
+          <Text
+            className="text-sm text-gray-600 font-inter dark:text-gray-400 mb-2"
+            numberOfLines={4}
+          >
+            {post.analysis_result}
+          </Text>
+          <TouchableOpacity>
+            <Text className="text-sm font-inter-semibold text-blue-600 dark:text-blue-400">
+              Read more
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
 
-  const renderEmptyState = () => (
-    <View className="items-center justify-center py-16">
-      <Text className="text-lg text-gray-600 font-medium mb-2">
-        No pet analysis records found
-      </Text>
-      <Text className="text-base text-gray-400">Pull down to refresh</Text>
-    </View>
-  );
-
-  return (
-    <SafeAreaView className="flex-1 bg-gray-100 dark:bg-black">
-      <View className="bg-white dark:bg-neutral-900 px-5 py-4 border-b border-gray-200 dark:border-gray-800">
-        <Text className="text-2xl font-bold text-gray-900 dark:text-white">
-          Pet Analysis History
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center bg-white dark:bg-black">
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text className="mt-4 text-base font-inter-bold text-gray-400 dark:text-gray-500">
+          Loading newsfeed...
         </Text>
       </View>
+    );
+  }
 
-      <FlatList
-        data={analysisData}
-        renderItem={renderAnalysisItem}
-        keyExtractor={(item) => item.id}
+  return (
+    <SafeAreaView className="flex-1 bg-white dark:bg-black">
+      <StatusBar
+        barStyle={isDark ? "light-content" : "dark-content"}
+        backgroundColor={isDark ? "#000" : "#fff"}
+      />
+
+      {/* Top Header */}
+      <View className="flex-row justify-between items-center px-5 py-4 border-b border-gray-200 dark:border-neutral-800">
+        <Text className="text-2xl font-inter-bold text-black dark:text-white">
+          Pet Community
+        </Text>
+        <TouchableOpacity className="p-2">
+          <FontAwesome
+            name="search"
+            size={20}
+            color={isDark ? "#8E8E93" : "#6C757D"}
+          />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        className="flex-1"
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#4CAF50"]}
+            tintColor="#007AFF"
           />
         }
-        ListEmptyComponent={!loading ? renderEmptyState : null}
-        contentContainerStyle={
-          analysisData.length === 0
-            ? { flex: 1, justifyContent: "center", alignItems: "center" }
-            : { padding: 16 }
-        }
-      />
+      >
+        {posts.length === 0 ? (
+          <View className="flex-1 justify-center items-center py-20">
+            <FontAwesome
+              name="heart-o"
+              size={48}
+              color={isDark ? "#8E8E93" : "#6C757D"}
+            />
+            <Text className="text-xl font-inter-semibold text-black dark:text-white mt-4">
+              No posts yet
+            </Text>
+            <Text className="text-base font-inter text-gray-500 dark:text-gray-400 text-center px-8">
+              Share your pet's health analysis to be the first!
+            </Text>
+          </View>
+        ) : (
+          posts.map((post) => <PostCard key={post.id} post={post} />)
+        )}
+      </ScrollView>
 
-      {/* Comment Modal */}
+      {/* Image Modal */}
       <Modal
-        visible={showCommentModal}
+        visible={imageModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closeImageModal}
+      >
+        <View className="flex-1 bg-black bg-opacity-90 justify-center items-center">
+          <TouchableOpacity
+            className="absolute top-12 right-4 z-10 w-10 h-10 rounded-full bg-black bg-opacity-50 justify-center items-center"
+            onPress={closeImageModal}
+          >
+            <FontAwesome name="times" size={20} color="white" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="flex-1 justify-center items-center w-full"
+            onPress={closeImageModal}
+            activeOpacity={1}
+          >
+            {selectedImage && (
+              <Image
+                source={{ uri: selectedImage }}
+                style={{
+                  width: screenWidth,
+                  height: screenHeight * 0.8,
+                }}
+                resizeMode="contain"
+              />
+            )}
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+      {/* Comments Modal */}
+      <Modal
+        visible={commentsModalVisible}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setShowCommentModal(false)}
+        onRequestClose={closeCommentsModal}
       >
-        <View className="flex-1 bg-white dark:bg-black">
-          <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-            <TouchableOpacity onPress={() => setShowCommentModal(false)}>
-              <Text className="text-base text-gray-600">Cancel</Text>
-            </TouchableOpacity>
-            <Text className="text-lg font-semibold text-gray-900 dark:text-white">
-              Add Comment
-            </Text>
-            <TouchableOpacity onPress={addComment}>
-              <Text className="text-base text-green-600 font-semibold">
-                Post
+        <SafeAreaView className="flex-1 bg-white dark:bg-black">
+          <KeyboardAvoidingView
+            className="flex-1"
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+          >
+            {/* Comments Header */}
+            <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
+              <Text className="text-lg font-inter-semibold text-black dark:text-white">
+                Comments
               </Text>
-            </TouchableOpacity>
-          </View>
-          <View className="flex-1 p-4">
-            <TextInput
-              className="flex-1 text-base text-gray-900 dark:text-white"
-              placeholder="Write a comment..."
-              value={commentText}
-              onChangeText={setCommentText}
-              multiline
-              textAlignVertical="top"
-              autoFocus
-            />
-          </View>
-        </View>
+              <TouchableOpacity onPress={closeCommentsModal} className="p-2">
+                <FontAwesome
+                  name="times"
+                  size={20}
+                  color={isDark ? "#8E8E93" : "#6C757D"}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Comments List */}
+            <View className="flex-1">
+              {loadingComments ? (
+                <View className="flex-1 justify-center items-center">
+                  <ActivityIndicator size="large" color="#007AFF" />
+                  <Text className="mt-2 font-inter-bold text-gray-500 dark:text-gray-400">
+                    Loading comments...
+                  </Text>
+                </View>
+              ) : comments.length === 0 ? (
+                <View className="flex-1 justify-center items-center px-8">
+                  <FontAwesome
+                    name="comment-o"
+                    size={48}
+                    color={isDark ? "#8E8E93" : "#6C757D"}
+                  />
+                  <Text className="text-lg font-inter-semibold text-black dark:text-white mt-4 text-center">
+                    No comments yet
+                  </Text>
+                  <Text className="text-gray-500 font-inter dark:text-gray-400 text-center mt-2">
+                    Be the first to share your thoughts!
+                  </Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={comments}
+                  keyExtractor={(item) => item.id}
+                  className="flex-1 px-4"
+                  showsVerticalScrollIndicator={false}
+                  renderItem={({ item }) => (
+                    <View className="py-3 border-b border-gray-100 dark:border-neutral-800">
+                      <View className="flex-row items-start">
+                        <View className="w-8 h-8 rounded-full bg-gray-200 dark:bg-neutral-700 justify-center items-center mr-3 mt-1">
+                          <FontAwesome
+                            name="user"
+                            size={14}
+                            color={isDark ? "#8E8E93" : "#6C757D"}
+                          />
+                        </View>
+                        <View className="flex-1">
+                          <View className="flex-row items-center mb-1">
+                            <Text className="font-inter-semibold text-black dark:text-white mr-2">
+                              {item.display_name || "Pet Owner"}
+                            </Text>
+                            <Text className="text-xs font-inter text-gray-400 dark:text-gray-500">
+                              {formatTimeAgo(item.created_at)}
+                            </Text>
+                          </View>
+                          <Text className="text-gray-800 font-inter dark:text-gray-200 leading-5">
+                            {item.comment_text}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  )}
+                />
+              )}
+            </View>
+
+            {/* Comment Input */}
+            <View className="border-t border-gray-200 dark:border-neutral-800 px-4 py-3">
+              <View className="flex-row items-end">
+                <View className="flex-1 mr-3">
+                  <TextInput
+                    value={newComment}
+                    onChangeText={setNewComment}
+                    placeholder="Write a comment..."
+                    placeholderTextColor={isDark ? "#8E8E93" : "#6C757D"}
+                    multiline
+                    maxLength={500}
+                    className="border border-gray-300 dark:border-neutral-600 rounded-2xl px-4 py-3 text-black dark:text-white font-inter bg-gray-50 dark:bg-neutral-800 max-h-24"
+                    style={{ textAlignVertical: "top" }}
+                  />
+                </View>
+                <TouchableOpacity
+                  onPress={postComment}
+                  disabled={postingComment || !newComment.trim()}
+                  className={`w-12 h-12 rounded-full justify-center items-center ${
+                    postingComment || !newComment.trim()
+                      ? "bg-gray-200 dark:bg-neutral-700"
+                      : "bg-blue-500"
+                  }`}
+                >
+                  {postingComment ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <FontAwesome
+                      name="send"
+                      size={16}
+                      color={
+                        !newComment.trim()
+                          ? isDark
+                            ? "#8E8E93"
+                            : "#6C757D"
+                          : "white"
+                      }
+                    />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
       </Modal>
     </SafeAreaView>
   );
 };
 
-export default PetNewsfeed;
+export default NewsFeedScreen;

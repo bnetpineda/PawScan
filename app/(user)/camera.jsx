@@ -49,14 +49,14 @@ export default function CameraScreen() {
           color={isDark ? "#888" : "#6C757D"}
           style={{ marginBottom: 20 }}
         />
-        <Text className="text-center text-lg text-gray-500 dark:text-gray-400 mb-6 leading-6">
+        <Text className="text-center font-inter text-lg text-gray-500 dark:text-gray-400 mb-6 leading-6">
           We need your permission to show the camera
         </Text>
         <TouchableOpacity
           className="bg-blue-500 dark:bg-blue-700 py-3 px-8 rounded-full"
           onPress={requestCameraPermission}
         >
-          <Text className="text-white text-base font-bold">
+          <Text className="text-white text-base font-inter-bold">
             Grant Camera Permission
           </Text>
         </TouchableOpacity>
@@ -130,7 +130,7 @@ export default function CameraScreen() {
       return (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color={isDark ? "#fff" : "#007AFF"} />
-          <Text className="text-center text-base text-gray-500 dark:text-gray-400 mt-2">
+          <Text className="text-center text-base font-inter text-gray-500 dark:text-gray-400 mt-2">
             Processing...
           </Text>
         </View>
@@ -151,7 +151,11 @@ export default function CameraScreen() {
               className="flex-row items-center bg-black dark:bg-white rounded-full py-3 px-6"
               activeOpacity={0.8}
             >
-              <FontAwesome name="camera" size={18} color={isDark ? "#000" : "#fff"} />
+              <FontAwesome
+                name="camera"
+                size={18}
+                color={isDark ? "#000" : "#fff"}
+              />
               <Text className="font-inter-bold text-white dark:text-black text-base ml-3">
                 Retake
               </Text>
@@ -161,15 +165,25 @@ export default function CameraScreen() {
               className="flex-row items-center bg-black dark:bg-white rounded-full py-3 px-6"
               activeOpacity={0.8}
             >
-              <FontAwesome name="image" size={18} color={isDark ? "#000" : "#fff"} />
+              <FontAwesome
+                name="image"
+                size={18}
+                color={isDark ? "#000" : "#fff"}
+              />
               <Text className="font-inter-bold text-white dark:text-black text-base ml-3">
                 Choose New
               </Text>
             </TouchableOpacity>
           </View>
           {analysisResult ? (
-            <View className="w-11/12 mt-4 p-4 bg-white dark:bg-black rounded-xl shadow" style={{ maxHeight: 600 }}>
-              <ScrollView className="max-h-80" showsVerticalScrollIndicator={true}>
+            <View
+              className="w-11/12 mt-4 p-4 bg-white dark:bg-black rounded-xl shadow"
+              style={{ maxHeight: 600 }}
+            >
+              <ScrollView
+                className="max-h-80"
+                showsVerticalScrollIndicator={true}
+              >
                 <Text className="text-black dark:text-white font-inter-semibold text-base mb-2">
                   {analysisResult}
                 </Text>
@@ -199,7 +213,10 @@ export default function CameraScreen() {
 
   return (
     <View className="flex-1 bg-gray-100 dark:bg-black">
-      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={isDark ? "#000" : "#F8F9FA"} />
+      <StatusBar
+        barStyle={isDark ? "light-content" : "dark-content"}
+        backgroundColor={isDark ? "#000" : "#F8F9FA"}
+      />
       <View className="flex-1">
         {!imageUri && (
           <CameraView style={{ flex: 1 }} facing={facing} ref={cameraRef} />
