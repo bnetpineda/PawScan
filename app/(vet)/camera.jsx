@@ -329,9 +329,7 @@ export default function CameraScreen() {
             <TouchableOpacity
               className="justify-center items-center bg-white rounded-full w-20 h-20"
               onPress={takePicture}
-            >
-              <FontAwesome name="camera" size={36} color={COLORS.primary} />
-            </TouchableOpacity>
+            />
             <TouchableOpacity onPress={toggleCameraFacing}>
               <FontAwesome name="refresh" size={28} color="#fff" />
             </TouchableOpacity>

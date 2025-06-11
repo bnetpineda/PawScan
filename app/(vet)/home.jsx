@@ -22,6 +22,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../providers/AuthProvider";
+import { router } from "expo-router";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -420,7 +421,7 @@ const NewsFeedScreen = () => {
           >
             {post.analysis_result}
           </Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => openCommentsModal(post.id)}>
             <Text className="text-sm font-inter-semibold text-blue-600 dark:text-blue-400">
               Read more
             </Text>
@@ -449,13 +450,44 @@ const NewsFeedScreen = () => {
       />
 
       {/* Top Header */}
-      <View className="flex-row justify-between items-center px-5 py-4 border-b border-gray-200 dark:border-neutral-800">
-        <Text className="text-2xl font-inter-bold text-black dark:text-white">
-          Pet Community
+      <View className="flex-row items-center px-5 py-4 border-b border-gray-200 dark:border-neutral-800">
+        <Image
+          source={require("../../assets/images/home-logo.png")}
+          className="w-8 h-9"
+          resizeMode="cover"
+        />
+        <Text className="text-2xl font-inter-bold text-black dark:text-white ml-2">
+          PawScan
         </Text>
-        <TouchableOpacity className="p-2">
+      </View>
+      {/* Top Header End */}
+      <View className="flex-row justify-center items-center px-5 py-4 border-b border-gray-200 dark:border-neutral-800 divide-x divide-gray-200 dark:divide-neutral-800">
+        <TouchableOpacity
+          className="flex-1 items-center"
+          onPress={() => console.log("Search pressed")}
+        >
           <FontAwesome
             name="search"
+            size={20}
+            color={isDark ? "#8E8E93" : "#6C757D"}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="flex-1 items-center"
+          onPress={() => router.push("info")}
+        >
+          <FontAwesome
+            name="info"
+            size={20}
+            color={isDark ? "#8E8E93" : "#6C757D"}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="flex-1 items-center"
+          onPress={() => router.push("history")}
+        >
+          <FontAwesome
+            name="history"
             size={20}
             color={isDark ? "#8E8E93" : "#6C757D"}
           />
@@ -463,7 +495,7 @@ const NewsFeedScreen = () => {
       </View>
 
       <ScrollView
-        className="flex-1"
+        className="flex-1 mt-2"
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

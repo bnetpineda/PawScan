@@ -1,0 +1,191 @@
+[
+  {
+    "Disease": "Feline Chin Acne",
+    "Overview": " A common dermatological condition characterized by blackheads (comedones) and mild to severe inflammation on the chin and lower lip.",
+    "Symptoms": "Black dots, pimples, crusts, redness, swelling, pustules, hair loss; may be itchy or sore in more severe cases.",
+    "Causes": "Follicular obstruction from excess keratin; bacterial infection; plastic food bowls; poor grooming; stress; allergies; hormonal imbalance.",
+    "Prevention Tips": "- Replace plastic dishes with stainless steel, ceramic, or glass and wash daily.\n- Maintain regular cleanliness and grooming.\n- Monitor stress and manage any allergic or hormonal triggers.",
+    "Approved Treatment and Protocols": "1. Cleanse daily with benzoyl peroxide or chlorhexidine wipes/shampoos.\n2. Clip hair around lesions for hygiene.\n3. Topical antibiotics (mupirocin, clindamycin).\n4. Systemic antibiotics, corticosteroids, isotretinoin in severe cases \n5. Omega\u20113 fatty acid supplements to improve skin health.",
+    "Feline vs Canine": "Works similarly in both species, but feline acne is localized to the chin and lower lip."
+  },
+  {
+    "Disease": "Allergies (Generalized Pruritic Dermatitis)",
+    "Overview": "Inflammatory skin disease triggered by environmental (atopic) or food allergens.",
+    "Symptoms": "tchy, red, inflamed skin, chewing, licking, scratching, commonly affecting face, paws, ears, belly.",
+    "Causes": "Pollen, dust mites, mold, food proteins.",
+    "Prevention Tips": "- Allergen avoidance.\n- Hypoallergenic diet trials.\n- Regular grooming and control of environmental allergens.",
+    "Approved Treatment and Protocols": "- Antihistamines, corticosteroids, immunotherapy.\n- Topical soothing shampoos, fatty acid supplementation.\n- In severe, chronic cases, oclacitinib or cyclosporine may be used.",
+    "Feline vs Canine": "Present in both; in cats, often results in eosinophilic granuloma complex. In dogs, typically manifests as atopic dermatitis."
+  },
+  {
+    "Disease": "Atopic Dermatitis",
+    "Overview": "Chronic, allergic, inflammatory skin disease often seen in cats and dogs.",
+    "Symptoms": "Chronically itchy and inflamed skin.",
+    "Causes": "Environmental allergens (often seasonal).",
+    "Prevention Tips": "- Regular baths\n- Allergen control\n- Diet optimization.",
+    "Approved Treatment and Protocols": "Antihistamines, steroids, immunotherapy, biologics, fatty acid supplementation.",
+    "Feline vs Canine": "Comparable in both; cats may develop nodules (eosinophilic granuloma complex)."
+  },
+  {
+    "Disease": "Pulicosis / Flea Allergy Dermatitis (FAD)",
+    "Overview": "Severe hypersensitivity to flea saliva.",
+    "Symptoms": "Row of red bumps near the fleas; intense itching and self-trauma.",
+    "Causes": "Flea bites\u2014often 1 bite triggers severe reaction.",
+    "Prevention Tips": "Year-round flea control via approved topical or oral preventives; regular combing.",
+    "Approved Treatment and Protocols": "Flea elimination, steroids/antihistamines for itching, antibiotics for secondary infections.",
+    "Feline vs Canine": null
+  },
+  {
+    "Disease": "Miliary Dermatitis",
+    "Overview": "Also known as \u201cscabby dermatitis,\u201d denoted by multiple small crusts.",
+    "Symptoms": "Tiny scabs, papules, often beneath insulating fur coat.",
+    "Causes": "Allergies (flea, food, contact), parasites (fleas, mites), infections.",
+    "Prevention Tips": "Address underlying cause; consistent parasite control.",
+    "Approved Treatment and Protocols": "Steroids, antibiotics, antiparasitics, soothing shampoos; treat allergies and parasites.",
+    "Feline vs Canine": "Mainly feline; not typical in dogs."
+  },
+  {
+    "Disease": "Ringworm (Dermatophytosis)",
+    "Overview": "Fungal infection, not actual worm.",
+    "Symptoms": "Circular lesions with hair loss, scaling, slight itching.",
+    "Causes": "Microsporum or Trichophyton species; contagious across species & to humans.",
+    "Prevention Tips": "Quarantine infected animals; disinfect environment.",
+    "Approved Treatment and Protocols": "Topical antifungals (lime sulfur dips, miconazole), + systemic itraconazole or terbinafine.",
+    "Feline vs Canine": null
+  },
+  {
+    "Disease": "Stud Tail (Feline Tail Gland Hyperplasia)",
+    "Overview": "Oily, greasy swelling on the tail, caused by overactive sebaceous glands.",
+    "Symptoms": "Greasy hair, localized alopecia, odor.",
+    "Causes": "Hyperplasia of tail glands, often hormonally driven.",
+    "Prevention Tips": "No specific prevention.",
+    "Approved Treatment and Protocols": "Topical keratolytics and seborrheic shampoos, in severe cases surgical gland removal; address hormonal drivers if identifiable.",
+    "Feline vs Canine": "Rare in dogs."
+  },
+  {
+    "Disease": "Eosinophilic Granuloma Complex (EGC)",
+    "Overview": "Group of lesions (rodent ulcer, indolent ulcer, eosinophilic plaque) often allergic in nature.",
+    "Symptoms": "Ulcers (lips normally), plaques, nodules.",
+    "Causes": "Likely allergy-mediated (flea, food, atopic).",
+    "Prevention Tips": "Allergy management.",
+    "Approved Treatment and Protocols": "Corticosteroids, antibiotics if infected, address underlying allergies, possibly immunosuppressive therapy.",
+    "Feline vs Canine": "Primarily a feline-specific condition."
+  },
+  {
+    "Disease": "FeLV Skin Diseases",
+    "Overview": "Feline Leukemia Virus impairs immunity and predisposes cats to skin infections/neoplasia.",
+    "Symptoms": "Chronic lesions, non-healing wounds, unusual growths.",
+    "Causes": "FeLV infection.",
+    "Prevention Tips": "FeLV vaccination, indoor lifestyle, FeLV testing on new cats.",
+    "Approved Treatment and Protocols": "Supportive care, antibiotics, antivirals if available; often guarded prognosis.",
+    "Feline vs Canine": null
+  },
+  {
+    "Disease": "Abscesses",
+    "Overview": "Localized pockets of pus under skin due to trauma.",
+    "Symptoms": "Painful swelling, fever, lethargy; sometimes draining tracts.",
+    "Causes": "Bite or scratch wounds, often from fighting.",
+    "Prevention Tips": "Neutering to reduce roaming/fighting, supervise outdoor exposure.",
+    "Approved Treatment and Protocols": "Vet drainage, flushing, antibiotics, analgesics, possible sedated/lanced treatment.",
+    "Feline vs Canine": null
+  },
+  {
+    "Disease": null,
+    "Overview": null,
+    "Symptoms": null,
+    "Causes": null,
+    "Prevention Tips": null,
+    "Approved Treatment and Protocols": null,
+    "Feline vs Canine": null
+  },
+  {
+    "Disease": "Canine Chin Acne",
+    "Overview": "Similar in mechanism to feline acne, resulting in pimples and inflammation often located near the lips or chin.",
+    "Symptoms": "Pimples, swelling, redness, possible crusts in the affected area.",
+    "Causes": "Follicular obstruction; bacterial overgrowth (e.g., Staphylococcus); trauma from licking, collars, or plastic bowls; genetic predisposition (common in Boxers, Bulldogs, Great Danes, Weimaraners, Mastiffs, Rottweilers, Dobermans); possible allergies.",
+    "Prevention Tips": "Keep chin area clean; avoid plastic bowls\u2014use ceramic or stainless steel; improve grooming habits; monitor for underlying allergies.",
+    "Approved Treatment and Protocols": "Clean area with benzoyl peroxide or chlorhexidine.\nUse topical antibiotics; in severe cases, systemic antibiotics.\nA 4\u20136 week course often needed; culture and sensitivity if relapse occurs",
+    "Feline vs Canine": "Very similar overall; acne is less common in dogs than cats."
+  },
+  {
+    "Disease": "Allergies",
+    "Overview": "Pruritic dermatitis caused by environmental or food sensitivities.",
+    "Symptoms": "Itchy, red skin; chewing, scratching; commonly on ears, paws, belly, and face.",
+    "Causes": "Pollen, dust mites, mold, food proteins.",
+    "Prevention Tips": "Avoid allergens when possible.\nTry hypoallergenic diets.\nMaintain regular grooming and clean environment.",
+    "Approved Treatment and Protocols": "Antihistamines, corticosteroids for relief.\nAllergen-specific immunotherapy.\nTopical shampoos and fatty acid supplements.\nChronic atopy may involve oclacitinib (Apoquel) or cyclosporine (Atopica). ",
+    "Feline vs Canine": "Dogs typically manifest allergic dermatitis; cats may show eosinophilic granulomas or miliary dermatitis."
+  },
+  {
+    "Disease": "Atopic Dermatitis",
+    "Overview": "Chronic itching and inflammation due to environmental allergens.",
+    "Symptoms": "Persistent itchiness, redness, possible secondary skin thickening, hot spots.",
+    "Causes": "Pollens, molds, dust mites; genetic predisposition.",
+    "Prevention Tips": "Frequent baths to remove allergens.\nMinimize allergen exposure.\nDietary optimization to support skin.",
+    "Approved Treatment and Protocols": "Antihistamines, corticosteroids.\nImmunotherapy (shots or drops).\nBiologic therapy (e.g., Cytopoint).\nFatty acid supplementation.",
+    "Feline vs Canine": "Both species affected; biologics more commonly used in dogs."
+  },
+  {
+    "Disease": "Demodectic Mange",
+    "Overview": "Parasitic infection caused by Demodex mites; may be juvenile (localized) or adult (generalized).",
+    "Symptoms": "Hair loss, redness, lesions, pustules, primarily on face, ears, paws.",
+    "Causes": "Overgrowth of Demodex due to immature or compromised immunity; juvenile onset often resolves; adult onset is more serious.",
+    "Prevention Tips": "Maintain general health and parasite prevention; genetic screening in breeding.",
+    "Approved Treatment and Protocols": "Localized cases may self-resolve or use topical moxidectin/imidacloprid.\nGeneralized cases: weekly amitraz dips or oral ivermectin/milbemycin, isoxazolines (fluralaner, afoxolaner, sarolaner).\nTreat secondary bacterial infection with antibiotics.",
+    "Feline vs Canine": "Severity and treatment similar, but dogs exhibit both localized and generalized forms frequently."
+  },
+  {
+    "Disease": "Hot Spots (Acute Moist Dermatitis)",
+    "Overview": "Rapid-onset, painful, moist, bacterial skin infection stemming from self-trauma and moisture.",
+    "Symptoms": "Red, moist, oozing lesion with hair loss and pain; typically single site.",
+    "Causes": "Minor irritants (bites, damp fur), allergies, poor grooming, curiosity licking.",
+    "Prevention Tips": "Keep coat dry.\nMaintain flea control.\nGroom regularly.\nOffer mental stimulation to reduce licking.",
+    "Approved Treatment and Protocols": "1. Clip fur around lesion and clean with chlorhexidine or mild antiseptic.\n2. Apply topical antibacterial and corticosteroid sprays or ointments.\n3. Use 1% hydrocortisone creams or astringents (Domeboro).\n4. Administer oral antibiotics (e.g., cephalexin for ~2 weeks) if infection is deeper.\n5. Use corticosteroids (prednisone 0.5\u202fmg/kg short course) to reduce inflammation.\n6. Use an Elizabethan collar or recovery suit to prevent self-trauma.\n7. Address underlying cause (allergies, parasites, moisture).\nTypical healing in 3\u20137 days.",
+    "Feline vs Canine": "Rare in cats; predominantly a canine condition.\n"
+  },
+  {
+    "Disease": "Mast Cell Tumors",
+    "Overview": "Skin tumors of mast cells with variable behavior\u2014from benign to malignant.",
+    "Symptoms": "Firm, sometimes itchy or red lumps on the skin.",
+    "Causes": "Likely genetic; some breeds predisposed; exact etiology unclear.",
+    "Prevention Tips": "No known prevention.",
+    "Approved Treatment and Protocols": "Surgical removal with clean margins.\nPossible chemotherapy or radiation depending on grade/staging.",
+    "Feline vs Canine": null
+  },
+  {
+    "Disease": "Pyoderma",
+    "Overview": "Bacterial skin infection\u2014superficial or deep; often secondary to allergies, parasites, hormone issues.",
+    "Symptoms": "Redness, swelling, pustules, crusts, possible odor or oozing.",
+    "Causes": "Overgrowth of Staphylococcus and other bacteria due to compromised skin.",
+    "Prevention Tips": "Manage underlying allergies and parasites.\nUse proper hygiene.\nSupplement with omega\u20113 fatty acids.",
+    "Approved Treatment and Protocols": "Topical antibacterial shampoos/creams (chlorhexidine, benzoyl peroxide).\nSystemic antibiotics for deeper infections.",
+    "Feline vs Canine": null
+  },
+  {
+    "Disease": "Ringworm (Dermatophytosis)",
+    "Overview": "Contagious fungal skin infection (not a worm) causing round lesions.",
+    "Symptoms": "Round lesions, hair loss, scaling, occasional itchiness.",
+    "Causes": "Microsporum or Trichophyton species; zoonotic potential.",
+    "Prevention Tips": "Quarantine affected pets; disinfect environment; use fungus-killing products.",
+    "Approved Treatment and Protocols": "Topical antifungals (lime sulfur dips, miconazole); systemic itraconazole or terbinafine.",
+    "Feline vs Canine": null
+  },
+  {
+    "Disease": "Sarcoptic Mange (Scabies)",
+    "Overview": "Extremely contagious parasitic infection by Sarcoptes scabiei mites.",
+    "Symptoms": "Intense red itchiness, hair loss, sores, thickened skin.",
+    "Causes": "Infestation from infected animals or environment.",
+    "Prevention Tips": "Isolate infected pets; treat all in household; maintain regular flea/tick preventives.",
+    "Approved Treatment and Protocols": "Oral or topical ivermectin, selamectin, moxidectin; isoxazolines; topical lime sulfur dips; treat all contacts; clean environment.",
+    "Feline vs Canine": null
+  },
+  {
+    "Disease": "Seborrhea",
+    "Overview": "Disorder of skin causing flaking (dry or oily) and greasiness.",
+    "Symptoms": "Dandruff, greasiness, odor, flaking, itchiness.",
+    "Causes": "Primary (genetic) or secondary to allergies, infections, endocrine disorder, sebaceous adenitis",
+    "Prevention Tips": "Manage underlying disease; regular grooming; medicated baths.",
+    "Approved Treatment and Protocols": "Use medicated shampoos (keratolytic, antifungal, antibacterial); supplement with omega\u20113s; treat any primary disease.",
+    "Feline vs Canine": null
+  }
+]

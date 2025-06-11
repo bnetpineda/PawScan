@@ -1,11 +1,14 @@
 import { Tabs, Redirect } from "expo-router";
+import { useColorScheme } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useAuth } from "../../providers/AuthProvider";
 
 export default function VetLayout() {
   const { user, loading } = useAuth();
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === "dark";
 
-  if (loading) return null; // Or a loading spinner
+  if (loading) return null;
 
   if (!user) {
     return <Redirect href="/(auth)/login" />;
@@ -15,35 +18,46 @@ export default function VetLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#007AFF",
-        tabBarInactiveTintColor: "#6C757D",
-        tabBarStyle: { backgroundColor: "#fff" },
+        tabBarShowLabel: false, // Removes text labels
+        tabBarActiveTintColor: isDarkMode ? "#fff" : "#000",
+        tabBarInactiveTintColor: isDarkMode ? "#6B7280" : "#9CA3AF", // Gray shades
+        tabBarStyle: {
+          backgroundColor: isDarkMode ? "#1F2937" : "#FFFFFF", // Dark Gray or White
+          borderTopColor: isDarkMode ? "#374151" : "#E5E7EB",
+          height: 75,
+        },
       }}
     >
       <Tabs.Screen
         name="home"
         options={{
-          title: "Home",
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="home" color={color} size={size} />
+            <FontAwesome name="home" color={color} size={24} />
           ),
         }}
       />
       <Tabs.Screen
         name="camera"
         options={{
-          title: "Camera",
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="camera" color={color} size={size} />
+            <FontAwesome name="camera" color={color} size={24} />
           ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="user" color={color} size={size} />
+            <FontAwesome name="user" color={color} size={24} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="history"
+        options={{
+          href: null,
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome name="user" color={color} size={24} />
           ),
         }}
       />
