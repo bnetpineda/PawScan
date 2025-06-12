@@ -248,15 +248,18 @@ export default function CameraScreen() {
 
           {/* Share Button - Only show if analysis is complete and has ID */}
           {analysisResult && currentAnalysisId && (
-            <View className="w-11/12 mb-4">
+            <View className="flex-row justify-center w-full px-6 mb-4">
               <TouchableOpacity
                 onPress={handleSharePress}
-                className="flex-row items-center justify-center bg-green-500 dark:bg-green-700 rounded-full py-3 px-6"
+                className="flex-row items-center bg-black dark:bg-white rounded-full py-3 px-6"
                 activeOpacity={0.8}
               >
-                <FontAwesome name="share" size={18} color="#fff" />{" "}
-                {/* Icon is white */}
-                <Text className="font-inter-bold text-white text-base ml-3">
+                <FontAwesome
+                  name="share"
+                  size={18}
+                  color={isDark ? "#000" : "#fff"}
+                />
+                <Text className="font-inter-bold text-white dark:text-black text-base ml-3">
                   Share to Newsfeed
                 </Text>
               </TouchableOpacity>

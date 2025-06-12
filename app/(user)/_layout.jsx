@@ -52,6 +52,15 @@ export default function VetLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="history"
+        options={{
+          href: null,
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome name="user" color={color} size={24} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

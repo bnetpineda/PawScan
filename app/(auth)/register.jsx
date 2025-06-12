@@ -229,28 +229,18 @@ export default function Register() {
               <TouchableOpacity
                 style={[
                   styles.buttonBase,
-                  userRole === "veterinarian"
-                    ? styles.buttonActive
+                  userRole === "Veterinarian"
+                    ? [styles.buttonActive, isDark && styles.buttonActiveDark, styles.buttonShadow]
                     : styles.buttonInactive,
-                  userRole === "veterinarian" && isDark
-                    ? styles.buttonActiveDark
-                    : {},
-                  userRole === "veterinarian" ? styles.buttonShadow : {},
                 ]}
-                onPress={() => setUserRole("veterinarian")}
+                onPress={() => setUserRole("Veterinarian")}
               >
                 <Text
                   style={[
                     styles.buttonTextBase,
-                    userRole === "veterinarian"
-                      ? styles.buttonTextActive
-                      : styles.buttonTextInactive,
-                    userRole === "veterinarian" && isDark
-                      ? styles.buttonTextActiveDark
-                      : {},
-                    !userRole === "veterinarian" && isDark
-                      ? styles.buttonTextInactiveDark
-                      : {},
+                    userRole === "Veterinarian"
+                      ? [styles.buttonTextActive, isDark && styles.buttonTextActiveDark]
+                      : [styles.buttonTextInactive, isDark && styles.buttonTextInactiveDark],
                   ]}
                 >
                   Veterinarian

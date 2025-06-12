@@ -42,7 +42,7 @@ export default function ShareModal({
             Pet Name (Optional)
           </Text>
           <TextInput
-            className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 mb-4 font-inter text-black dark:text-white"
+            className="border border-gray-300 dark:border-gray-600 rounded-lg pl-2 p-4 mb-4 font-inter text-black dark:text-white"
             placeholder="Enter your pet's name"
             placeholderTextColor={isDark ? "#6C757D" : "#6C757D"}
             value={petName}

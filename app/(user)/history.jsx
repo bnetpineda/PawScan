@@ -238,8 +238,12 @@ const AnalysisHistoryScreen = () => {
       animationType="slide"
       onRequestClose={() => setModalVisible(false)}
     >
-      <View className={`flex-1 justify-center items-center px-4 ${colors.modalBg}`}>
-        <View className={`w-full max-h-[90%] rounded-2xl overflow-hidden ${colors.card}`}>
+      <View
+        className={`flex-1 justify-center items-center px-4 ${colors.modalBg}`}
+      >
+        <View
+          className={`w-full max-h-[90%] rounded-2xl overflow-hidden ${colors.card}`}
+        >
           {/* Modal Header */}
           <View className="flex-row justify-between items-center px-5 py-4 border-b border-gray-200 dark:border-gray-700">
             <Text className="text-lg font-inter-bold text-black dark:text-white">
@@ -267,9 +271,11 @@ const AnalysisHistoryScreen = () => {
                 <Text className="text-xs font-inter text-gray-500 dark:text-gray-400">
                   {formatDate(selectedAnalysis.created_at)}
                 </Text>
-                <View className={`self-start px-2 py-1 rounded-xl ${getUrgencyColor(
-                  selectedAnalysis.analysis_result
-                )}`}>
+                <View
+                  className={`self-start px-2 py-1 rounded-xl ${getUrgencyColor(
+                    selectedAnalysis.analysis_result
+                  )}`}
+                >
                   <Text className="text-xs font-inter-semibold text-white">
                     {getUrgencyLevel(selectedAnalysis.analysis_result)}
                   </Text>

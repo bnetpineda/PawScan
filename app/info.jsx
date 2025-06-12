@@ -43,39 +43,25 @@ const DiseasesInformationScreen = () => {
 
   const DiseaseCard = ({ disease }) => (
     <TouchableOpacity
-      className={`mb-4 p-4 rounded-2xl border ${
-        isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"
-      } shadow-sm`}
+      className="mb-4 p-4 rounded-2xl border dark:bg-gray-800 dark:border-gray-700 bg-white border-gray-100 shadow-sm"
       onPress={() => setSelectedDisease(disease)}
       activeOpacity={0.7}
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-1 mr-3">
-          <Text
-            className={`text-lg font-inter-semibold mb-2 ${
-              isDarkMode ? "text-white" : "text-gray-900"
-            }`}
-          >
+          <Text className="text-lg font-inter-semibold mb-2 dark:text-white text-gray-900">
             {disease.Disease}
           </Text>
           <Text
-            className={`text-sm font-inter leading-5 ${
-              isDarkMode ? "text-gray-300" : "text-gray-600"
-            }`}
+            className="text-sm font-inter leading-5 dark:text-gray-300 text-gray-600"
             numberOfLines={2}
           >
             {disease.Overview}
           </Text>
           {disease["Feline vs Canine"] && (
-            <View
-              className={`mt-2 px-2 py-1 rounded-full self-start ${
-                isDarkMode ? "bg-blue-900" : "bg-blue-50"
-              }`}
-            >
+            <View className="mt-2 px-2 py-1 rounded-full self-start dark:bg-blue-900 first-letter:bg-blue-50">
               <Text
-                className={`text-xs font-inter-semibold ${
-                  isDarkMode ? "text-blue-300" : "text-blue-700"
-                }`}
+                className="text-xs font-inter-semibold dark:text-blue-300 text-blue-700"
               >
                 Species Specific
               </Text>
@@ -106,17 +92,13 @@ const DiseasesInformationScreen = () => {
         <View className="flex-row items-center mb-3">
           <FontAwesome name={icon} size={20} color={colorMap[color]} />
           <Text
-            className={`ml-2 text-lg font-inter-semibold ${
-              isDarkMode ? "text-white" : "text-gray-900"
-            }`}
+            className="ml-2 text-lg font-inter-semibold dark:text-white text-gray-900"
           >
             {title}
           </Text>
         </View>
         <Text
-          className={`text-base font-inter leading-6 ${
-            isDarkMode ? "text-gray-300" : "text-gray-700"
-          }`}
+          className="text-base font-inter leading-6 dark:text-gray-300 text-gray-700"
         >
           {content}
         </Text>
@@ -126,7 +108,7 @@ const DiseasesInformationScreen = () => {
 
   return (
     <SafeAreaView
-      className={`flex-1 ${isDarkMode ? "bg-gray-900" : "bg-gray-50"}`}
+      className="flex-1 dark:bg-gray-900 bg-gray-50"
     >
       <StatusBar
         barStyle={isDarkMode ? "light-content" : "dark-content"}
@@ -135,15 +117,11 @@ const DiseasesInformationScreen = () => {
 
       {/* Header */}
       <View
-        className={`px-6 py-4 border-b ${
-          isDarkMode ? "border-gray-800" : "border-gray-200"
-        }`}
+        className="px-6 py-4 border-b dark:border-gray-800 border-gray-200"
       >
         <View className="flex-row items-center justify-between mb-4">
           <Text
-            className={`text-2xl font-inter-bold ${
-              isDarkMode ? "text-white" : "text-gray-900"
-            }`}
+            className="text-2xl font-inter-bold dark:text-white text-gray-900"
           >
             Disease Information
           </Text>
@@ -151,9 +129,7 @@ const DiseasesInformationScreen = () => {
 
         {/* Search Bar */}
         <View
-          className={`flex-row items-center px-4 py-3 rounded-xl ${
-            isDarkMode ? "bg-gray-800" : "bg-white"
-          } shadow-sm`}
+          className="flex-row items-center px-4 py-3 rounded-xl dark:bg-gray-800 bg-white shadow-sm"
         >
           <FontAwesome
             name={ICONS.search}
@@ -161,9 +137,7 @@ const DiseasesInformationScreen = () => {
             color={isDarkMode ? "#9CA3AF" : "#6B7280"}
           />
           <TextInput
-            className={`flex-1 ml-3 text-base font-inter ${
-              isDarkMode ? "text-white" : "text-gray-900"
-            }`}
+            className="flex-1 ml-3 text-base font-inter dark:text-white text-gray-900"
             placeholder="Search diseases..."
             placeholderTextColor={isDarkMode ? "#9CA3AF" : "#6B7280"}
             value={searchQuery}
@@ -186,9 +160,7 @@ const DiseasesInformationScreen = () => {
         {filteredDiseases.length > 0 ? (
           <>
             <Text
-              className={`text-sm font-inter-semibold mb-4 ${
-                isDarkMode ? "text-gray-400" : "text-gray-600"
-              }`}
+              className="text-sm font-inter-semibold mb-4 dark:text-gray-400 text-gray-600"
             >
               {filteredDiseases.length} disease
               {filteredDiseases.length !== 1 ? "s" : ""} found
@@ -205,16 +177,12 @@ const DiseasesInformationScreen = () => {
               color={isDarkMode ? "#6B7280" : "#9CA3AF"}
             />
             <Text
-              className={`text-lg font-inter-semibold mt-4 ${
-                isDarkMode ? "text-gray-400" : "text-gray-500"
-              }`}
+              className="text-lg font-inter-semibold mt-4 dark:text-gray-400 text-gray-500"
             >
               No diseases found
             </Text>
             <Text
-              className={`text-sm font-inter mt-2 text-center ${
-                isDarkMode ? "text-gray-500" : "text-gray-400"
-              }`}
+              className="text-sm font-inter mt-2 text-center dark:text-gray-500 text-gray-400"
             >
               Try adjusting your search terms
             </Text>
@@ -230,25 +198,19 @@ const DiseasesInformationScreen = () => {
         onRequestClose={() => setSelectedDisease(null)}
       >
         <SafeAreaView
-          className={`flex-1 ${isDarkMode ? "bg-gray-900" : "bg-white"}`}
+          className="flex-1 dark:bg-gray-900 bg-white"
         >
           <View
-            className={`flex-row items-center justify-between p-6 border-b ${
-              isDarkMode ? "border-gray-800" : "border-gray-200"
-            }`}
+            className="flex-row items-center justify-between p-6 border-b dark:border-gray-800 border-gray-200"
           >
             <Text
-              className={`text-xl font-inter-bold flex-1 ${
-                isDarkMode ? "text-white" : "text-gray-900"
-              }`}
+              className="text-xl font-inter-bold flex-1 dark:text-white text-gray-900"
             >
               {selectedDisease?.Disease}
             </Text>
             <TouchableOpacity
               onPress={() => setSelectedDisease(null)}
-              className={`p-2 rounded-full ${
-                isDarkMode ? "bg-gray-800" : "bg-gray-100"
-              }`}
+              className="p-2 rounded-full dark:bg-gray-800 bg-gray-100"
             >
               <FontAwesome
                 name={ICONS.close}
@@ -296,21 +258,15 @@ const DiseasesInformationScreen = () => {
 
             {selectedDisease?.["Feline vs Canine"] && (
               <View
-                className={`p-4 rounded-xl mb-6 ${
-                  isDarkMode ? "bg-gray-800" : "bg-blue-50"
-                }`}
+                className="p-4 rounded-xl mb-6 dark:bg-gray-800 bg-blue-50"
               >
                 <Text
-                  className={`font-inter-semibold mb-2 ${
-                    isDarkMode ? "text-blue-400" : "text-blue-800"
-                  }`}
+                  className="font-inter-semibold mb-2 dark:text-blue-400 text-blue-800"
                 >
                   Species Comparison
                 </Text>
                 <Text
-                  className={`text-base font-inter ${
-                    isDarkMode ? "text-gray-300" : "text-blue-700"
-                  }`}
+                  className="text-base font-inter dark:text-gray-300 text-blue-700"
                 >
                   {selectedDisease["Feline vs Canine"]}
                 </Text>

@@ -41,6 +41,7 @@ const NewsFeedScreen = () => {
   const [newComment, setNewComment] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
   const [postingComment, setPostingComment] = useState(false);
+  const [numLines, setNumLines] = useState(4); // Default number of lines for analysis text
   const { user } = useAuth();
 
   useEffect(() => {
@@ -246,6 +247,7 @@ const NewsFeedScreen = () => {
               currentUser.user_metadata?.options?.data?.display_name ||
               "Pet Owner", // Use email prefix as display name
             created_at: new Date().toISOString(),
+            role: currentUser.user_metadata?.options?.data?.role || "User",
           },
         ])
         .select()
@@ -299,10 +301,12 @@ const NewsFeedScreen = () => {
 
   const PostCard = ({ post }) => {
     const isAnonymous = post.is_anonymous;
-    // Since we don't have profiles table, we'll use a simple display name
     const userDisplayName = isAnonymous
       ? "Anonymous User"
       : post.display_name || "Pet Owner";
+
+    // Track expanded state per post
+    const [expanded, setExpanded] = useState(false);
 
     return (
       <View
@@ -417,15 +421,17 @@ const NewsFeedScreen = () => {
           </Text>
           <Text
             className="text-sm text-gray-600 font-inter dark:text-gray-400 mb-2"
-            numberOfLines={4}
+            numberOfLines={expanded ? undefined : 4}
           >
             {post.analysis_result}
           </Text>
-          <TouchableOpacity onPress={() => openCommentsModal(post.id)}>
-            <Text className="text-sm font-inter-semibold text-blue-600 dark:text-blue-400">
-              Read more
-            </Text>
-          </TouchableOpacity>
+          {!expanded && (
+            <TouchableOpacity onPress={() => setExpanded(true)}>
+              <Text className="text-sm font-inter-semibold text-blue-600 dark:text-white">
+                Read More
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -460,39 +466,6 @@ const NewsFeedScreen = () => {
           PawScan
         </Text>
       </View>
-      {/* Top Header End */}
-      <View className="flex-row justify-center items-center px-5 py-4 border-b border-gray-200 dark:border-neutral-800 divide-x divide-gray-200 dark:divide-neutral-800">
-        <TouchableOpacity
-          className="flex-1 items-center"
-          onPress={() => console.log("Search pressed")}
-        >
-          <FontAwesome
-            name="search"
-            size={20}
-            color={isDark ? "#8E8E93" : "#6C757D"}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="flex-1 items-center"
-          onPress={() => router.push("info")}
-        >
-          <FontAwesome
-            name="info"
-            size={20}
-            color={isDark ? "#8E8E93" : "#6C757D"}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="flex-1 items-center"
-          onPress={() => router.push("history")}
-        >
-          <FontAwesome
-            name="history"
-            size={20}
-            color={isDark ? "#8E8E93" : "#6C757D"}
-          />
-        </TouchableOpacity>
-      </View>
 
       <ScrollView
         className="flex-1 mt-2"
@@ -505,6 +478,39 @@ const NewsFeedScreen = () => {
           />
         }
       >
+        {/* Top Header */}
+        <View className="flex-row justify-center items-center px-5 py-4 border-b border-gray-200 dark:border-neutral-800 divide-x divide-gray-200 dark:divide-neutral-800">
+          <TouchableOpacity
+            className="flex-1 items-center"
+            onPress={() => console.log("Search pressed")}
+          >
+            <FontAwesome
+              name="search"
+              size={20}
+              color={isDark ? "#fff" : "#6C757D"}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="flex-1 items-center"
+            onPress={() => router.push("info")}
+          >
+            <FontAwesome
+              name="info"
+              size={20}
+              color={isDark ? "#fff" : "#6C757D"}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="flex-1 items-center"
+            onPress={() => router.push("history")}
+          >
+            <FontAwesome
+              name="history"
+              size={20}
+              color={isDark ? "#fff" : "#6C757D"}
+            />
+          </TouchableOpacity>
+        </View>
         {posts.length === 0 ? (
           <View className="flex-1 justify-center items-center py-20">
             <FontAwesome
@@ -625,13 +631,16 @@ const NewsFeedScreen = () => {
                         </View>
                         <View className="flex-1">
                           <View className="flex-row items-center mb-1">
-                            <Text className="font-inter-semibold text-black dark:text-white mr-2">
+                            <Text className="font-inter-bold text-black dark:text-white mr-2">
                               {item.display_name || "Pet Owner"}
                             </Text>
                             <Text className="text-xs font-inter text-gray-400 dark:text-gray-500">
                               {formatTimeAgo(item.created_at)}
                             </Text>
                           </View>
+                          <Text className="font-inter-semibold text-black dark:text-white text-xs mb-2">
+                            {`Role: ${item.role || "User"} `}
+                          </Text>
                           <Text className="text-gray-800 font-inter dark:text-gray-200 leading-5">
                             {item.comment_text}
                           </Text>

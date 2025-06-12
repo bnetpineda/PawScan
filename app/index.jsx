@@ -27,7 +27,7 @@ const GetStartedScreen = () => {
     const displayName = user.user_metadata?.options?.data?.display_name; // You might want this too!
     console.log("User role:", role);
     console.log("User Display Name:", displayName); // Log display name for verification
-    if (role === "veterinarian") {
+    if (role === "Veterinarian") {
       return <Redirect href="/(vet)/home" />;
     } else {
       return <Redirect href="/(user)/home" />;

@@ -164,7 +164,7 @@ Always provide a direct and clear answer for each. If uncertain, **still give yo
 5. Urgency level: low / medium / emergency — choose one  
 6. Essential first aid care steps  
 7. Recommended medication (if applicable)  
-8. Indicators that a veterinarian should be contacted
+8. Indicators that a Veterinarian should be contacted
 
 Respond strictly with just the answers to these points. No explanations, no disclaimers, and no advice to consult a vet. Be direct.
     `;

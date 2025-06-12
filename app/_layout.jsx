@@ -43,7 +43,9 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(user)" options={{ headerShown: false }} />
-        <Stack.Screen name="(vet)" options={{ headerShown: false }} />
+        <Stack.Screen name="info" options={{ headerShown: false }} />
+        <Stack.Screen name="viewprofile" options={{ headerShown: false }} />
+        
       </Stack>
     </AuthProvider>
   );
