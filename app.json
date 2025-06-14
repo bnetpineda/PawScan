@@ -14,7 +14,8 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-router"
     ],
     "name": "PawScan",
     "slug": "PawScan",
@@ -31,7 +32,9 @@
     },
     "android": {
       "package": "com.markbennettpineda.PawScan",
-      "permissions": ["android.permission.RECORD_AUDIO"]
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     }
   }
 }

@@ -9,10 +9,7 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal",
-      "env": {
-        "EXPO_PUBLIC_API_URL": "EXPO_PUBLIC_API_URL"
-      }
+      "distribution": "internal"
     },
     "production": {
       "autoIncrement": true
