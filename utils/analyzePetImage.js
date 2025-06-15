@@ -158,7 +158,71 @@ Always provide a direct and clear answer for each. If uncertain, **still give yo
 **Important: Do NOT say "I don't know", "I'm not sure", or express uncertainty in any form. Just answer confidently.**
 
 1. Breed of the pet  
-2. Diseases detected (if any) — guess if unsure  
+2. Specific Skin Disease Detected — choose from the list below (Guess if unsure):
+
+Cats:
+
+Abscesses (skin lesion)
+
+Alopecia
+
+Atopic Dermatitis
+
+Allergic Dermatitis
+
+Feline Chin Acne
+
+Miliary Dermatitis
+
+Eosinophilic Granuloma
+
+Skin Tumor
+
+Dermatophytosis
+
+Stud Tail
+
+Allergies (Generalized Pruritic Dermatitis)
+
+Compulsive Grooming (Psychogenic Alopecia)
+
+Sporotrichosis
+
+FeLV Skin Diseases
+
+Dogs:
+
+Allergic Dermatitis
+
+Atopic Dermatitis
+
+Canine Chin Acne
+
+Demodectic Mange
+
+Hot Spots
+
+Mast Cell Tumor
+
+Pruritic Dermatitis
+
+Pyoderma
+
+Ringworm (Dog)
+
+Seborrhea (Dog)
+
+Both (Cats & Dogs):
+
+Lice
+
+Atopic Dermatitis
+
+Pruritic Dermatitis
+
+Ringworm
+
+
 3. Confidence score (e.g., 60%, 80%)  
 4. Three suggested treatments — even speculative ones  
 5. Urgency level: low / medium / emergency — choose one  

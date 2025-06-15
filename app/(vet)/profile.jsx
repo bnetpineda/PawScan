@@ -10,6 +10,7 @@ import {
 import { supabase } from "../../lib/supabase"; // Adjust path as needed
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../providers/AuthProvider"; // Adjust path as needed
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ProfileScreen = () => {
   const [current, setCurrentUser] = useState(null);
@@ -40,6 +41,12 @@ const ProfileScreen = () => {
         },
       },
     ]);
+  };
+
+  const handleSettings = () => {
+    AsyncStorage.getAllKeys()
+      .then((keys) => AsyncStorage.multiRemove(keys))
+      .then(() => alert("success"));
   };
 
   const getInitials = (name) => {
@@ -342,10 +349,7 @@ const ProfileScreen = () => {
           className={`p-4 rounded-lg border ${
             isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"
           }`}
-          onPress={() => {
-            // Add settings functionality
-            Alert.alert("Settings", "Settings functionality would go here");
-          }}
+          onPress={handleSettings}
         >
           <View className="flex-row items-center justify-center">
             <Ionicons

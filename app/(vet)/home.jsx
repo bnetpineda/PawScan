@@ -23,6 +23,10 @@ import { FontAwesome } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../providers/AuthProvider";
 import { router } from "expo-router";
+import TutorialModal, {
+  useTutorial,
+} from "../../assets/components/TutorialHomeModal"; // Adjust path as needed
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -43,11 +47,45 @@ const NewsFeedScreen = () => {
   const [postingComment, setPostingComment] = useState(false);
   const [numLines, setNumLines] = useState(4); // Default number of lines for analysis text
   const { user } = useAuth();
+  const { showTutorial, startTutorial, closeTutorial } = useTutorial();
+  const [tutorialVisible, setTutorialVisible] = useState(false);
 
   useEffect(() => {
     setCurrentUser(user || null);
     loadPosts();
+    checkFirstTimeUser();
   }, []);
+
+  const checkFirstTimeUser = async () => {
+    try {
+      const hasSeenTutorial = await AsyncStorage.getItem(
+        "hasSeenNewsfeedTutorial"
+      );
+      if (!hasSeenTutorial) {
+        // Show tutorial after a brief delay to let the screen load
+        setTimeout(() => {
+          setTutorialVisible(true);
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("Error checking tutorial status:", error);
+    }
+  };
+
+  // Function to handle tutorial completion
+  const handleTutorialClose = async () => {
+    try {
+      await AsyncStorage.setItem("hasSeenNewsfeedTutorial", "true");
+      setTutorialVisible(false);
+    } catch (error) {
+      console.error("Error saving tutorial status:", error);
+    }
+  };
+
+  // Function to manually start tutorial (for help button)
+  const handleShowTutorial = () => {
+    setTutorialVisible(true);
+  };
 
   const loadPosts = async () => {
     try {
@@ -455,18 +493,6 @@ const NewsFeedScreen = () => {
         backgroundColor={isDark ? "#000" : "#fff"}
       />
 
-      {/* Top Header */}
-      <View className="flex-row items-center px-5 py-4 border-b border-gray-200 dark:border-neutral-800">
-        <Image
-          source={require("../../assets/images/home-logo.png")}
-          className="w-8 h-9"
-          resizeMode="cover"
-        />
-        <Text className="text-2xl font-inter-bold text-black dark:text-white ml-2">
-          PawScan
-        </Text>
-      </View>
-
       <ScrollView
         className="flex-1 mt-2"
         showsVerticalScrollIndicator={false}
@@ -478,6 +504,27 @@ const NewsFeedScreen = () => {
           />
         }
       >
+        {/* Top Header */}
+        <View className="flex-row items-center px-5 py-4 border-b border-gray-200 dark:border-neutral-800">
+          <Image
+            source={require("../../assets/images/home-logo.png")}
+            className="w-8 h-9"
+            resizeMode="cover"
+          />
+          <Text className="text-2xl font-inter-bold text-black dark:text-white ml-2">
+            PawScan
+          </Text>
+          <View className="flex-1" />
+          <TouchableOpacity
+            className="px-3 py-1"
+            onPress={handleShowTutorial}
+            activeOpacity={0.7}
+          >
+            <Text className="text-base font-inter-bold text-blue-600 dark:text-blue-400">
+              Help
+            </Text>
+          </TouchableOpacity>
+        </View>
         {/* Top Header */}
         <View className="flex-row justify-center items-center px-5 py-4 border-b border-gray-200 dark:border-neutral-800 divide-x divide-gray-200 dark:divide-neutral-800">
           <TouchableOpacity
@@ -697,6 +744,11 @@ const NewsFeedScreen = () => {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
+      <TutorialModal
+        visible={tutorialVisible}
+        onClose={handleTutorialClose}
+        isDark={isDark}
+      />
     </SafeAreaView>
   );
 };
