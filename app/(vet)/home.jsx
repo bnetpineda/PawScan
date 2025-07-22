@@ -19,7 +19,7 @@ import {
   FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../providers/AuthProvider";
 import { router } from "expo-router";
@@ -681,13 +681,18 @@ const NewsFeedScreen = () => {
                             <Text className="font-inter-bold text-black dark:text-white mr-2">
                               {item.display_name || "Pet Owner"}
                             </Text>
+                            {item.role === "Veterinarian" && (
+                              <MaterialIcons
+                                name="verified"
+                                size={16}
+                                color="#007AFF"
+                                style={{ marginRight: 4 }}
+                              />
+                            )}
                             <Text className="text-xs font-inter text-gray-400 dark:text-gray-500">
                               {formatTimeAgo(item.created_at)}
                             </Text>
                           </View>
-                          <Text className="font-inter-semibold text-black dark:text-white text-xs mb-2">
-                            {`Role: ${item.role || "User"} `}
-                          </Text>
                           <Text className="text-gray-800 font-inter dark:text-gray-200 leading-5">
                             {item.comment_text}
                           </Text>

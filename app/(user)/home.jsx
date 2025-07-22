@@ -19,7 +19,7 @@ import {
   FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../providers/AuthProvider";
 import { router } from "expo-router";
@@ -681,13 +681,18 @@ const NewsFeedScreen = () => {
                             <Text className="font-inter-bold text-black dark:text-white mr-2">
                               {item.display_name || "Pet Owner"}
                             </Text>
+                            {item.role === "Veterinarian" && (
+                              <MaterialIcons
+                                name="verified"
+                                size={16}
+                                color="#007AFF"
+                                style={{ marginRight: 4 }}
+                              />
+                            )}
                             <Text className="text-xs font-inter text-gray-400 dark:text-gray-500">
                               {formatTimeAgo(item.created_at)}
                             </Text>
                           </View>
-                          <Text className="font-inter-semibold text-black dark:text-white text-xs mb-2">
-                            {`Role: ${item.role || "User"} `}
-                          </Text>
                           <Text className="text-gray-800 font-inter dark:text-gray-200 leading-5">
                             {item.comment_text}
                           </Text>
@@ -700,47 +705,71 @@ const NewsFeedScreen = () => {
             </View>
 
             {/* Comment Input */}
-            <View className="border-t border-gray-200 dark:border-neutral-800 px-4 py-3">
-              <View className="flex-row items-end">
-                <View className="flex-1 mr-3">
-                  <TextInput
-                    value={newComment}
-                    onChangeText={setNewComment}
-                    placeholder="Write a comment..."
-                    placeholderTextColor={isDark ? "#8E8E93" : "#6C757D"}
-                    multiline
-                    maxLength={500}
-                    className="border border-gray-300 dark:border-neutral-600 rounded-2xl px-4 py-3 text-black dark:text-white font-inter bg-gray-50 dark:bg-neutral-800 max-h-24"
-                    style={{ textAlignVertical: "top" }}
-                  />
-                </View>
-                <TouchableOpacity
-                  onPress={postComment}
-                  disabled={postingComment || !newComment.trim()}
-                  className={`w-12 h-12 rounded-full justify-center items-center ${
-                    postingComment || !newComment.trim()
-                      ? "bg-gray-200 dark:bg-neutral-700"
-                      : "bg-blue-500"
-                  }`}
-                >
-                  {postingComment ? (
-                    <ActivityIndicator size="small" color="white" />
-                  ) : (
-                    <FontAwesome
-                      name="send"
-                      size={16}
-                      color={
-                        !newComment.trim()
-                          ? isDark
-                            ? "#8E8E93"
-                            : "#6C757D"
-                          : "white"
-                      }
-                    />
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
+            {(() => {
+              const selectedPost = posts.find((p) => p.id === selectedPostId);
+              if (!selectedPost) return null;
+
+              const isOwner = currentUser?.id === selectedPost.user_id;
+              const isVet =
+                currentUser?.user_metadata?.options?.data?.role ===
+                "Veterinarian";
+
+              if (isOwner || isVet) {
+                return (
+                  <View className="border-t border-gray-200 dark:border-neutral-800 px-4 py-3">
+                    <View className="flex-row items-end">
+                      <View className="flex-1 mr-3">
+                        <TextInput
+                          value={newComment}
+                          onChangeText={setNewComment}
+                          placeholder="Write a comment..."
+                          placeholderTextColor={
+                            isDark ? "#8E8E93" : "#6C757D"
+                          }
+                          multiline
+                          maxLength={500}
+                          className="border border-gray-300 dark:border-neutral-600 rounded-2xl px-4 py-3 text-black dark:text-white font-inter bg-gray-50 dark:bg-neutral-800 max-h-24"
+                          style={{ textAlignVertical: "top" }}
+                        />
+                      </View>
+                      <TouchableOpacity
+                        onPress={postComment}
+                        disabled={postingComment || !newComment.trim()}
+                        className={`w-12 h-12 rounded-full justify-center items-center ${
+                          postingComment || !newComment.trim()
+                            ? "bg-gray-200 dark:bg-neutral-700"
+                            : "bg-blue-500"
+                        }`}
+                      >
+                        {postingComment ? (
+                          <ActivityIndicator size="small" color="white" />
+                        ) : (
+                          <FontAwesome
+                            name="send"
+                            size={16}
+                            color={
+                              !newComment.trim()
+                                ? isDark
+                                  ? "#8E8E93"
+                                  : "#6C757D"
+                                : "white"
+                            }
+                          />
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              } else {
+                return (
+                  <View className="border-t border-gray-200 dark:border-neutral-800 px-4 py-3">
+                    <Text className="text-center text-gray-500 dark:text-gray-400 font-inter">
+                      Only the post owner and veterinarians can comment.
+                    </Text>
+                  </View>
+                );
+              }
+            })()}
           </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
