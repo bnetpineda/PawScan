@@ -264,7 +264,20 @@ const ChangeEmailModal = ({ visible, onClose, newEmail, setNewEmail, onSubmit, u
   </Modal>
 );
 
-const ChangePasswordModal = ({ visible, onClose, currentPassword, setCurrentPassword, newPassword, setNewPassword, confirmPassword, setConfirmPassword, onSubmit, updating, isDark }) => (
+const ChangePasswordModal = ({ 
+  visible, 
+  onClose, 
+  currentPassword, 
+  setCurrentPassword, 
+  newPassword, 
+  setNewPassword, 
+  confirmPassword, 
+  setConfirmPassword, 
+  onSubmit, 
+  updating, 
+  isDark,
+  userEmail 
+}) => (
   <Modal
     visible={visible}
     animationType="slide"
@@ -622,35 +635,51 @@ const ProfileScreen = () => {
   };
 
   const handleChangePassword = async () => {
-    if (!newPassword || newPassword.length < 6) {
-      Alert.alert("Error", "New password must be at least 6 characters long");
-      return;
+  if (!currentPassword) {
+    Alert.alert("Error", "Please enter your current password");
+    return;
+  }
+
+  if (!newPassword || newPassword.length < 6) {
+    Alert.alert("Error", "New password must be at least 6 characters long");
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    Alert.alert("Error", "New passwords do not match");
+    return;
+  }
+
+  setUpdating(true);
+  try {
+    // First verify current password by reauthenticating
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+
+    if (authError) {
+      throw new Error("Current password is incorrect");
     }
 
-    if (newPassword !== confirmPassword) {
-      Alert.alert("Error", "New passwords do not match");
-      return;
-    }
+    // If authentication succeeds, update the password
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
 
-    setUpdating(true);
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
+    if (error) throw error;
 
-      if (error) throw error;
-
-      Alert.alert("Success", "Password updated successfully!");
-      setChangePasswordVisible(false);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (error) {
-      Alert.alert("Error", error.message);
-    } finally {
-      setUpdating(false);
-    }
-  };
+    Alert.alert("Success", "Password updated successfully!");
+    setChangePasswordVisible(false);
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+  } catch (error) {
+    Alert.alert("Error", error.message);
+  } finally {
+    setUpdating(false);
+  }
+};
 
   const resetForms = useCallback(() => {
     const displayName = user?.user_metadata?.options?.data?.display_name || "";
