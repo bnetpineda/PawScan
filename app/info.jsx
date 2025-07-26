@@ -1,16 +1,16 @@
-import React, { useState, useMemo } from "react";
+import { FontAwesome } from "@expo/vector-icons";
+import { useMemo, useState } from "react";
 import {
-  View,
-  Text,
+  Modal,
   ScrollView,
+  StatusBar,
+  Text,
   TextInput,
   TouchableOpacity,
-  Modal,
-  StatusBar,
   useColorScheme,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FontAwesome } from "@expo/vector-icons";
 import diseasesData from "../assets/diseases_information.json";
 
 const ICONS = {
