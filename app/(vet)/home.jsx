@@ -90,43 +90,43 @@ const NewsFeedScreen = () => {
   // Function to determine urgency level from analysis text
   const getUrgencyLevel = (analysisText) => {
     if (!analysisText) return { level: "none", color: "#10B981", text: "No Analysis" };
-    
+
     const text = analysisText.toLowerCase();
-    
+
     // Check for high urgency keywords
-    if (text.includes("urgent") || text.includes("emergency") || 
-        text.includes("immediate") || text.includes("severe") ||
-        text.includes("critical") || text.includes("serious condition") ||
-        text.includes("high urgency") || text.includes("life-threatening")) {
+    if (text.includes("urgent") || text.includes("emergency") ||
+      text.includes("immediate") || text.includes("severe") ||
+      text.includes("critical") || text.includes("serious condition") ||
+      text.includes("high urgency") || text.includes("life-threatening")) {
       return { level: "high", color: "#EF4444", text: "High Urgency" };
     }
-    
+
     // Check for high urgency keywords
     if (text.includes("urgent") || text.includes("immediate") || text.includes("emergency") ||
-        text.includes("severe") || text.includes("critical") || text.includes("serious") ||
-        text.includes("high risk") || text.includes("dangerous")) {
+      text.includes("severe") || text.includes("critical") || text.includes("serious") ||
+      text.includes("high risk") || text.includes("dangerous")) {
       return { level: "high", color: "#F44336", text: "High Urgency" };
     }
-    
+
     // Check for medium urgency keywords
     if (text.includes("moderate") || text.includes("concerning") ||
-        text.includes("veterinarian") || text.includes("vet") || text.includes("medical attention") ||
-        text.includes("medium") || text.includes("caution")) {
+      text.includes("veterinarian") || text.includes("vet") || text.includes("medical attention") ||
+      text.includes("medium") || text.includes("caution")) {
       return { level: "medium", color: "#FF9800", text: "Medium Urgency" };
     }
-    
+
     // Check for low urgency keywords
     if (text.includes("mild") || text.includes("minor") ||
-        text.includes("slight") || text.includes("observe") || text.includes("watch")) {
+      text.includes("slight") || text.includes("observe") || text.includes("watch")) {
       return { level: "low", color: "#FFC107", text: "Low Urgency" };
     }
-    
+
     // Check for no disease keywords
     if (text.includes("no skin disease detected") ||
-        text.includes("no specific skin disease detected") || text.includes("low")) {
+      text.includes("no specific skin disease detected") || text.includes("low")) {
       return { level: "none", color: "#4CAF50", text: "No Disease" };
     }
-    
+
     // Default to low if no specific keywords found but has analysis
     return { level: "low", color: "#FFFFFF", text: "Not a Dog or Cat" };
   };
@@ -205,10 +205,10 @@ const NewsFeedScreen = () => {
       prev.map((post) =>
         post.id === postId
           ? {
-              ...post,
-              likes_count: post.likes_count + (isLiked ? -1 : 1),
-              user_has_liked: !isLiked,
-            }
+            ...post,
+            likes_count: post.likes_count + (isLiked ? -1 : 1),
+            user_has_liked: !isLiked,
+          }
           : post
       )
     );
@@ -241,10 +241,10 @@ const NewsFeedScreen = () => {
         prev.map((post) =>
           post.id === postId
             ? {
-                ...post,
-                likes_count: post.likes_count + (isLiked ? 1 : -1),
-                user_has_liked: isLiked,
-              }
+              ...post,
+              likes_count: post.likes_count + (isLiked ? 1 : -1),
+              user_has_liked: isLiked,
+            }
             : post
         )
       );
@@ -379,12 +379,34 @@ const NewsFeedScreen = () => {
     const postTime = new Date(timestamp);
     const secondsAgo = Math.floor((now - postTime) / 1000);
 
-    if (secondsAgo < 60) return "Just now";
-    if (secondsAgo < 3600) return `${Math.floor(secondsAgo / 60)}m ago`;
-    if (secondsAgo < 86400) return `${Math.floor(secondsAgo / 3600)}h ago`;
-    if (secondsAgo < 604800) return `${Math.floor(secondsAgo / 86400)}d ago`;
+    let timeAgo;
+    if (secondsAgo < 60) timeAgo = "Just now";
+    else if (secondsAgo < 3600) timeAgo = `${Math.floor(secondsAgo / 60)}m ago`;
+    else if (secondsAgo < 86400) timeAgo = `${Math.floor(secondsAgo / 3600)}h ago`;
+    else if (secondsAgo < 604800) timeAgo = `${Math.floor(secondsAgo / 86400)}d ago`;
+    else timeAgo = postTime.toLocaleDateString();
 
-    return postTime.toLocaleDateString();
+    return timeAgo;
+  };
+
+  const formatFullDateTime = (timestamp) => {
+    const postTime = new Date(timestamp);
+    const dateOptions = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    };
+    const timeOptions = {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    };
+
+    const date = postTime.toLocaleDateString('en-US', dateOptions);
+    const time = postTime.toLocaleTimeString('en-US', timeOptions);
+    const timeAgo = formatTimeAgo(timestamp);
+
+    return `${date}   ${time}  ${timeAgo}`;
   };
 
   const PostCard = ({ post }) => {
@@ -395,7 +417,7 @@ const NewsFeedScreen = () => {
 
     // Track expanded state per post
     const [expanded, setExpanded] = useState(false);
-    
+
     // Get urgency level for this post
     const urgencyInfo = getUrgencyLevel(post.analysis_result);
 
@@ -433,7 +455,7 @@ const NewsFeedScreen = () => {
                 </Text>
               )}
               <Text className="text-xs font-inter text-gray-400 dark:text-gray-500">
-                {formatTimeAgo(post.created_at)}
+                {formatFullDateTime(post.created_at)}
               </Text>
             </View>
           </View>
@@ -511,7 +533,7 @@ const NewsFeedScreen = () => {
               size={18}
               color={urgencyInfo.color}
             />
-            <Text 
+            <Text
               className="ml-2 text-sm font-inter-semibold"
               style={{ color: urgencyInfo.color }}
             >
@@ -758,7 +780,7 @@ const NewsFeedScreen = () => {
                               />
                             )}
                             <Text className="text-xs font-inter text-gray-400 dark:text-gray-500">
-                              {formatTimeAgo(item.created_at)}
+                              {formatFullDateTime(item.created_at)}
                             </Text>
                           </View>
                           <Text className="text-gray-800 font-inter dark:text-gray-200 leading-5">
@@ -790,11 +812,10 @@ const NewsFeedScreen = () => {
                 <TouchableOpacity
                   onPress={postComment}
                   disabled={postingComment || !newComment.trim()}
-                  className={`w-12 h-12 rounded-full justify-center items-center ${
-                    postingComment || !newComment.trim()
+                  className={`w-12 h-12 rounded-full justify-center items-center ${postingComment || !newComment.trim()
                       ? "bg-gray-200 dark:bg-neutral-700"
                       : "bg-blue-500"
-                  }`}
+                    }`}
                 >
                   {postingComment ? (
                     <ActivityIndicator size="small" color="white" />
