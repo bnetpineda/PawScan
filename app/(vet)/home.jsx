@@ -1,32 +1,32 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  RefreshControl,
   ActivityIndicator,
   Alert,
-  StatusBar,
-  useColorScheme,
-  Modal,
   Dimensions,
-  Share,
-  Platform,
-  TextInput,
-  KeyboardAvoidingView,
   FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  Share,
+  StatusBar,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  useColorScheme,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import { supabase } from "../../lib/supabase";
-import { useAuth } from "../../providers/AuthProvider";
-import { router } from "expo-router";
 import TutorialModal, {
   useTutorial,
 } from "../../assets/components/TutorialHomeModal"; // Adjust path as needed
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../providers/AuthProvider";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -87,6 +87,50 @@ const NewsFeedScreen = () => {
     setTutorialVisible(true);
   };
 
+  // Function to determine urgency level from analysis text
+  const getUrgencyLevel = (analysisText) => {
+    if (!analysisText) return { level: "none", color: "#10B981", text: "No Analysis" };
+    
+    const text = analysisText.toLowerCase();
+    
+    // Check for high urgency keywords
+    if (text.includes("urgent") || text.includes("emergency") || 
+        text.includes("immediate") || text.includes("severe") ||
+        text.includes("critical") || text.includes("serious condition") ||
+        text.includes("high urgency") || text.includes("life-threatening")) {
+      return { level: "high", color: "#EF4444", text: "High Urgency" };
+    }
+    
+    // Check for high urgency keywords
+    if (text.includes("urgent") || text.includes("immediate") || text.includes("emergency") ||
+        text.includes("severe") || text.includes("critical") || text.includes("serious") ||
+        text.includes("high risk") || text.includes("dangerous")) {
+      return { level: "high", color: "#F44336", text: "High Urgency" };
+    }
+    
+    // Check for medium urgency keywords
+    if (text.includes("moderate") || text.includes("concerning") ||
+        text.includes("veterinarian") || text.includes("vet") || text.includes("medical attention") ||
+        text.includes("medium") || text.includes("caution")) {
+      return { level: "medium", color: "#FF9800", text: "Medium Urgency" };
+    }
+    
+    // Check for low urgency keywords
+    if (text.includes("mild") || text.includes("minor") ||
+        text.includes("slight") || text.includes("observe") || text.includes("watch")) {
+      return { level: "low", color: "#FFC107", text: "Low Urgency" };
+    }
+    
+    // Check for no disease keywords
+    if (text.includes("no skin disease detected") ||
+        text.includes("no specific skin disease detected") || text.includes("low")) {
+      return { level: "none", color: "#4CAF50", text: "No Disease" };
+    }
+    
+    // Default to low if no specific keywords found but has analysis
+    return { level: "low", color: "#FFFFFF", text: "Not a Dog or Cat" };
+  };
+
   const loadPosts = async () => {
     try {
       // Get posts first
@@ -107,6 +151,12 @@ const NewsFeedScreen = () => {
             .select("*", { count: "exact", head: true })
             .eq("post_id", post.id);
 
+          // Get total comments count for this post
+          const { count: commentsCount } = await supabase
+            .from("newsfeed_comments")
+            .select("*", { count: "exact", head: true })
+            .eq("post_id", post.id);
+
           // Check if current user has liked this post
           let userHasLiked = false;
           if (currentUser) {
@@ -124,7 +174,7 @@ const NewsFeedScreen = () => {
             ...post,
             likes_count: likesCount || 0,
             user_has_liked: userHasLiked,
-            comments_count: 0, // You can implement this similarly if needed
+            comments_count: commentsCount || 0, // You can implement this similarly if needed
           };
         })
       );
@@ -345,6 +395,9 @@ const NewsFeedScreen = () => {
 
     // Track expanded state per post
     const [expanded, setExpanded] = useState(false);
+    
+    // Get urgency level for this post
+    const urgencyInfo = getUrgencyLevel(post.analysis_result);
 
     return (
       <View
@@ -440,7 +493,7 @@ const NewsFeedScreen = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="flex-row items-center"
+            className="flex-row items-center mr-6"
             onPress={() => handleShare(post)}
             activeOpacity={0.7}
           >
@@ -450,6 +503,21 @@ const NewsFeedScreen = () => {
               color={isDark ? "#8E8E93" : "#6C757D"}
             />
           </TouchableOpacity>
+
+          {/* Urgency Level Indicator */}
+          <View className="flex-row items-center">
+            <FontAwesome
+              name="flag"
+              size={18}
+              color={urgencyInfo.color}
+            />
+            <Text 
+              className="ml-2 text-sm font-inter-semibold"
+              style={{ color: urgencyInfo.color }}
+            >
+              {urgencyInfo.text}
+            </Text>
+          </View>
         </View>
 
         {/* Analysis */}

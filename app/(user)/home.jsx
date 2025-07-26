@@ -1,32 +1,32 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  RefreshControl,
   ActivityIndicator,
   Alert,
-  StatusBar,
-  useColorScheme,
-  Modal,
   Dimensions,
-  Share,
-  Platform,
-  TextInput,
-  KeyboardAvoidingView,
   FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  Share,
+  StatusBar,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  useColorScheme,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import { supabase } from "../../lib/supabase";
-import { useAuth } from "../../providers/AuthProvider";
-import { router } from "expo-router";
 import TutorialModal, {
   useTutorial,
 } from "../../assets/components/TutorialHomeModal"; // Adjust path as needed
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../providers/AuthProvider";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
