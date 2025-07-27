@@ -1,7 +1,7 @@
-import OpenAI from "openai";
-import * as FileSystem from "expo-file-system";
-import { supabase } from "../lib/supabase"; // Adjust the import path as needed
 import { Buffer } from "buffer"; // Ensure you have buffer polyfill for React Native
+import * as FileSystem from "expo-file-system";
+import OpenAI from "openai";
+import { supabase } from "../lib/supabase"; // Adjust the import path as needed
 
 global.Buffer = Buffer; // Set global Buffer for React Native
 
@@ -151,86 +151,61 @@ export async function analyzePetImage(imageUri, userId) {
     console.log("Preparing image for OpenAI analysis...");
 
     const prompt = `
-You are a pet health assistant AI. Analyze the provided image of a cat or dog and answer **only** the following points.
+You are an AI pet health assistant . Analyze carefully the provided image of a cat or dog and answer **only** the following 8 points.
 
 Always provide a direct and clear answer for each. If uncertain, **still give your best guess** based on the image — it's okay to be speculative or even incorrect.
 
 **Important: Do NOT say "I don't know", "I'm not sure", or express uncertainty in any form. Just answer confidently.**
 
-1. Breed of the pet  
-2. Specific Skin Disease Detected — choose from the list below (Guess if unsure):
+Respond using this strict format:
 
-Cats:
+Breed of the pet:
+Specific Skin Disease Detected: — check carefully if it has disease or none. If it has no disease, say “No disease detected”, if it has disease and you are not sure, guess. If it has disease and you are sure, choose from the list below:
 
-Abscesses (skin lesion)
+  Cats:
+  Abscesses (skin lesion)
+  Alopecia
+  Atopic Dermatitis
+  Allergic Dermatitis
+  Feline Chin Acne
+  Miliary Dermatitis
+  Eosinophilic Granuloma
+  Skin Tumor
+  Dermatophytosis
+  Stud Tail
+  Allergies (Generalized Pruritic Dermatitis)
+  Compulsive Grooming (Psychogenic Alopecia)
+  Sporotrichosis
+  FeLV Skin Diseases
+  
+  Dogs:
+  Allergic Dermatitis
+  Atopic Dermatitis
+  Canine Chin Acne
+  Demodectic Mange
+  Hot Spots
+  Mast Cell Tumor
+  Pruritic Dermatitis
+  Pyoderma
+  Ringworm (Dog)
+  Seborrhea (Dog)
 
-Alopecia
-
-Atopic Dermatitis
-
-Allergic Dermatitis
-
-Feline Chin Acne
-
-Miliary Dermatitis
-
-Eosinophilic Granuloma
-
-Skin Tumor
-
-Dermatophytosis
-
-Stud Tail
-
-Allergies (Generalized Pruritic Dermatitis)
-
-Compulsive Grooming (Psychogenic Alopecia)
-
-Sporotrichosis
-
-FeLV Skin Diseases
-
-Dogs:
-
-Allergic Dermatitis
-
-Atopic Dermatitis
-
-Canine Chin Acne
-
-Demodectic Mange
-
-Hot Spots
-
-Mast Cell Tumor
-
-Pruritic Dermatitis
-
-Pyoderma
-
-Ringworm (Dog)
-
-Seborrhea (Dog)
-
-Both (Cats & Dogs):
-
-Lice
-
-Atopic Dermatitis
-
-Pruritic Dermatitis
-
-Ringworm
+  Both (Cats & Dogs):
+  Lice
+  Atopic Dermatitis
+  Pruritic Dermatitis
+  Ringworm
 
 
-3. Confidence score (e.g., 60%, 80%)  
-4. Three suggested treatments — even speculative ones  
-5. Urgency level: low / medium / emergency — choose one  
-6. Essential first aid care steps  
-7. Recommended medication (if applicable)  
-8. Indicators that a Veterinarian should be contacted
+Confidence score: (e.g., 60%, 80%)
+Three suggested treatments: — even speculative ones  — output it in bullet form
+Urgency level: none / low / medium / emergency — choose one
+Essential first aid care steps:  — output it in bullet form
+Recommended medication: (if applicable)  — output it in bullet form
+Indicators that a Veterinarian should be contacted: — output it in bullet form
 
-Respond strictly with just the answers to these points. No explanations, no disclaimers, and no advice to consult a vet. Be direct.
+Respond strictly with just the answers to these 8 points. No explanations, no disclaimers, and no advice to consult a vet. Be direct.
+
     `;
 
     const openai = new OpenAI({

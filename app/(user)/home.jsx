@@ -515,7 +515,7 @@ const NewsFeedScreen = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="flex-row items-center"
+            className="flex-row items-center mr-6"
             onPress={() => handleShare(post)}
             activeOpacity={0.7}
           >
