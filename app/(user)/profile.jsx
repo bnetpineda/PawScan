@@ -1,402 +1,23 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   Image,
-  Modal,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   useColorScheme,
   View,
 } from "react-native";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../providers/AuthProvider";
-
-
-// Move modal components outside or memoize them
-const SettingsModal = ({ visible, onClose, onEmailPress, onPasswordPress, isDark }) => (
-  <Modal
-    visible={visible}
-    animationType="slide"
-    presentationStyle="pageSheet"
-    onRequestClose={onClose}
-  >
-    <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
-      <View className={`pt-16 pb-4 px-6 border-b ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
-        <View className="flex-row justify-between items-center">
-          <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-black"}`}>
-            Settings
-          </Text>
-          <TouchableOpacity
-            onPress={onClose}
-            className={`p-2 rounded-full ${isDark ? "bg-gray-800" : "bg-gray-200"}`}
-          >
-            <Ionicons name="close" size={24} color={isDark ? "white" : "black"} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView className="flex-1 px-6 py-4">
-        <View className="space-y-3">
-          <TouchableOpacity
-            className={`p-4 rounded-lg border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
-            onPress={onEmailPress}
-          >
-            <View className="flex-row items-center">
-              <Ionicons name="mail-outline" size={24} color={isDark ? "white" : "black"} />
-              <View className="ml-3 flex-1">
-                <Text className={`text-base font-inter-semibold ${isDark ? "text-white" : "text-black"}`}>
-                  Change Email
-                </Text>
-                <Text className={`text-sm font-inter ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                  Update your email address
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={isDark ? "#9CA3AF" : "#6B7280"} />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className={`p-4 rounded-lg border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
-            onPress={onPasswordPress}
-          >
-            <View className="flex-row items-center">
-              <Ionicons name="lock-closed-outline" size={24} color={isDark ? "white" : "black"} />
-              <View className="ml-3 flex-1">
-                <Text className={`text-base font-inter-semibold ${isDark ? "text-white" : "text-black"}`}>
-                  Change Password
-                </Text>
-                <Text className={`text-sm font-inter ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                  Update your account password
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={isDark ? "#9CA3AF" : "#6B7280"} />
-            </View>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </View>
-  </Modal>
-);
-
-const EditProfileModal = ({ 
-  visible, 
-  onClose, 
-  newName, 
-  setNewName, 
-  profileImage, 
-  onProfileImageChange,
-  onSubmit, 
-  updating, 
-  isDark 
-}) => (
-  <Modal
-    visible={visible}
-    animationType="slide"
-    presentationStyle="pageSheet"
-    onRequestClose={onClose}
-  >
-    <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
-      <View className={`pt-16 pb-4 px-6 border-b ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
-        <View className="flex-row justify-between items-center">
-          <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-black"}`}>
-            Edit Profile
-          </Text>
-          <TouchableOpacity
-            onPress={onClose}
-            className={`p-2 rounded-full ${isDark ? "bg-gray-800" : "bg-gray-200"}`}
-          >
-            <Ionicons name="close" size={24} color={isDark ? "white" : "black"} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView className="flex-1 px-6 py-6">
-        <View className="items-center mb-6">
-          <TouchableOpacity onPress={onProfileImageChange}>
-            {profileImage ? (
-              <Image
-                source={{ uri: profileImage }}
-                className="w-32 h-32 rounded-full"
-              />
-            ) : (
-              <View className={`w-32 h-32 rounded-full justify-center items-center ${
-                isDark ? "bg-gray-700" : "bg-gray-300"
-              }`}>
-                <Ionicons 
-                  name="camera-outline" 
-                  size={32} 
-                  color={isDark ? "white" : "black"} 
-                />
-              </View>
-            )}
-          </TouchableOpacity>
-          <Text className={`mt-2 text-sm font-inter ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-            Tap to change photo
-          </Text>
-        </View>
-
-        <View className="mb-4">
-          <Text className={`text-base font-inter mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-            Display Name
-          </Text>
-          <TextInput
-            value={newName}
-            onChangeText={setNewName}
-            placeholder="Enter your name"
-            placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
-            className={`p-4 rounded-lg border text-base font-inter ${
-              isDark 
-                ? "bg-gray-900 border-gray-700 text-white" 
-                : "bg-white border-gray-300 text-black"
-            }`}
-            autoCapitalize="words"
-            autoFocus
-          />
-        </View>
-
-        <View className="flex-row space-x-3 mt-6">
-          <TouchableOpacity
-            onPress={onClose}
-            className={`flex-1 p-4 rounded-lg border ${
-              isDark ? "border-gray-700 bg-gray-800" : "border-gray-300 bg-gray-100"
-            }`}
-            disabled={updating}
-          >
-            <Text className={`text-center text-base font-inter-semibold ${
-              isDark ? "text-gray-300" : "text-gray-700"
-            }`}>
-              Cancel
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={onSubmit}
-            className="flex-1 p-4 rounded-lg bg-blue-600"
-            disabled={updating}
-          >
-            <Text className="text-center text-base font-inter-bold text-white">
-              {updating ? "Saving..." : "Save Changes"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </View>
-  </Modal>
-);
-
-const ChangeEmailModal = ({ visible, onClose, newEmail, setNewEmail, onSubmit, updating, isDark }) => (
-  <Modal
-    visible={visible}
-    animationType="slide"
-    presentationStyle="pageSheet"
-    onRequestClose={onClose}
-  >
-    <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
-      <View className={`pt-16 pb-4 px-6 border-b ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
-        <View className="flex-row justify-between items-center">
-          <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-black"}`}>
-            Change Email
-          </Text>
-          <TouchableOpacity
-            onPress={onClose}
-            className={`p-2 rounded-full ${isDark ? "bg-gray-800" : "bg-gray-200"}`}
-          >
-            <Ionicons name="close" size={24} color={isDark ? "white" : "black"} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View className="flex-1 px-6 py-6">
-        <Text className={`text-base font-inter mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-          New Email Address
-        </Text>
-        <TextInput
-          value={newEmail}
-          onChangeText={setNewEmail}
-          placeholder="Enter new email address"
-          placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
-          className={`p-4 rounded-lg border text-base font-inter ${
-            isDark 
-              ? "bg-gray-900 border-gray-700 text-white" 
-              : "bg-white border-gray-300 text-black"
-          }`}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoFocus
-        />
-
-        <View className={`mt-4 p-4 rounded-lg ${isDark ? "bg-gray-900" : "bg-blue-50"}`}>
-          <Text className={`text-sm font-inter ${isDark ? "text-gray-400" : "text-blue-700"}`}>
-            A verification email will be sent to your new email address. You'll need to verify it before the change takes effect.
-          </Text>
-        </View>
-
-        <View className="flex-row space-x-3 mt-6">
-          <TouchableOpacity
-            onPress={onClose}
-            className={`flex-1 p-4 rounded-lg border ${
-              isDark ? "border-gray-700 bg-gray-800" : "border-gray-300 bg-gray-100"
-            }`}
-            disabled={updating}
-          >
-            <Text className={`text-center text-base font-inter-semibold ${
-              isDark ? "text-gray-300" : "text-gray-700"
-            }`}>
-              Cancel
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={onSubmit}
-            className="flex-1 p-4 rounded-lg bg-blue-600"
-            disabled={updating}
-          >
-            <Text className="text-center text-base font-inter-bold text-white">
-              {updating ? "Updating..." : "Update Email"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  </Modal>
-);
-
-const ChangePasswordModal = ({ 
-  visible, 
-  onClose, 
-  currentPassword, 
-  setCurrentPassword, 
-  newPassword, 
-  setNewPassword, 
-  confirmPassword, 
-  setConfirmPassword, 
-  onSubmit, 
-  updating, 
-  isDark,
-  userEmail 
-}) => (
-  <Modal
-    visible={visible}
-    animationType="slide"
-    presentationStyle="pageSheet"
-    onRequestClose={onClose}
-  >
-    <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
-      <View className={`pt-16 pb-4 px-6 border-b ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
-        <View className="flex-row justify-between items-center">
-          <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-black"}`}>
-            Change Password
-          </Text>
-          <TouchableOpacity
-            onPress={onClose}
-            className={`p-2 rounded-full ${isDark ? "bg-gray-800" : "bg-gray-200"}`}
-          >
-            <Ionicons name="close" size={24} color={isDark ? "white" : "black"} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView className="flex-1 px-6 py-6">
-        <View className="space-y-4">
-          <View>
-            <Text className={`text-base font-inter mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-              Current Password
-            </Text>
-            <TextInput
-              value={currentPassword}
-              onChangeText={setCurrentPassword}
-              placeholder="Enter current password"
-              placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
-              className={`p-4 rounded-lg border text-base font-inter ${
-                isDark 
-                  ? "bg-gray-900 border-gray-700 text-white" 
-                  : "bg-white border-gray-300 text-black"
-              }`}
-              secureTextEntry
-              autoFocus
-            />
-          </View>
-
-          <View>
-            <Text className={`text-base font-inter mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-              New Password
-            </Text>
-            <TextInput
-              value={newPassword}
-              onChangeText={setNewPassword}
-              placeholder="Enter new password"
-              placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
-              className={`p-4 rounded-lg border text-base font-inter ${
-                isDark 
-                  ? "bg-gray-900 border-gray-700 text-white" 
-                  : "bg-white border-gray-300 text-black"
-              }`}
-              secureTextEntry
-            />
-          </View>
-
-          <View>
-            <Text className={`text-base font-inter mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-              Confirm New Password
-            </Text>
-            <TextInput
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              placeholder="Confirm new password"
-              placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
-              className={`p-4 rounded-lg border text-base font-inter ${
-                isDark 
-                  ? "bg-gray-900 border-gray-700 text-white" 
-                  : "bg-white border-gray-300 text-black"
-              }`}
-              secureTextEntry
-            />
-          </View>
-        </View>
-
-        <View className={`mt-4 p-4 rounded-lg ${isDark ? "bg-gray-900" : "bg-yellow-50"}`}>
-          <Text className={`text-sm font-inter ${isDark ? "text-gray-400" : "text-yellow-700"}`}>
-            Password must be at least 6 characters long.
-          </Text>
-        </View>
-
-        <View className="flex-row space-x-3 mt-6">
-          <TouchableOpacity
-            onPress={onClose}
-            className={`flex-1 p-4 rounded-lg border ${
-              isDark ? "border-gray-700 bg-gray-800" : "border-gray-300 bg-gray-100"
-            }`}
-            disabled={updating}
-          >
-            <Text className={`text-center text-base font-inter-semibold ${
-              isDark ? "text-gray-300" : "text-gray-700"
-            }`}>
-              Cancel
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={onSubmit}
-            className="flex-1 p-4 rounded-lg bg-blue-600"
-            disabled={updating}
-          >
-            <Text className="text-center text-base font-inter-bold text-white">
-              {updating ? "Updating..." : "Update Password"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </View>
-  </Modal>
-);
+import ChangeEmailModal from "./components/ChangeEmailModal";
+import ChangePasswordModal from "./components/ChangePasswordModal";
+import EditProfileModal from "./components/EditProfileModal";
+import SettingsModal from "./components/SettingsModal";
 
 const ProfileScreen = () => {
-  const [current, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [editProfileVisible, setEditProfileVisible] = useState(false);
@@ -414,12 +35,10 @@ const ProfileScreen = () => {
   
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-
   const { user } = useAuth();
-  
+  const navigation = useNavigation();
+
   useEffect(() => {
-    setCurrentUser(user);
-    setLoading(false);
     if (user) {
       const displayName = user?.user_metadata?.options?.data?.display_name || "";
       setNewName(displayName);
@@ -429,20 +48,16 @@ const ProfileScreen = () => {
         setProfileImage(user.user_metadata.avatar_url);
       }
     }
+    setLoading(false);
   }, [user]);
 
-  const navigation = useNavigation();
-
-const handleGoBack = () => {
-  navigation.goBack();
-};
+  const handleGoBack = () => {
+    navigation.goBack();
+  };
 
   const handleSignOut = async () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
+      { text: "Cancel", style: "cancel" },
       {
         text: "Sign Out",
         style: "destructive",
@@ -455,78 +70,6 @@ const handleGoBack = () => {
       },
     ]);
   };
-
-  // PAG MERON NA AVATAR BUCKET SA SUPABASE
-  //const handleEditProfile = async () => {
-//   if (!newName.trim()) {
-//     Alert.alert("Error", "Please enter a valid name");
-//     return;
-//   }
-
-//   setUpdating(true);
-//   try {
-//     // First update the name
-//     const { error: nameError } = await supabase.auth.updateUser({
-//       data: { 
-//         display_name: newName.trim(),
-//         options: {
-//           data: {
-//             display_name: newName.trim(),
-//             role: user?.user_metadata?.options?.data?.role || "Pet Owner",
-//             ...(profileImage && { avatar_url: profileImage }) // Include avatar if exists
-//           }
-//         }
-//       }
-//     });
-
-//     if (nameError) throw nameError;
-
-//     // If there's a new image (and it's a local file), upload it
-//     if (profileImage && profileImage.startsWith('file:')) {
-//       // Extract file extension
-//       const fileExt = profileImage.split('.').pop();
-//       const fileName = `avatar.${fileExt}`;
-//       const filePath = `${user.id}/${fileName}`;
-
-//       // Read the file
-//       const response = await fetch(profileImage);
-//       const blob = await response.blob();
-
-//       // Upload the file
-//       const { error: uploadError } = await supabase
-//         .storage
-//         .from('avatars') // your bucket name
-//         .upload(filePath, blob);
-
-//       if (uploadError) throw uploadError;
-
-//       // Get the public URL
-//       const { data: { publicUrl } } = supabase
-//         .storage
-//         .from('avatars')
-//         .getPublicUrl(filePath);
-
-//       // Update user metadata with the new avatar URL
-//       const { error: avatarError } = await supabase.auth.updateUser({
-//         data: { 
-//           avatar_url: publicUrl,
-//           ...user.user_metadata // keep existing metadata
-//         }
-//       });
-
-//       if (avatarError) throw avatarError;
-//       setProfileImage(publicUrl);
-//     }
-
-//     Alert.alert("Success", "Profile updated successfully!");
-//     setEditProfileVisible(false);
-//   } catch (error) {
-//     Alert.alert("Error", error.message);
-//   } finally {
-//     setUpdating(false);
-//   }
-// };
-  
 
   const handleEditProfile = async () => {
     if (!newName.trim()) {
@@ -544,7 +87,7 @@ const handleGoBack = () => {
             data: {
               display_name: newName.trim(),
               role: user?.user_metadata?.options?.data?.role || "Pet Owner",
-              ...(profileImage && { avatar_url: profileImage }) // Include avatar if exists
+              ...(profileImage && { avatar_url: profileImage })
             }
           }
         }
@@ -557,13 +100,13 @@ const handleGoBack = () => {
         const formData = new FormData();
         formData.append('file', {
           uri: profileImage,
-          type: 'image/jpeg', // or whatever type your image is
+          type: 'image/jpeg',
           name: 'profile.jpg',
         });
 
         const { error: uploadError } = await supabase
           .storage
-          .from('avatars') // your bucket name
+          .from('avatars')
           .upload(`user_${user.id}/avatar.jpg`, formData);
 
         if (uploadError) throw uploadError;
@@ -578,7 +121,7 @@ const handleGoBack = () => {
         const { error: avatarError } = await supabase.auth.updateUser({
           data: { 
             avatar_url: publicUrl,
-            ...user.user_metadata // keep existing metadata
+            ...user.user_metadata
           }
         });
 
@@ -643,51 +186,51 @@ const handleGoBack = () => {
   };
 
   const handleChangePassword = async () => {
-  if (!currentPassword) {
-    Alert.alert("Error", "Please enter your current password");
-    return;
-  }
-
-  if (!newPassword || newPassword.length < 6) {
-    Alert.alert("Error", "New password must be at least 6 characters long");
-    return;
-  }
-
-  if (newPassword !== confirmPassword) {
-    Alert.alert("Error", "New passwords do not match");
-    return;
-  }
-
-  setUpdating(true);
-  try {
-    // First verify current password by reauthenticating
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email: user.email,
-      password: currentPassword,
-    });
-
-    if (authError) {
-      throw new Error("Current password is incorrect");
+    if (!currentPassword) {
+      Alert.alert("Error", "Please enter your current password");
+      return;
     }
 
-    // If authentication succeeds, update the password
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword,
-    });
+    if (!newPassword || newPassword.length < 6) {
+      Alert.alert("Error", "New password must be at least 6 characters long");
+      return;
+    }
 
-    if (error) throw error;
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Error", "New passwords do not match");
+      return;
+    }
 
-    Alert.alert("Success", "Password updated successfully!");
-    setChangePasswordVisible(false);
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-  } catch (error) {
-    Alert.alert("Error", error.message);
-  } finally {
-    setUpdating(false);
-  }
-};
+    setUpdating(true);
+    try {
+      // First verify current password by reauthenticating
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+
+      if (authError) {
+        throw new Error("Current password is incorrect");
+      }
+
+      // If authentication succeeds, update the password
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) throw error;
+
+      Alert.alert("Success", "Password updated successfully!");
+      setChangePasswordVisible(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   const resetForms = useCallback(() => {
     const displayName = user?.user_metadata?.options?.data?.display_name || "";
@@ -719,39 +262,27 @@ const handleGoBack = () => {
 
   if (loading) {
     return (
-      <View
-        className={`flex-1 justify-center items-center ${
-          isDark ? "bg-black" : "bg-white"
-        }`}
-      >
-        <Text
-          className={`text-lg font-inter ${
-            isDark ? "text-white" : "text-black"
-          }`}
-        >
+      <View className={`flex-1 justify-center items-center ${isDark ? "bg-black" : "bg-white"}`}>
+        <Text className={`text-lg font-inter ${isDark ? "text-white" : "text-black"}`}>
           Loading...
         </Text>
       </View>
     );
   }
 
-  const displayName =
-    user?.user_metadata?.options?.data?.display_name || "Pet Owner";
+  const displayName = user?.user_metadata?.options?.data?.display_name || "Pet Owner";
   const role = user?.user_metadata?.options?.data?.role || "Pet Owner";
   const email = user?.email || "";
 
   return (
     <>
-<ScrollView className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
+      <ScrollView className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
         {/* Header */}
-        <View
-          className={`pt-16 pb-8 px-6 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}
-        >
+        <View className={`pt-16 pb-8 px-6 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
           <View className="flex-row items-center mb-6">
             <TouchableOpacity
               onPress={handleGoBack}
-              className={`p-2 rounded-full mr-4 ${isDark ? "bg-gray-800" : "bg-gray-200"
-                }`}
+              className={`p-2 rounded-full mr-4 ${isDark ? "bg-gray-800" : "bg-gray-200"}`}
             >
               <Ionicons
                 name="arrow-back-outline"
@@ -759,10 +290,7 @@ const handleGoBack = () => {
                 color={isDark ? "white" : "black"}
               />
             </TouchableOpacity>
-            <Text
-              className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-black"
-                }`}
-            >
+            <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-black"}`}>
               Profile
             </Text>
           </View>
@@ -780,37 +308,21 @@ const handleGoBack = () => {
                   isDark ? "bg-gray-700" : "bg-gray-300"
                 }`}
               >
-                <Text
-                  className={`text-4xl font-inter-bold ${
-                    isDark ? "text-white" : "text-black"
-                  }`}
-                >
+                <Text className={`text-4xl font-inter-bold ${isDark ? "text-white" : "text-black"}`}>
                   {getInitials(displayName)}
                 </Text>
               </View>
             )}
 
-            <Text
-              className={`text-2xl font-inter-bold mb-2 ${
-                isDark ? "text-white" : "text-black"
-              }`}
-            >
+            <Text className={`text-2xl font-inter-bold mb-2 ${isDark ? "text-white" : "text-black"}`}>
               {displayName}
             </Text>
 
-            <Text
-              className={`text-lg font-inter capitalize mb-1 ${
-                isDark ? "text-gray-300" : "text-gray-600"
-              }`}
-            >
+            <Text className={`text-lg font-inter capitalize mb-1 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
               {role}
             </Text>
 
-            <Text
-              className={`text-base font-inter ${
-                isDark ? "text-gray-400" : "text-gray-500"
-              }`}
-            >
+            <Text className={`text-base font-inter ${isDark ? "text-gray-400" : "text-gray-500"}`}>
               {email}
             </Text>
           </View>
@@ -818,152 +330,88 @@ const handleGoBack = () => {
 
         {/* Profile Details */}
         <View className="px-6 py-4">
-          <Text
-            className={`text-xl font-inter-bold mb-4 ${
-              isDark ? "text-white" : "text-black"
-            }`}
-          >
+          <Text className={`text-xl font-inter-bold mb-4 ${isDark ? "text-white" : "text-black"}`}>
             Account Information
           </Text>
 
           {/* Info Cards */}
           <View className="space-y-3">
-            <View
-              className={`p-4 rounded-lg ${
-                isDark ? "bg-gray-900" : "bg-gray-50"
-              }`}
-            >
+            <View className={`p-4 rounded-lg ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
               <View className="flex-row items-center mb-2">
                 <Ionicons
                   name="mail-outline"
                   size={20}
                   color={isDark ? "#9CA3AF" : "#6B7280"}
                 />
-                <Text
-                  className={`ml-3 text-base font-inter-semibold ${
-                    isDark ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
+                <Text className={`ml-3 text-base font-inter-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                   Email
                 </Text>
               </View>
-              <Text
-                className={`text-base font-inter ${
-                  isDark ? "text-white" : "text-black"
-                }`}
-              >
+              <Text className={`text-base font-inter ${isDark ? "text-white" : "text-black"}`}>
                 {email}
               </Text>
             </View>
 
-            <View
-              className={`p-4 rounded-lg ${
-                isDark ? "bg-gray-900" : "bg-gray-50"
-              }`}
-            >
+            <View className={`p-4 rounded-lg ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
               <View className="flex-row items-center mb-2">
                 <Ionicons
                   name="person-outline"
                   size={20}
                   color={isDark ? "#9CA3AF" : "#6B7280"}
                 />
-                <Text
-                  className={`ml-3 text-base font-inter-semibold ${
-                    isDark ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
+                <Text className={`ml-3 text-base font-inter-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                   Role
                 </Text>
               </View>
-              <Text
-                className={`text-base font-inter capitalize ${
-                  isDark ? "text-white" : "text-black"
-                }`}
-              >
+              <Text className={`text-base font-inter capitalize ${isDark ? "text-white" : "text-black"}`}>
                 {role}
               </Text>
             </View>
 
-            <View
-              className={`p-4 rounded-lg ${
-                isDark ? "bg-gray-900" : "bg-gray-50"
-              }`}
-            >
+            <View className={`p-4 rounded-lg ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
               <View className="flex-row items-center mb-2">
                 <Ionicons
                   name="calendar-outline"
                   size={20}
                   color={isDark ? "#9CA3AF" : "#6B7280"}
                 />
-                <Text
-                  className={`ml-3 text-base font-inter-semibold ${
-                    isDark ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
+                <Text className={`ml-3 text-base font-inter-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                   Member Since
                 </Text>
               </View>
-              <Text
-                className={`text-base font-inter ${
-                  isDark ? "text-white" : "text-black"
-                }`}
-              >
+              <Text className={`text-base font-inter ${isDark ? "text-white" : "text-black"}`}>
                 {formatDate(user?.created_at)}
               </Text>
             </View>
 
-            <View
-              className={`p-4 rounded-lg ${
-                isDark ? "bg-gray-900" : "bg-gray-50"
-              }`}
-            >
+            <View className={`p-4 rounded-lg ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
               <View className="flex-row items-center mb-2">
                 <Ionicons
                   name="time-outline"
                   size={20}
                   color={isDark ? "#9CA3AF" : "#6B7280"}
                 />
-                <Text
-                  className={`ml-3 text-base font-inter-semibold ${
-                    isDark ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
+                <Text className={`ml-3 text-base font-inter-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                   Last Sign In
                 </Text>
               </View>
-              <Text
-                className={`text-base font-inter ${
-                  isDark ? "text-white" : "text-black"
-                }`}
-              >
+              <Text className={`text-base font-inter ${isDark ? "text-white" : "text-black"}`}>
                 {formatDate(user?.last_sign_in_at)}
               </Text>
             </View>
 
-            <View
-              className={`p-4 rounded-lg ${
-                isDark ? "bg-gray-900" : "bg-gray-50"
-              }`}
-            >
+            <View className={`p-4 rounded-lg ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
               <View className="flex-row items-center mb-2">
                 <Ionicons
                   name="checkmark-circle-outline"
                   size={20}
                   color={isDark ? "#10B981" : "#059669"}
                 />
-                <Text
-                  className={`ml-3 text-base font-inter-semibold ${
-                    isDark ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
+                <Text className={`ml-3 text-base font-inter-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                   Email Status
                 </Text>
               </View>
-              <Text
-                className={`text-base font-inter ${
-                  isDark ? "text-green-400" : "text-green-600"
-                }`}
-              >
+              <Text className={`text-base font-inter ${isDark ? "text-green-400" : "text-green-600"}`}>
                 {user?.role === "authenticated" ? "Verified" : "Not Verified"}
               </Text>
             </View>
@@ -973,9 +421,7 @@ const handleGoBack = () => {
         {/* Action Buttons */}
         <View className="px-6 py-4 space-y-3">
           <TouchableOpacity
-            className={`p-4 rounded-lg border ${
-              isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"
-            }`}
+            className={`p-4 rounded-lg border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
             onPress={() => setEditProfileVisible(true)}
           >
             <View className="flex-row items-center justify-center">
@@ -984,20 +430,14 @@ const handleGoBack = () => {
                 size={20}
                 color={isDark ? "white" : "black"}
               />
-              <Text
-                className={`ml-2 text-base font-inter-semibold ${
-                  isDark ? "text-white" : "text-black"
-                }`}
-              >
+              <Text className={`ml-2 text-base font-inter-semibold ${isDark ? "text-white" : "text-black"}`}>
                 Edit Profile
               </Text>
             </View>
           </TouchableOpacity>
 
           <TouchableOpacity
-            className={`p-4 rounded-lg border ${
-              isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"
-            }`}
+            className={`p-4 rounded-lg border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
             onPress={() => setSettingsVisible(true)}
           >
             <View className="flex-row items-center justify-center">
@@ -1006,11 +446,7 @@ const handleGoBack = () => {
                 size={20}
                 color={isDark ? "white" : "black"}
               />
-              <Text
-                className={`ml-2 text-base font-inter-semibold ${
-                  isDark ? "text-white" : "text-black"
-                }`}
-              >
+              <Text className={`ml-2 text-base font-inter-semibold ${isDark ? "text-white" : "text-black"}`}>
                 Settings
               </Text>
             </View>

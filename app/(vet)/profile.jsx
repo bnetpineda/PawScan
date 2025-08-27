@@ -35,10 +35,10 @@ const EditProfileModal = ({
     presentationStyle="pageSheet"
     onRequestClose={onClose}
   >
-    <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
-      <View className={`pt-16 pb-4 px-6 border-b ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
+    <View className={`flex-1 ${isDark ? "bg-gray-900" : "bg-white"}`}>
+      <View className={`pt-16 pb-4 px-6 border-b ${isDark ? "border-gray-800 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
         <View className="flex-row justify-between items-center">
-          <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-black"}`}>
+          <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-gray-900"}`}>
             Edit Profile
           </Text>
           <TouchableOpacity
@@ -59,12 +59,12 @@ const EditProfileModal = ({
                 className="w-32 h-32 rounded-full"
               />
             ) : (
-              <View className={`w-32 h-32 rounded-full justify-center items-center ${isDark ? "bg-gray-700" : "bg-gray-300"
+              <View className={`w-32 h-32 rounded-full justify-center items-center ${isDark ? "bg-gray-800" : "bg-gray-300"
                 }`}>
                 <Ionicons
                   name="camera-outline"
                   size={32}
-                  color={isDark ? "white" : "black"}
+                  color={isDark ? "white" : "black"} 
                 />
               </View>
             )}
@@ -84,8 +84,8 @@ const EditProfileModal = ({
             placeholder="Enter your name"
             placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
             className={`p-4 rounded-lg border text-base font-inter ${isDark
-              ? "bg-gray-900 border-gray-700 text-white"
-              : "bg-white border-gray-300 text-black"
+              ? "bg-gray-800 border-gray-700 text-white"
+              : "bg-white border-gray-300 text-gray-900"
               }`}
             autoCapitalize="words"
             autoFocus
@@ -133,16 +133,15 @@ const SettingsModal = ({
     presentationStyle="pageSheet"
     onRequestClose={onClose}
   >
-    <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
-      <View className={`pt-16 pb-4 px-6 border-b ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
+    <View className={`flex-1 ${isDark ? "bg-gray-900" : "bg-white"}`}>
+      <View className={`pt-16 pb-4 px-6 border-b ${isDark ? "border-gray-800 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
         <View className="flex-row justify-between items-center">
-          <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-black"}`}>
+          <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-gray-900"}`}>
             Settings
           </Text>
           <TouchableOpacity
             onPress={onClose}
-            className={`p-2 rounded-full ${isDark ? "bg-gray-800" : "bg-gray-200"}`}
-          >
+            className={`p-2 rounded-full ${isDark ? "bg-gray-800" : "bg-gray-200"}`}>
             <Ionicons name="close" size={24} color={isDark ? "white" : "black"} />
           </TouchableOpacity>
         </View>
@@ -151,13 +150,13 @@ const SettingsModal = ({
       <ScrollView className="flex-1 px-6 py-4">
         <View className="space-y-3">
           <TouchableOpacity
-            className={`p-4 rounded-lg border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
+            className={`p-4 rounded-lg border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
             onPress={onEmailPress}
           >
             <View className="flex-row items-center">
               <Ionicons name="mail-outline" size={24} color={isDark ? "white" : "black"} />
               <View className="ml-3 flex-1">
-                <Text className={`text-base font-inter-semibold ${isDark ? "text-white" : "text-black"}`}>
+                <Text className={`text-base font-inter-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
                   Change Email
                 </Text>
                 <Text className={`text-sm font-inter ${isDark ? "text-gray-400" : "text-gray-600"}`}>
@@ -169,13 +168,13 @@ const SettingsModal = ({
           </TouchableOpacity>
 
           <TouchableOpacity
-            className={`p-4 rounded-lg border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
+            className={`p-4 rounded-lg border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
             onPress={onPasswordPress}
           >
             <View className="flex-row items-center">
               <Ionicons name="lock-closed-outline" size={24} color={isDark ? "white" : "black"} />
               <View className="ml-3 flex-1">
-                <Text className={`text-base font-inter-semibold ${isDark ? "text-white" : "text-black"}`}>
+                <Text className={`text-base font-inter-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
                   Change Password
                 </Text>
                 <Text className={`text-sm font-inter ${isDark ? "text-gray-400" : "text-gray-600"}`}>
@@ -206,16 +205,15 @@ const ChangeEmailModal = ({
     presentationStyle="pageSheet"
     onRequestClose={onClose}
   >
-    <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
-      <View className={`pt-16 pb-4 px-6 border-b ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
+    <View className={`flex-1 ${isDark ? "bg-gray-900" : "bg-white"}`}>
+      <View className={`pt-16 pb-4 px-6 border-b ${isDark ? "border-gray-800 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
         <View className="flex-row justify-between items-center">
-          <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-black"}`}>
+          <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-gray-900"}`}>
             Change Email
           </Text>
           <TouchableOpacity
             onPress={onClose}
-            className={`p-2 rounded-full ${isDark ? "bg-gray-800" : "bg-gray-200"}`}
-          >
+            className={`p-2 rounded-full ${isDark ? "bg-gray-800" : "bg-gray-200"}`}>
             <Ionicons name="close" size={24} color={isDark ? "white" : "black"} />
           </TouchableOpacity>
         </View>
@@ -231,15 +229,15 @@ const ChangeEmailModal = ({
           placeholder="Enter new email address"
           placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
           className={`p-4 rounded-lg border text-base font-inter ${isDark
-            ? "bg-gray-900 border-gray-700 text-white"
-            : "bg-white border-gray-300 text-black"
+            ? "bg-gray-800 border-gray-700 text-white"
+            : "bg-white border-gray-300 text-gray-900"
             }`}
           keyboardType="email-address"
           autoCapitalize="none"
           autoFocus
         />
 
-        <View className={`mt-4 p-4 rounded-lg ${isDark ? "bg-gray-900" : "bg-blue-50"}`}>
+        <View className={`mt-4 p-4 rounded-lg ${isDark ? "bg-gray-800" : "bg-blue-50"}`}>
           <Text className={`text-sm font-inter ${isDark ? "text-gray-400" : "text-blue-700"}`}>
             A verification email will be sent to your new email address. You'll need to verify it before the change takes effect.
           </Text>
@@ -293,16 +291,15 @@ const ChangePasswordModal = ({
     presentationStyle="pageSheet"
     onRequestClose={onClose}
   >
-    <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
-      <View className={`pt-16 pb-4 px-6 border-b ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
+    <View className={`flex-1 ${isDark ? "bg-gray-900" : "bg-white"}`}>
+      <View className={`pt-16 pb-4 px-6 border-b ${isDark ? "border-gray-800 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
         <View className="flex-row justify-between items-center">
-          <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-black"}`}>
+          <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-gray-900"}`}>
             Change Password
           </Text>
           <TouchableOpacity
             onPress={onClose}
-            className={`p-2 rounded-full ${isDark ? "bg-gray-800" : "bg-gray-200"}`}
-          >
+            className={`p-2 rounded-full ${isDark ? "bg-gray-800" : "bg-gray-200"}`}>
             <Ionicons name="close" size={24} color={isDark ? "white" : "black"} />
           </TouchableOpacity>
         </View>
@@ -320,8 +317,8 @@ const ChangePasswordModal = ({
               placeholder="Enter current password"
               placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
               className={`p-4 rounded-lg border text-base font-inter ${isDark
-                ? "bg-gray-900 border-gray-700 text-white"
-                : "bg-white border-gray-300 text-black"
+                ? "bg-gray-800 border-gray-700 text-white"
+                : "bg-white border-gray-300 text-gray-900"
                 }`}
               secureTextEntry
               autoFocus
@@ -338,8 +335,8 @@ const ChangePasswordModal = ({
               placeholder="Enter new password"
               placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
               className={`p-4 rounded-lg border text-base font-inter ${isDark
-                ? "bg-gray-900 border-gray-700 text-white"
-                : "bg-white border-gray-300 text-black"
+                ? "bg-gray-800 border-gray-700 text-white"
+                : "bg-white border-gray-300 text-gray-900"
                 }`}
               secureTextEntry
             />
@@ -355,15 +352,15 @@ const ChangePasswordModal = ({
               placeholder="Confirm new password"
               placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
               className={`p-4 rounded-lg border text-base font-inter ${isDark
-                ? "bg-gray-900 border-gray-700 text-white"
-                : "bg-white border-gray-300 text-black"
+                ? "bg-gray-800 border-gray-700 text-white"
+                : "bg-white border-gray-300 text-gray-900"
                 }`}
               secureTextEntry
             />
           </View>
         </View>
 
-        <View className={`mt-4 p-4 rounded-lg ${isDark ? "bg-gray-900" : "bg-yellow-50"}`}>
+        <View className={`mt-4 p-4 rounded-lg ${isDark ? "bg-gray-800" : "bg-yellow-50"}`}>
           <Text className={`text-sm font-inter ${isDark ? "text-gray-400" : "text-yellow-700"}`}>
             Password must be at least 6 characters long.
           </Text>
@@ -649,11 +646,11 @@ const ProfileScreen = () => {
   if (loading) {
     return (
       <View
-        className={`flex-1 justify-center items-center ${isDark ? "bg-black" : "bg-white"
+        className={`flex-1 justify-center items-center ${isDark ? "bg-gray-900" : "bg-white"
           }`}
       >
         <Text
-          className={`text-lg font-inter ${isDark ? "text-white" : "text-black"
+          className={`text-lg font-inter ${isDark ? "text-white" : "text-gray-900"
             }`}
         >
           Loading...
@@ -669,7 +666,7 @@ const ProfileScreen = () => {
 
   return (
     <>
-      <ScrollView className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
+      <ScrollView className={`flex-1 ${isDark ? "bg-gray-900" : "bg-white"}`}>
         {/* Header */}
         <View
           className={`pt-16 pb-8 px-6 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}
@@ -687,7 +684,7 @@ const ProfileScreen = () => {
               />
             </TouchableOpacity>
             <Text
-              className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-black"
+              className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-gray-900"
                 }`}
             >
               Profile
@@ -703,11 +700,11 @@ const ProfileScreen = () => {
               />
             ) : (
               <View
-                className={`w-32 h-32 rounded-full justify-center items-center mb-4 ${isDark ? "bg-gray-700" : "bg-gray-300"
+                className={`w-32 h-32 rounded-full justify-center items-center mb-4 ${isDark ? "bg-gray-800" : "bg-gray-300"
                   }`}
               >
                 <Text
-                  className={`text-4xl font-inter-bold ${isDark ? "text-white" : "text-black"
+                  className={`text-4xl font-inter-bold ${isDark ? "text-white" : "text-gray-900"
                     }`}
                 >
                   {getInitials(displayName)}
@@ -716,7 +713,7 @@ const ProfileScreen = () => {
             )}
 
             <Text
-              className={`text-2xl font-inter-bold mb-2 ${isDark ? "text-white" : "text-black"
+              className={`text-2xl font-inter-bold mb-2 ${isDark ? "text-white" : "text-gray-900"
                 }`}
             >
               {displayName}
@@ -741,7 +738,7 @@ const ProfileScreen = () => {
         {/* Profile Details */}
         <View className="px-6 py-4">
           <Text
-            className={`text-xl font-inter-bold mb-4 ${isDark ? "text-white" : "text-black"
+            className={`text-xl font-inter-bold mb-4 ${isDark ? "text-white" : "text-gray-900"
               }`}
           >
             Account Information
@@ -750,7 +747,7 @@ const ProfileScreen = () => {
           {/* Info Cards */}
           <View className="space-y-3">
             <View
-              className={`p-4 rounded-lg ${isDark ? "bg-gray-900" : "bg-gray-50"
+              className={`p-4 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"
                 }`}
             >
               <View className="flex-row items-center mb-2">
@@ -767,7 +764,7 @@ const ProfileScreen = () => {
                 </Text>
               </View>
               <Text
-                className={`text-base font-inter ${isDark ? "text-white" : "text-black"
+                className={`text-base font-inter ${isDark ? "text-white" : "text-gray-900"
                   }`}
               >
                 {email}
@@ -775,7 +772,7 @@ const ProfileScreen = () => {
             </View>
 
             <View
-              className={`p-4 rounded-lg ${isDark ? "bg-gray-900" : "bg-gray-50"
+              className={`p-4 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"
                 }`}
             >
               <View className="flex-row items-center mb-2">
@@ -792,7 +789,7 @@ const ProfileScreen = () => {
                 </Text>
               </View>
               <Text
-                className={`text-base font-inter capitalize ${isDark ? "text-white" : "text-black"
+                className={`text-base font-inter capitalize ${isDark ? "text-white" : "text-gray-900"
                   }`}
               >
                 {role}
@@ -800,7 +797,7 @@ const ProfileScreen = () => {
             </View>
 
             <View
-              className={`p-4 rounded-lg ${isDark ? "bg-gray-900" : "bg-gray-50"
+              className={`p-4 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"
                 }`}
             >
               <View className="flex-row items-center mb-2">
@@ -817,7 +814,7 @@ const ProfileScreen = () => {
                 </Text>
               </View>
               <Text
-                className={`text-base font-inter ${isDark ? "text-white" : "text-black"
+                className={`text-base font-inter ${isDark ? "text-white" : "text-gray-900"
                   }`}
               >
                 {formatDate(user?.created_at)}
@@ -825,32 +822,7 @@ const ProfileScreen = () => {
             </View>
 
             <View
-              className={`p-4 rounded-lg ${isDark ? "bg-gray-900" : "bg-gray-50"
-                }`}
-            >
-              <View className="flex-row items-center mb-2">
-                <Ionicons
-                  name="time-outline"
-                  size={20}
-                  color={isDark ? "#9CA3AF" : "#6B7280"}
-                />
-                <Text
-                  className={`ml-3 text-base font-inter-semibold ${isDark ? "text-gray-300" : "text-gray-700"
-                    }`}
-                >
-                  Last Sign In
-                </Text>
-              </View>
-              <Text
-                className={`text-base font-inter ${isDark ? "text-white" : "text-black"
-                  }`}
-              >
-                {formatDate(user?.last_sign_in_at)}
-              </Text>
-            </View>
-
-            <View
-              className={`p-4 rounded-lg ${isDark ? "bg-gray-900" : "bg-gray-50"
+              className={`p-4 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"
                 }`}
             >
               <View className="flex-row items-center mb-2">
@@ -879,7 +851,7 @@ const ProfileScreen = () => {
         {/* Action Buttons */}
         <View className="px-6 py-4 space-y-3">
           <TouchableOpacity
-            className={`p-4 rounded-lg border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"
+            className={`p-4 rounded-lg border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
               }`}
             onPress={() => setEditProfileVisible(true)}
           >
@@ -890,7 +862,7 @@ const ProfileScreen = () => {
                 color={isDark ? "white" : "black"}
               />
               <Text
-                className={`ml-2 text-base font-inter-semibold ${isDark ? "text-white" : "text-black"
+                className={`ml-2 text-base font-inter-semibold ${isDark ? "text-white" : "text-gray-900"
                   }`}
               >
                 Edit Profile
@@ -899,7 +871,7 @@ const ProfileScreen = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className={`p-4 rounded-lg border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"
+            className={`p-4 rounded-lg border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
               }`}
             onPress={() => setSettingsVisible(true)}
           >
@@ -910,7 +882,7 @@ const ProfileScreen = () => {
                 color={isDark ? "white" : "black"}
               />
               <Text
-                className={`ml-2 text-base font-inter-semibold ${isDark ? "text-white" : "text-black"
+                className={`ml-2 text-base font-inter-semibold ${isDark ? "text-white" : "text-gray-900"
                   }`}
               >
                 Settings

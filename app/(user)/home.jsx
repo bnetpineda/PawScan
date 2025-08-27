@@ -34,6 +34,7 @@ const NewsFeedScreen = () => {
   const isDark = useColorScheme() === "dark";
 
   const [posts, setPosts] = useState([]);
+  const [allPosts, setAllPosts] = useState([]); // Store all posts for filtering
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -49,12 +50,22 @@ const NewsFeedScreen = () => {
   const { user } = useAuth();
   const { showTutorial, startTutorial, closeTutorial } = useTutorial();
   const [tutorialVisible, setTutorialVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(""); // Search query state
+  const [isSearching, setIsSearching] = useState(false); // Search mode state
 
   useEffect(() => {
     setCurrentUser(user || null);
     loadPosts();
     checkFirstTimeUser();
   }, []);
+
+  // Update filtered posts when allPosts or searchQuery changes
+  useEffect(() => {
+    if (searchQuery) {
+      const filtered = filterPosts(searchQuery);
+      setPosts(filtered);
+    }
+  }, [allPosts, searchQuery, filterPosts]);
 
   const checkFirstTimeUser = async () => {
     try {
@@ -179,7 +190,8 @@ const NewsFeedScreen = () => {
         })
       );
 
-      setPosts(processedPosts);
+      setAllPosts(processedPosts); // Store all posts
+      setPosts(processedPosts); // Set initial posts
     } catch (err) {
       console.error("Failed to load posts:", err);
       Alert.alert("Error", "Could not fetch posts.");
@@ -193,6 +205,52 @@ const NewsFeedScreen = () => {
     await loadPosts();
     setRefreshing(false);
   }, []);
+
+  // Filter posts based on search query
+  const filterPosts = useCallback((query) => {
+    if (!query.trim()) {
+      return allPosts;
+    }
+    
+    const normalizedQuery = query.toLowerCase().trim();
+    return allPosts.filter(post => {
+      // Check pet name
+      if (post.pet_name && post.pet_name.toLowerCase().includes(normalizedQuery)) {
+        return true;
+      }
+      
+      // Check display name
+      if (post.display_name && post.display_name.toLowerCase().includes(normalizedQuery)) {
+        return true;
+      }
+      
+      // Check analysis result
+      if (post.analysis_result && post.analysis_result.toLowerCase().includes(normalizedQuery)) {
+        return true;
+      }
+      
+      // Check if anonymous and query matches "anonymous"
+      if (post.is_anonymous && normalizedQuery === "anonymous") {
+        return true;
+      }
+      
+      return false;
+    });
+  }, [allPosts]);
+
+  // Handle search input changes
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    const filtered = filterPosts(query);
+    setPosts(filtered);
+  };
+
+  // Clear search and show all posts
+  const clearSearch = () => {
+    setSearchQuery("");
+    setPosts(allPosts);
+    setIsSearching(false);
+  };
 
   const toggleLike = async (postId, isLiked) => {
     if (!currentUser) {
@@ -615,39 +673,68 @@ const NewsFeedScreen = () => {
             </Text>
           </TouchableOpacity>
         </View>
-        {/* Top Header */}
-        <View className="flex-row justify-center items-center px-5 py-4 border-b border-gray-200 dark:border-neutral-800 divide-x divide-gray-200 dark:divide-neutral-800">
-          <TouchableOpacity
-            className="flex-1 items-center"
-            onPress={() => console.log("Search pressed")}
-          >
-            <FontAwesome
-              name="search"
-              size={20}
-              color={isDark ? "#fff" : "#6C757D"}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="flex-1 items-center"
-            onPress={() => router.push("info")}
-          >
-            <FontAwesome
-              name="info"
-              size={20}
-              color={isDark ? "#fff" : "#6C757D"}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="flex-1 items-center"
-            onPress={() => router.push("history")}
-          >
-            <FontAwesome
-              name="history"
-              size={20}
-              color={isDark ? "#fff" : "#6C757D"}
-            />
-          </TouchableOpacity>
-        </View>
+        
+        {/* Search Bar */}
+        {isSearching ? (
+          <View className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
+            <View className="flex-row items-center bg-gray-100 dark:bg-neutral-800 rounded-full px-4 py-2">
+              <FontAwesome
+                name="search"
+                size={18}
+                color={isDark ? "#8E8E93" : "#6C757D"}
+              />
+              <TextInput
+                value={searchQuery}
+                onChangeText={handleSearch}
+                placeholder="Search posts..."
+                placeholderTextColor={isDark ? "#8E8E93" : "#6C757D"}
+                className="flex-1 mx-2 font-inter text-black dark:text-white"
+                autoFocus
+              />
+              <TouchableOpacity onPress={clearSearch}>
+                <FontAwesome
+                  name="times"
+                  size={18}
+                  color={isDark ? "#8E8E93" : "#6C757D"}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          /* Top Header with Icons */
+          <View className="flex-row justify-center items-center px-5 py-4 border-b border-gray-200 dark:border-neutral-800 divide-x divide-gray-200 dark:divide-neutral-800">
+            <TouchableOpacity
+              className="flex-1 items-center"
+              onPress={() => setIsSearching(true)}
+            >
+              <FontAwesome
+                name="search"
+                size={20}
+                color={isDark ? "#fff" : "#6C757D"}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-1 items-center"
+              onPress={() => router.push("info")}
+            >
+              <FontAwesome
+                name="info"
+                size={20}
+                color={isDark ? "#fff" : "#6C757D"}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-1 items-center"
+              onPress={() => router.push("history")}
+            >
+              <FontAwesome
+                name="history"
+                size={20}
+                color={isDark ? "#fff" : "#6C757D"}
+              />
+            </TouchableOpacity>
+          </View>
+        )}
         {posts.length === 0 ? (
           <View className="flex-1 justify-center items-center py-20">
             <FontAwesome

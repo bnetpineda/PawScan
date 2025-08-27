@@ -97,6 +97,25 @@ export async function shareToNewsfeed(
       throw new Error("Analysis not found");
     }
 
+    // Validate that this is a proper pet analysis by checking for the structured format
+    // The analysis should contain these key headers to be considered valid
+    const analysisResult = analysisData.analysis_result;
+    const hasValidStructure = analysisResult.includes("Breed of the pet:") && 
+                             analysisResult.includes("Specific Skin Disease Detected:") &&
+                             analysisResult.includes("Confidence score:") &&
+                             analysisResult.includes("Three suggested treatments:") &&
+                             analysisResult.includes("Urgency level:") &&
+                             analysisResult.includes("Essential first aid care steps:") &&
+                             analysisResult.includes("Recommended medication:") &&
+                             analysisResult.includes("Indicators that a Veterinarian should be contacted:");
+    
+    // Also check that it's not the "unable to analyze" message
+    const isInvalidAnalysis = analysisResult.includes("I'm unable to analyze this image as it does not contain a cat or dog");
+    
+    if (!hasValidStructure || isInvalidAnalysis) {
+      throw new Error("Only valid pet analyses can be shared. This analysis doesn't appear to be of a cat or dog.");
+    }
+
     // Create newsfeed post
     const { data: postData, error: postError } = await supabase
       .from("newsfeed_posts")

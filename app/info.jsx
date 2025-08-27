@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   useColorScheme,
   View,
+  FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import diseasesData from "../assets/diseases_information.json";
@@ -21,61 +22,138 @@ const ICONS = {
   shield: "shield",
   stethoscope: "stethoscope",
   info: "info-circle",
+  bug: "bug",
+  paw: "paw",
+  heart: "heart",
+  filter: "filter",
 };
 
 const DiseasesInformationScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDisease, setSelectedDisease] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const isDarkMode = useColorScheme() === "dark";
 
-  // Filter diseases based on search query
-  const filteredDiseases = useMemo(() => {
-    if (!searchQuery.trim()) return diseasesData.filter((d) => d.Disease);
+  // Categorize diseases
+  const categorizedDiseases = useMemo(() => {
+    const categories = {
+      "All": [],
+      "Skin Conditions": [],
+      "Infections": [],
+      "Parasites": [],
+      "Allergies": [],
+      "Other": []
+    };
 
-    return diseasesData.filter(
+    diseasesData.forEach(disease => {
+      if (!disease.Disease) return;
+      
+      categories["All"].push(disease);
+      
+      const diseaseName = disease.Disease.toLowerCase();
+      const overview = disease.Overview?.toLowerCase() || "";
+      
+      if (diseaseName.includes("dermatitis") || diseaseName.includes("allergy") || diseaseName.includes("allergic")) {
+        categories["Allergies"].push(disease);
+      } else if (diseaseName.includes("mite") || diseaseName.includes("flea") || diseaseName.includes("lice") || diseaseName.includes("tick")) {
+        categories["Parasites"].push(disease);
+      } else if (diseaseName.includes("bacteria") || diseaseName.includes("bacterial") || diseaseName.includes("fungi") || diseaseName.includes("fungal")) {
+        categories["Infections"].push(disease);
+      } else if (diseaseName.includes("skin") || diseaseName.includes("dermatitis") || diseaseName.includes("acne")) {
+        categories["Skin Conditions"].push(disease);
+      } else {
+        categories["Other"].push(disease);
+      }
+    });
+
+    return categories;
+  }, []);
+
+  // Filter diseases based on search query and category
+  const filteredDiseases = useMemo(() => {
+    let diseasesToFilter = selectedCategory === "All" 
+      ? diseasesData.filter((d) => d.Disease)
+      : categorizedDiseases[selectedCategory] || [];
+
+    if (!searchQuery.trim()) return diseasesToFilter;
+
+    return diseasesToFilter.filter(
       (disease) =>
         disease.Disease &&
         (disease.Disease.toLowerCase().includes(searchQuery.toLowerCase()) ||
           disease.Overview?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           disease.Symptoms?.toLowerCase().includes(searchQuery.toLowerCase()))
     );
-  }, [searchQuery]);
+  }, [searchQuery, selectedCategory, categorizedDiseases]);
 
-  const DiseaseCard = ({ disease }) => (
-    <TouchableOpacity
-      className="mb-4 p-4 rounded-2xl border dark:bg-gray-800 dark:border-gray-700 bg-white border-gray-100 shadow-sm"
-      onPress={() => setSelectedDisease(disease)}
-      activeOpacity={0.7}
-    >
-      <View className="flex-row items-center justify-between">
-        <View className="flex-1 mr-3">
-          <Text className="text-lg font-inter-semibold mb-2 dark:text-white text-gray-900">
-            {disease.Disease}
-          </Text>
-          <Text
-            className="text-sm font-inter leading-5 dark:text-gray-300 text-gray-600"
-            numberOfLines={2}
-          >
-            {disease.Overview}
-          </Text>
-          {disease["Feline vs Canine"] && (
-            <View className="mt-2 px-2 py-1 rounded-full self-start dark:bg-blue-900 first-letter:bg-blue-50">
-              <Text
-                className="text-xs font-inter-semibold dark:text-blue-300 text-blue-700"
-              >
-                Species Specific
+  const DiseaseCard = ({ disease }) => {
+    // Determine icon based on disease type
+    const getDiseaseIcon = () => {
+      const diseaseName = disease.Disease.toLowerCase();
+      if (diseaseName.includes("mite") || diseaseName.includes("flea") || diseaseName.includes("lice")) {
+        return ICONS.bug;
+      } else if (diseaseName.includes("allergy") || diseaseName.includes("allergic")) {
+        return ICONS.heart;
+      } else {
+        return ICONS.paw;
+      }
+    };
+
+    // Determine icon color based on disease type
+    const getIconColor = () => {
+      const diseaseName = disease.Disease.toLowerCase();
+      if (diseaseName.includes("mite") || diseaseName.includes("flea") || diseaseName.includes("lice")) {
+        return isDarkMode ? "#F87171" : "#EF4444"; // Red for parasites
+      } else if (diseaseName.includes("allergy") || diseaseName.includes("allergic")) {
+        return isDarkMode ? "#60A5FA" : "#3B82F6"; // Blue for allergies
+      } else {
+        return isDarkMode ? "#34D399" : "#10B981"; // Green for others
+      }
+    };
+
+    return (
+      <TouchableOpacity
+        className="mb-4 p-4 rounded-2xl border dark:bg-gray-800 dark:border-gray-700 bg-white border-gray-100 shadow-sm"
+        onPress={() => setSelectedDisease(disease)}
+        activeOpacity={0.7}
+      >
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1 mr-3">
+            <View className="flex-row items-center mb-1">
+              <FontAwesome
+                name={getDiseaseIcon()}
+                size={16}
+                color={getIconColor()}
+              />
+              <Text className="text-lg font-inter-semibold ml-2 dark:text-white text-gray-900">
+                {disease.Disease}
               </Text>
             </View>
-          )}
+            <Text
+              className="text-sm font-inter leading-5 dark:text-gray-300 text-gray-600"
+              numberOfLines={2}
+            >
+              {disease.Overview}
+            </Text>
+            {disease["Feline vs Canine"] && (
+              <View className="mt-2 px-2 py-1 rounded-full self-start dark:bg-blue-900 bg-blue-100">
+                <Text
+                  className="text-xs font-inter-semibold dark:text-blue-300 text-blue-700"
+                >
+                  Species Specific
+                </Text>
+              </View>
+            )}
+          </View>
+          <FontAwesome
+            name={ICONS.chevronRight}
+            size={20}
+            color={isDarkMode ? "#9CA3AF" : "#6B7280"}
+          />
         </View>
-        <FontAwesome
-          name={ICONS.chevronRight}
-          size={20}
-          color={isDarkMode ? "#9CA3AF" : "#6B7280"}
-        />
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   const DetailSection = ({ title, content, icon, color = "blue" }) => {
     if (!content) return null;
@@ -129,7 +207,7 @@ const DiseasesInformationScreen = () => {
 
         {/* Search Bar */}
         <View
-          className="flex-row items-center px-4 py-3 rounded-xl dark:bg-gray-800 bg-white shadow-sm"
+          className="flex-row items-center px-4 py-3 rounded-xl dark:bg-gray-800 bg-white shadow-sm mb-4"
         >
           <FontAwesome
             name={ICONS.search}
@@ -153,10 +231,39 @@ const DiseasesInformationScreen = () => {
             </TouchableOpacity>
           )}
         </View>
+
+        {/* Category Filter */}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          className="pb-2"
+        >
+          {Object.keys(categorizedDiseases).map((category) => (
+            <TouchableOpacity
+              key={category}
+              className={`px-4 py-2 rounded-full mr-2 ${
+                selectedCategory === category
+                  ? "dark:bg-blue-600 bg-blue-500"
+                  : "dark:bg-gray-700 bg-gray-200"
+              }`}
+              onPress={() => setSelectedCategory(category)}
+            >
+              <Text
+                className={`text-sm font-inter-semibold ${
+                  selectedCategory === category
+                    ? "dark:text-white text-white"
+                    : "dark:text-gray-300 text-gray-700"
+                }`}
+              >
+                {category} ({categorizedDiseases[category].length})
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
       {/* Disease List */}
-      <ScrollView className="flex-1 px-6 py-4">
+      <View className="flex-1 px-6 py-4">
         {filteredDiseases.length > 0 ? (
           <>
             <Text
@@ -164,10 +271,15 @@ const DiseasesInformationScreen = () => {
             >
               {filteredDiseases.length} disease
               {filteredDiseases.length !== 1 ? "s" : ""} found
+              {selectedCategory !== "All" && ` in ${selectedCategory}`}
             </Text>
-            {filteredDiseases.map((disease, index) => (
-              <DiseaseCard key={index} disease={disease} />
-            ))}
+            <FlatList
+              data={filteredDiseases}
+              renderItem={({ item }) => <DiseaseCard disease={item} />}
+              keyExtractor={(item, index) => index.toString()}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 20 }}
+            />
           </>
         ) : (
           <View className="flex-1 items-center justify-center py-16">
@@ -184,11 +296,22 @@ const DiseasesInformationScreen = () => {
             <Text
               className="text-sm font-inter mt-2 text-center dark:text-gray-500 text-gray-400"
             >
-              Try adjusting your search terms
+              Try adjusting your search terms or select a different category
             </Text>
+            <TouchableOpacity
+              className="mt-4 px-4 py-2 rounded-full dark:bg-gray-700 bg-gray-200"
+              onPress={() => {
+                setSearchQuery("");
+                setSelectedCategory("All");
+              }}
+            >
+              <Text className="font-inter-semibold dark:text-gray-300 text-gray-700">
+                Clear Filters
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
-      </ScrollView>
+      </View>
 
       {/* Disease Detail Modal */}
       <Modal
@@ -221,6 +344,8 @@ const DiseasesInformationScreen = () => {
           </View>
 
           <ScrollView className="flex-1 p-6">
+
+
             <DetailSection
               title="Overview"
               content={selectedDisease?.Overview}
@@ -239,7 +364,7 @@ const DiseasesInformationScreen = () => {
               title="Causes"
               content={selectedDisease?.Causes}
               icon={ICONS.stethoscope}
-              color="purple"
+              color="purple"@
             />
 
             <DetailSection
@@ -260,11 +385,18 @@ const DiseasesInformationScreen = () => {
               <View
                 className="p-4 rounded-xl mb-6 dark:bg-gray-800 bg-blue-50"
               >
-                <Text
-                  className="font-inter-semibold mb-2 dark:text-blue-400 text-blue-800"
-                >
-                  Species Comparison
-                </Text>
+                <View className="flex-row items-center mb-2">
+                  <FontAwesome 
+                    name={ICONS.paw} 
+                    size={16} 
+                    color={isDarkMode ? "#60A5FA" : "#2563EB"} 
+                  />
+                  <Text
+                    className="ml-2 font-inter-semibold mb-2 dark:text-blue-400 text-blue-800"
+                  >
+                    Species Comparison
+                  </Text>
+                </View>
                 <Text
                   className="text-base font-inter dark:text-gray-300 text-blue-700"
                 >
