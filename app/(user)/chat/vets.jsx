@@ -27,16 +27,24 @@ const VetsListScreen = () => {
       // Get all veterinarians from the secure view
       const { data: vetsData, error: vetsError } = await supabase
         .from('veterinarians')
-        .select('id, raw_user_meta_data, email');
+        .select('id, raw_user_meta_data, email')
+        .order('raw_user_meta_data->options->data->display_name', { ascending: true });
 
-      if (vetsError) throw vetsError;
+      if (vetsError) {
+        console.error('Error loading vets:', vetsError);
+        // Fallback: try to get from conversations
+        await loadVetsFromConversations();
+        return;
+      }
 
       // Format the data for display
-      const formattedVets = vetsData.map(vet => ({
-        id: vet.id,
-        name: vet.raw_user_meta_data?.options?.data?.display_name || 'Veterinarian',
-        email: vet.email || 'No email provided'
-      }));
+      const formattedVets = vetsData
+        .map(vet => ({
+          id: vet.id,
+          name: vet.raw_user_meta_data?.options?.data?.display_name || 'Veterinarian',
+          email: vet.email || 'No email provided'
+        }))
+        .filter(vet => vet.id !== user.id); // Exclude current user if they're also a vet
 
       setVets(formattedVets);
     } catch (error) {
@@ -44,6 +52,49 @@ const VetsListScreen = () => {
       Alert.alert('Error', 'Could not load veterinarians. Please try again later.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadVetsFromConversations = async () => {
+    try {
+      // Fallback method: get vets from existing conversations
+      const { data: conversationsData, error: conversationsError } = await supabase
+        .from('conversations')
+        .select('vet_id')
+        .eq('user_id', user.id);
+
+      if (conversationsError) throw conversationsError;
+
+      // Get unique vet IDs
+      const vetIds = [...new Set(conversationsData.map(conv => conv.vet_id))];
+
+      if (vetIds.length === 0) {
+        setVets([]);
+        return;
+      }
+
+      // Get vet details for each ID
+      const vetsWithDetails = [];
+      for (const vetId of vetIds) {
+        const { data: vetData, error: vetError } = await supabase
+          .from('veterinarians')
+          .select('id, raw_user_meta_data, email')
+          .eq('id', vetId)
+          .single();
+
+        if (!vetError && vetData) {
+          vetsWithDetails.push({
+            id: vetData.id,
+            name: vetData.raw_user_meta_data?.options?.data?.display_name || 'Veterinarian',
+            email: vetData.email || 'No email provided'
+          });
+        }
+      }
+
+      setVets(vetsWithDetails);
+    } catch (error) {
+      console.error('Error loading vets from conversations:', error);
+      setVets([]);
     }
   };
 
