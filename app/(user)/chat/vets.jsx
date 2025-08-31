@@ -1,51 +1,47 @@
 import { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { useAuth } from '../../../providers/AuthProvider';
 import { supabase } from '../../../lib/supabase';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 const VetsListScreen = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [vets, setVets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadVets();
   }, []);
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadVets();
+    setRefreshing(false);
+  };
+
   const loadVets = async () => {
     try {
-      // Get all users with the role of "Veterinarian" from the user metadata
-      // We'll use a different approach that doesn't require direct access to auth.users
-      const { data: users, error } = await supabase
-        .from('user_profiles')
-        .select('id, display_name, email, role')
-        .eq('role', 'Veterinarian')
-        .order('display_name');
+      // Get all veterinarians from the secure view
+      const { data: vetsData, error: vetsError } = await supabase
+        .from('veterinarians')
+        .select('id, raw_user_meta_data, email');
 
-      if (error) {
-        // Fallback: try to get from a different source
-        console.warn('Error loading vets from user_profiles:', error);
-        throw error;
-      }
+      if (vetsError) throw vetsError;
 
       // Format the data for display
-      const formattedVets = users.map(vet => ({
+      const formattedVets = vetsData.map(vet => ({
         id: vet.id,
-        name: vet.display_name || 'Veterinarian',
+        name: vet.raw_user_meta_data?.options?.data?.display_name || 'Veterinarian',
         email: vet.email || 'No email provided'
       }));
 
       setVets(formattedVets);
     } catch (error) {
       console.error('Error loading vets:', error);
-      // Show a friendly message to the user
-      Alert.alert(
-        'Information', 
-        'Unable to load veterinarians at the moment. Please try again later.',
-        [{ text: 'OK' }]
-      );
+      Alert.alert('Error', 'Could not load veterinarians. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -56,10 +52,18 @@ const VetsListScreen = () => {
       style={styles.vetItem}
       onPress={() => router.push(`/(user)/chat/${item.id}?vetName=${encodeURIComponent(item.name)}`)}
     >
-      <View style={styles.vetHeader}>
-        <Text style={styles.vetName}>{item.name}</Text>
+      <View style={styles.avatarContainer}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>{item.name.charAt(0).toUpperCase()}</Text>
+        </View>
       </View>
-      <Text style={styles.vetEmail}>{item.email}</Text>
+      <View style={styles.vetInfo}>
+        <Text style={styles.vetName}>{item.name}</Text>
+        <Text style={styles.vetEmail}>{item.email}</Text>
+      </View>
+      <View style={styles.arrowContainer}>
+        <Ionicons name="chevron-forward" size={24} color="#007AFF" />
+      </View>
     </TouchableOpacity>
   );
 
@@ -75,7 +79,9 @@ const VetsListScreen = () => {
         </View>
       ) : vets.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No veterinarians available at the moment</Text>
+          <Ionicons name="person-outline" size={64} color="#007AFF" />
+          <Text style={styles.emptyTitle}>No veterinarians available</Text>
+          <Text style={styles.emptyText}>Please check back later</Text>
         </View>
       ) : (
         <FlatList
@@ -83,6 +89,9 @@ const VetsListScreen = () => {
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderVet}
           style={styles.vetsList}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         />
       )}
     </SafeAreaView>
@@ -95,57 +104,86 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   header: {
-    padding: 16,
+    padding: 20,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
   headerText: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
+    color: '#333',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
+    padding: 32,
   },
   loadingText: {
-    marginTop: 10,
+    marginTop: 16,
     fontSize: 16,
-    color: '#888',
+    color: '#666',
   },
   vetsList: {
     flex: 1,
   },
   vetItem: {
+    flexDirection: 'row',
     backgroundColor: '#fff',
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
+    alignItems: 'center',
   },
-  vetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
+  avatarContainer: {
+    marginRight: 16,
   },
-  vetName: {
-    fontSize: 16,
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    color: 'white',
+    fontSize: 20,
     fontWeight: 'bold',
   },
+  vetInfo: {
+    flex: 1,
+  },
+  vetName: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
   vetEmail: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#666',
+  },
+  arrowContainer: {
+    marginLeft: 8,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
+    padding: 32,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 16,
+    marginBottom: 8,
   },
   emptyText: {
     fontSize: 16,
-    color: '#888',
+    color: '#666',
   },
 });
 
