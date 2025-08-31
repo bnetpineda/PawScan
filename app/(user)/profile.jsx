@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
@@ -12,10 +11,11 @@ import {
 } from "react-native";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../providers/AuthProvider";
-import ChangeEmailModal from "./components/ChangeEmailModal";
-import ChangePasswordModal from "./components/ChangePasswordModal";
-import EditProfileModal from "./components/EditProfileModal";
-import SettingsModal from "./components/SettingsModal";
+import ChangeEmailModal from "../../components/ChangeEmailModal";
+import ChangePasswordModal from "../../components/ChangePasswordModal";
+import EditProfileModal from "../../components/EditProfileModal";
+import SettingsModal from "../../components/SettingsModal";
+import * as ImagePicker from 'expo-image-picker'; // Added missing import
 
 const ProfileScreen = () => {
   const [loading, setLoading] = useState(true);
@@ -36,7 +36,6 @@ const ProfileScreen = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const { user } = useAuth();
-  const navigation = useNavigation();
 
   useEffect(() => {
     if (user) {
@@ -50,10 +49,6 @@ const ProfileScreen = () => {
     }
     setLoading(false);
   }, [user]);
-
-  const handleGoBack = () => {
-    navigation.goBack();
-  };
 
   const handleSignOut = async () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -280,16 +275,6 @@ const ProfileScreen = () => {
         {/* Header */}
         <View className={`pt-16 pb-8 px-6 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
           <View className="flex-row items-center mb-6">
-            <TouchableOpacity
-              onPress={handleGoBack}
-              className={`p-2 rounded-full mr-4 ${isDark ? "bg-gray-800" : "bg-gray-200"}`}
-            >
-              <Ionicons
-                name="arrow-back-outline"
-                size={24}
-                color={isDark ? "white" : "black"}
-              />
-            </TouchableOpacity>
             <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-black"}`}>
               Profile
             </Text>

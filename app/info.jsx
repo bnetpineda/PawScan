@@ -350,7 +350,7 @@ const DiseasesInformationScreen = () => {
               title="Overview"
               content={selectedDisease?.Overview}
               icon={ICONS.info}
-              color="blue"
+              color="blue"C
             />
 
             <DetailSection
@@ -364,7 +364,7 @@ const DiseasesInformationScreen = () => {
               title="Causes"
               content={selectedDisease?.Causes}
               icon={ICONS.stethoscope}
-              color="purple"@
+              color="purple"
             />
 
             <DetailSection
