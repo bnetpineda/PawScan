@@ -32,7 +32,7 @@ export default function VetLayout() {
         name="home"
         options={{
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="home" color={color} size={24} />
+            <FontAwesome name="home" color={color} size={20} />
           ),
         }}
       />
@@ -40,7 +40,7 @@ export default function VetLayout() {
         name="camera"
         options={{
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="camera" color={color} size={24} />
+            <FontAwesome name="camera" color={color} size={20} />
           ),
         }}
       />
@@ -49,7 +49,7 @@ export default function VetLayout() {
         options={{
           title: "Chat",
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="comment" color={color} size={24} />
+            <FontAwesome name="comment" color={color} size={20} />
           ),
         }}
       />
@@ -57,7 +57,7 @@ export default function VetLayout() {
         name="profile"
         options={{
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="user" color={color} size={24} />
+            <FontAwesome name="user" color={color} size={20} />
           ),
         }}
       />
@@ -66,7 +66,7 @@ export default function VetLayout() {
         options={{
           href: null,
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="user" color={color} size={24} />
+            <FontAwesome name="user" color={color} size={20} />
           ),
         }}
       />

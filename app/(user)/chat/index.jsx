@@ -1,15 +1,27 @@
-import { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
-import { useAuth } from '../../../providers/AuthProvider';
-import { supabase } from '../../../lib/supabase';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  Alert,
+  RefreshControl,
+  useColorScheme,
+  StatusBar,
+} from "react-native";
+import { useAuth } from "../../../providers/AuthProvider";
+import { supabase } from "../../../lib/supabase";
+import { useRouter } from "expo-router";
+import { FontAwesome } from "@expo/vector-icons";
 
 const ChatListScreen = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [conversations, setConversations] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const isDark = useColorScheme() === "dark";
 
   useEffect(() => {
     loadConversations();
@@ -24,15 +36,18 @@ const ChatListScreen = () => {
   const loadConversations = async () => {
     try {
       // Get conversations for the current user
-      const { data: conversationsData, error: conversationsError } = await supabase
-        .from('conversations')
-        .select(`
+      const { data: conversationsData, error: conversationsError } =
+        await supabase
+          .from("conversations")
+          .select(
+            `
           id,
           vet_id,
           updated_at
-        `)
-        .eq('user_id', user.id)
-        .order('updated_at', { ascending: false });
+        `
+          )
+          .eq("user_id", user.id)
+          .order("updated_at", { ascending: false });
 
       if (conversationsError) throw conversationsError;
 
@@ -41,241 +56,172 @@ const ChatListScreen = () => {
         conversationsData.map(async (conversation) => {
           // Get vet details from the secure veterinarians view
           const { data: vetData, error: vetError } = await supabase
-            .from('veterinarians')
-            .select('id, raw_user_meta_data, email')
-            .eq('id', conversation.vet_id)
+            .from("veterinarians")
+            .select("id, raw_user_meta_data, email")
+            .eq("id", conversation.vet_id)
             .single();
 
           if (vetError) {
-            console.error('Error fetching vet data:', vetError);
+            console.error("Error fetching vet data:", vetError);
             // Fallback to a default vet name
             return {
               ...conversation,
               latestMessage: null,
-              vetName: 'Veterinarian'
+              vetName: "Veterinarian",
             };
           }
 
-          const vetName = vetData?.raw_user_meta_data?.options?.data?.display_name || 'Veterinarian';
+          const vetName =
+            vetData?.raw_user_meta_data?.options?.data?.display_name ||
+            "Veterinarian";
 
           // Get the latest message for this conversation
-          const { data: latestMessageData, error: messageError } = await supabase
-            .from('messages')
-            .select('content, created_at')
-            .eq('conversation_id', conversation.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
+          const { data: latestMessageData, error: messageError } =
+            await supabase
+              .from("messages")
+              .select("content, created_at")
+              .eq("conversation_id", conversation.id)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .single();
 
-          if (messageError && messageError.code !== 'PGRST116') {
-            console.error('Error fetching message:', messageError);
+          if (messageError && messageError.code !== "PGRST116") {
+            console.error("Error fetching message:", messageError);
           }
 
           return {
             ...conversation,
             latestMessage: latestMessageData || null,
-            vetName: vetName
+            vetName: vetName,
           };
         })
       );
 
       setConversations(conversationsWithLatestMessage);
     } catch (error) {
-      console.error('Error loading conversations:', error);
-      Alert.alert('Error', 'Could not load conversations');
+      console.error("Error loading conversations:", error);
+      Alert.alert("Error", "Could not load conversations");
     }
   };
 
   const formatTime = (dateString) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     const date = new Date(dateString);
     const now = new Date();
     const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-    
+
     if (diffInDays === 0) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     } else if (diffInDays === 1) {
-      return 'Yesterday';
+      return "Yesterday";
     } else if (diffInDays < 7) {
-      return date.toLocaleDateString([], { weekday: 'long' });
+      return date.toLocaleDateString([], { weekday: "long" });
     } else {
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      return date.toLocaleDateString([], { month: "short", day: "numeric" });
     }
   };
 
   const renderConversation = ({ item }) => (
     <TouchableOpacity
-      style={styles.conversationItem}
-      onPress={() => router.push(`/(user)/chat/${item.vet_id}?vetName=${encodeURIComponent(item.vetName)}`)}
+      className="flex-row p-4 bg-white border-b border-gray-200 dark:bg-neutral-900 dark:border-neutral-800"
+      onPress={() =>
+        router.push(
+          `/(user)/chat/${item.vet_id}?vetName=${encodeURIComponent(
+            item.vetName
+          )}`
+        )
+      }
     >
-      <View style={styles.avatarContainer}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{item.vetName.charAt(0).toUpperCase()}</Text>
+      <View className="mr-3">
+        <View className="w-12 h-12 rounded-full bg-blue-500 justify-center items-center">
+          <Text className="text-white text-xl font-inter-bold">
+            {item.vetName.charAt(0).toUpperCase()}
+          </Text>
         </View>
       </View>
-      <View style={styles.conversationContent}>
-        <View style={styles.conversationHeader}>
-          <Text style={styles.vetName} numberOfLines={1}>{item.vetName}</Text>
+      <View className="flex-1 justify-center">
+        <View className="flex-row justify-between mb-1">
+          <Text
+            className="text-base font-inter-bold flex-1 text-black dark:text-white"
+            numberOfLines={1}
+          >
+            {item.vetName}
+          </Text>
           {item.latestMessage && (
-            <Text style={styles.timestamp}>{formatTime(item.latestMessage.created_at)}</Text>
+            <Text className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+              {formatTime(item.latestMessage.created_at)}
+            </Text>
           )}
         </View>
         {item.latestMessage ? (
-          <Text style={styles.lastMessage} numberOfLines={1}>
+          <Text
+            className="text-sm text-gray-600 dark:text-gray-300"
+            numberOfLines={1}
+          >
             {item.latestMessage.content}
           </Text>
         ) : (
-          <Text style={styles.noMessage}>No messages yet</Text>
+          <Text className="text-sm italic text-gray-500 dark:text-gray-400">
+            No messages yet
+          </Text>
         )}
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Your Chats</Text>
+    <SafeAreaView className="flex-1 bg-white dark:bg-black pt-12">
+      <StatusBar
+        barStyle={isDark ? "light-content" : "dark-content"}
+        backgroundColor={isDark ? "#000" : "#fff"}
+      />
+      <View className="flex-row justify-between items-center px-5 py-4 border-b border-gray-200 dark:border-neutral-800 mt-2">
+        <Text className="text-2xl font-inter-bold text-black dark:text-white">
+          Your Chats
+        </Text>
       </View>
       {conversations.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="chatbubbles-outline" size={64} color="#007AFF" />
-          <Text style={styles.emptyTitle}>No conversations yet</Text>
-          <Text style={styles.emptyText}>Start a chat with a veterinarian to begin</Text>
+        <View className="flex-1 justify-center items-center p-8">
+          <FontAwesome
+            name="commenting-o"
+            size={64}
+            color={isDark ? "#60a5fa" : "#007AFF"}
+          />
+          <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">
+            No conversations yet
+          </Text>
+          <Text className="text-base text-center text-gray-600 dark:text-gray-300">
+            Start a chat with a veterinarian to begin
+          </Text>
         </View>
       ) : (
         <FlatList
           data={conversations}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderConversation}
-          style={styles.conversationsList}
+          className="flex-1"
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? "#60a5fa" : "#007AFF"} />
           }
         />
       )}
-      <View style={styles.startChatContainer}>
+      <View className="p-4 bg-white border-t border-gray-200 dark:bg-neutral-900 dark:border-neutral-800">
         <TouchableOpacity
-          style={styles.startChatButton}
-          onPress={() => router.push('/(user)/chat/vets')}
+          className="flex-row bg-blue-500 rounded-full p-4 items-center justify-center"
+          onPress={() => router.push("/(user)/chat/vets")}
+          activeOpacity={0.8}
         >
-          <Ionicons name="person-add-outline" size={24} color="white" />
-          <Text style={styles.startChatButtonText}>Start New Chat</Text>
+          <FontAwesome name="plus" size={20} color="white" />
+          <Text className="text-white text-lg font-inter-bold ml-2">
+            Start New Chat
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    padding: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  headerText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  conversationsList: {
-    flex: 1,
-  },
-  conversationItem: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    alignItems: 'center',
-  },
-  avatarContainer: {
-    marginRight: 12,
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  conversationContent: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  conversationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  vetName: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#333',
-    flex: 1,
-  },
-  timestamp: {
-    fontSize: 12,
-    color: '#888',
-    marginLeft: 8,
-  },
-  lastMessage: {
-    fontSize: 15,
-    color: '#666',
-  },
-  noMessage: {
-    fontSize: 15,
-    color: '#999',
-    fontStyle: 'italic',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-  },
-  startChatContainer: {
-    padding: 16,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
-  startChatButton: {
-    flexDirection: 'row',
-    backgroundColor: '#007AFF',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  startChatButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-});
 
 export default ChatListScreen;

@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import { View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, Alert, RefreshControl, useColorScheme, StatusBar } from 'react-native';
 import { useAuth } from '../../../providers/AuthProvider';
 import { supabase } from '../../../lib/supabase';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 
 const VetChatListScreen = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [conversations, setConversations] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const isDark = useColorScheme() === 'dark';
 
   useEffect(() => {
     loadConversations();
@@ -104,51 +105,55 @@ const VetChatListScreen = () => {
 
   const renderConversation = ({ item }) => (
     <TouchableOpacity
-      style={styles.conversationItem}
+      className="flex-row p-4 bg-white border-b border-gray-200 dark:bg-neutral-900 dark:border-neutral-800"
       onPress={() => router.push(`/(vet)/chat/${item.user_id}?userName=${encodeURIComponent(item.userName)}`)}
     >
-      <View style={styles.avatarContainer}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{item.userName.charAt(0).toUpperCase()}</Text>
+      <View className="mr-3">
+        <View className="w-12 h-12 rounded-full bg-blue-500 justify-center items-center">
+          <Text className="text-white text-xl font-inter-bold">{item.userName.charAt(0).toUpperCase()}</Text>
         </View>
       </View>
-      <View style={styles.conversationContent}>
-        <View style={styles.conversationHeader}>
-          <Text style={styles.userName} numberOfLines={1}>{item.userName}</Text>
+      <View className="flex-1 justify-center">
+        <View className="flex-row justify-between mb-1">
+          <Text className="text-base font-inter-bold flex-1 text-black dark:text-white" numberOfLines={1}>{item.userName}</Text>
           {item.latestMessage && (
-            <Text style={styles.timestamp}>{formatTime(item.latestMessage.created_at)}</Text>
+            <Text className="text-xs text-gray-500 dark:text-gray-400 ml-2">{formatTime(item.latestMessage.created_at)}</Text>
           )}
         </View>
         {item.latestMessage ? (
-          <Text style={styles.lastMessage} numberOfLines={1}>
+          <Text className="text-sm text-gray-600 dark:text-gray-300" numberOfLines={1}>
             {item.latestMessage.content}
           </Text>
         ) : (
-          <Text style={styles.noMessage}>No messages yet</Text>
+          <Text className="text-sm italic text-gray-500 dark:text-gray-400">No messages yet</Text>
         )}
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Your Chats</Text>
+    <SafeAreaView className="flex-1 bg-white dark:bg-black">
+      <StatusBar
+        barStyle={isDark ? "light-content" : "dark-content"}
+        backgroundColor={isDark ? "#000" : "#fff"}
+      />
+      <View className="flex-row justify-between items-center px-5 py-4 border-b border-gray-200 dark:border-neutral-800">
+        <Text className="text-2xl font-inter-bold text-black dark:text-white">Your Chats</Text>
       </View>
       {conversations.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="chatbubbles-outline" size={64} color="#007AFF" />
-          <Text style={styles.emptyTitle}>No conversations yet</Text>
-          <Text style={styles.emptyText}>Users will start chats with you. Check back later!</Text>
+        <View className="flex-1 justify-center items-center p-8">
+          <FontAwesome name="commenting-o" size={64} color={isDark ? "#60a5fa" : "#007AFF"} />
+          <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">No conversations yet</Text>
+          <Text className="text-base text-center text-gray-600 dark:text-gray-300">Users will start chats with you. Check back later!</Text>
         </View>
       ) : (
         <FlatList
           data={conversations}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderConversation}
-          style={styles.conversationsList}
+          className="flex-1"
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? "#60a5fa" : "#007AFF"} />
           }
         />
       )}

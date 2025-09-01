@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, Alert, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, useColorScheme, StatusBar } from 'react-native';
 import { useAuth } from '../../../providers/AuthProvider';
 import { supabase } from '../../../lib/supabase';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 
 const VetsListScreen = () => {
   const { user } = useAuth();
@@ -11,6 +11,7 @@ const VetsListScreen = () => {
   const [vets, setVets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const isDark = useColorScheme() === 'dark';
 
   useEffect(() => {
     loadVets();
@@ -100,142 +101,58 @@ const VetsListScreen = () => {
 
   const renderVet = ({ item }) => (
     <TouchableOpacity
-      style={styles.vetItem}
+      className="flex-row p-4 bg-white dark:bg-black border-b border-gray-200 "
       onPress={() => router.push(`/(user)/chat/${item.id}?vetName=${encodeURIComponent(item.name)}`)}
+      activeOpacity={0.7}
     >
-      <View style={styles.avatarContainer}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{item.name.charAt(0).toUpperCase()}</Text>
+      <View className="mr-4">
+        <View className="w-12 h-12 rounded-full bg-blue-500 justify-center items-center">
+          <Text className="text-white text-xl font-inter-bold">{item.name.charAt(0).toUpperCase()}</Text>
         </View>
       </View>
-      <View style={styles.vetInfo}>
-        <Text style={styles.vetName}>{item.name}</Text>
-        <Text style={styles.vetEmail}>{item.email}</Text>
+      <View className="flex-1 justify-center">
+        <Text className="text-base font-inter-bold mb-1 text-black dark:text-white">{item.name}</Text>
+        <Text className="text-sm text-gray-600 dark:text-gray-300">{item.email}</Text>
       </View>
-      <View style={styles.arrowContainer}>
-        <Ionicons name="chevron-forward" size={24} color="#007AFF" />
+      <View className="ml-2 justify-center">
+        <FontAwesome name="chevron-right" size={20} color={isDark ? "#ffffff" : "#000000ff"} />
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Select a Veterinarian</Text>
+    <SafeAreaView className="flex-1 bg-white dark:bg-black pt-12">
+      <StatusBar
+        barStyle={isDark ? "light-content" : "dark-content"}
+        backgroundColor={isDark ? "#000" : "#fff"}
+      />
+      <View className="px-5 py-4 border-b border-gray-200">
+        <Text className="text-2xl font-inter-bold text-black dark:text-white">Select a Veterinarian</Text>
       </View>
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Loading veterinarians...</Text>
+        <View className="flex-1 justify-center items-center p-8">
+          <ActivityIndicator size="large" color={isDark ? "#60a5fa" : "#007AFF"} />
+          <Text className="mt-4 text-base text-gray-600 dark:text-gray-300">Loading veterinarians...</Text>
         </View>
       ) : vets.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="person-outline" size={64} color="#007AFF" />
-          <Text style={styles.emptyTitle}>No veterinarians available</Text>
-          <Text style={styles.emptyText}>Please check back later</Text>
+        <View className="flex-1 justify-center items-center p-8">
+          <FontAwesome name="user-md" size={64} color={isDark ? "#60a5fa" : "#007AFF"} />
+          <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">No veterinarians available</Text>
+          <Text className="text-base text-gray-600 dark:text-gray-300">Please check back later</Text>
         </View>
       ) : (
         <FlatList
           data={vets}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderVet}
-          style={styles.vetsList}
+          className="flex-1"
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? "#60a5fa" : "#007AFF"} />
           }
         />
       )}
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    padding: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  headerText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  vetsList: {
-    flex: 1,
-  },
-  vetItem: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    alignItems: 'center',
-  },
-  avatarContainer: {
-    marginRight: 16,
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  vetInfo: {
-    flex: 1,
-  },
-  vetName: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  vetEmail: {
-    fontSize: 15,
-    color: '#666',
-  },
-  arrowContainer: {
-    marginLeft: 8,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-  },
-});
 
 export default VetsListScreen;

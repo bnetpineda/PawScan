@@ -14,14 +14,14 @@ export default function ChatLayout() {
         name="[vetId]" 
         options={{ 
           title: "Chat",
-          headerShown: true 
+          headerShown: false 
         }} 
       />
       <Stack.Screen 
         name="vets" 
         options={{ 
           title: "Select Veterinarian",
-          headerShown: true 
+          headerShown: false 
         }} 
       />
     </Stack>

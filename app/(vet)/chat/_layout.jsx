@@ -14,7 +14,7 @@ export default function ChatLayout() {
         name="[userId]"
         options={{
           title: "Chat",
-          headerShown: true,
+          headerShown: false,
         }}
       />
     </Stack>

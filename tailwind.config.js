@@ -2,6 +2,7 @@
 module.exports = {
   content: ["./app/**/*.{js,ts,tsx,jsx}", "./components/**/*.{js,ts,tsx,jsx}"],
   presets: [require("nativewind/preset")],
+  darkMode: 'class', // Enable dark mode with class strategy
   theme: {
     extend: {
       fontFamily: {
