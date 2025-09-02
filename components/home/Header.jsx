@@ -29,7 +29,7 @@ const Header = ({
           onPress={onShowTutorial}
           activeOpacity={0.7}
         >
-          <Text className="text-base font-inter-bold text-blue-600 dark:text-blue-400">
+          <Text className="text-base font-inter-bold dark:text-white text-black">
             Help
           </Text>
         </TouchableOpacity>

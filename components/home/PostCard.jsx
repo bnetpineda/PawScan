@@ -108,15 +108,25 @@ const PostCard = ({ post, isDark, onToggleLike, onOpenComments, onShare, onOpenI
       {/* Header */}
       <View className="flex-row justify-between items-center p-4">
         <View className="flex-row items-center flex-1">
-          <View className="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 justify-center items-center mr-3">
-            <FontAwesome
-              name={isAnonymous ? "user" : "user-circle"}
-              size={isAnonymous ? 20 : 32}
-              color={
-                isAnonymous ? (isDark ? "#8E8E93" : "#6C757D") : "#007AFF"
-              }
-            />
-          </View>
+          {/* Anonymous User Avatar */}
+          {isAnonymous ? (
+            <View className="w-10 h-10 rounded-full border-2 border-black dark:border-white justify-center items-center mr-3 bg-white dark:bg-black">
+              <FontAwesome
+                name="user"
+                size={20}
+                color={isDark ? "#ffffff" : "#000000"}
+              />
+            </View>
+          ) : (
+            /* Non-Anonymous User Avatar */
+            <View className="w-10 h-10 rounded-full border-2 border-black dark:border-white justify-center items-center mr-3 bg-white dark:bg-black">
+              <FontAwesome
+                name="user-circle"
+                size={32}
+                color={isDark ? "#ffffff" : "#000000"}
+              />
+            </View>
+          )}
           <View className="flex-1">
             <Text className="text-base font-inter-semibold text-black dark:text-white">
               {userDisplayName}

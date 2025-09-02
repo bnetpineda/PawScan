@@ -126,7 +126,7 @@ const ChatListScreen = () => {
 
   const renderConversation = ({ item }) => (
     <TouchableOpacity
-      className="flex-row p-4 bg-white border-b border-gray-200 dark:bg-neutral-900 dark:border-neutral-800"
+      className="flex-row p-4 bg-white border-b border-black dark:bg-neutral-900 dark:border-neutral-700"
       onPress={() =>
         router.push(
           `/(user)/chat/${item.vet_id}?vetName=${encodeURIComponent(
@@ -136,8 +136,8 @@ const ChatListScreen = () => {
       }
     >
       <View className="mr-3">
-        <View className="w-12 h-12 rounded-full bg-blue-500 justify-center items-center">
-          <Text className="text-white text-xl font-inter-bold">
+        <View className="w-12 h-12 rounded-full bg-black dark:bg-white justify-center items-center">
+          <Text className="text-white dark:text-black text-xl font-inter-bold">
             {item.vetName.charAt(0).toUpperCase()}
           </Text>
         </View>
@@ -178,7 +178,7 @@ const ChatListScreen = () => {
         barStyle={isDark ? "light-content" : "dark-content"}
         backgroundColor={isDark ? "#000" : "#fff"}
       />
-      <View className="flex-row justify-between items-center px-5 py-4 border-b border-gray-200 dark:border-neutral-800 mt-2">
+      <View className="flex-row justify-between items-center px-5 py-4 border-b border-black dark:border-neutral-700 mt-2">
         <Text className="text-2xl font-inter-bold text-black dark:text-white">
           Your Chats
         </Text>
@@ -188,7 +188,7 @@ const ChatListScreen = () => {
           <FontAwesome
             name="commenting-o"
             size={64}
-            color={isDark ? "#60a5fa" : "#007AFF"}
+            color={isDark ? "#fff" : "#000"}
           />
           <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">
             No conversations yet
@@ -204,18 +204,18 @@ const ChatListScreen = () => {
           renderItem={renderConversation}
           className="flex-1"
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? "#60a5fa" : "#007AFF"} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? "#fff" : "#000"} />
           }
         />
       )}
-      <View className="p-4 bg-white border-t border-gray-200 dark:bg-neutral-900 dark:border-neutral-800">
+      <View className="p-4 bg-white border-t border-black dark:bg-neutral-900 dark:border-neutral-700">
         <TouchableOpacity
-          className="flex-row bg-blue-500 rounded-full p-4 items-center justify-center"
+          className="flex-row bg-black dark:bg-white rounded-full p-4 items-center justify-center"
           onPress={() => router.push("/(user)/chat/vets")}
           activeOpacity={0.8}
         >
-          <FontAwesome name="plus" size={20} color="white" />
-          <Text className="text-white text-lg font-inter-bold ml-2">
+          <FontAwesome name="plus" size={20} color={isDark ? "#000" : "#fff"} />
+          <Text className="text-white dark:text-black text-lg font-inter-bold ml-4">
             Start New Chat
           </Text>
         </TouchableOpacity>

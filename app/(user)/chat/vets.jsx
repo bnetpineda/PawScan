@@ -101,13 +101,13 @@ const VetsListScreen = () => {
 
   const renderVet = ({ item }) => (
     <TouchableOpacity
-      className="flex-row p-4 bg-white dark:bg-black border-b border-gray-200 "
+      className="flex-row p-4 bg-white border-b border-black dark:bg-neutral-900 dark:border-neutral-700"
       onPress={() => router.push(`/(user)/chat/${item.id}?vetName=${encodeURIComponent(item.name)}`)}
       activeOpacity={0.7}
     >
       <View className="mr-4">
-        <View className="w-12 h-12 rounded-full bg-blue-500 justify-center items-center">
-          <Text className="text-white text-xl font-inter-bold">{item.name.charAt(0).toUpperCase()}</Text>
+        <View className="w-12 h-12 rounded-full bg-black dark:bg-white justify-center items-center">
+          <Text className="text-white dark:text-black text-xl font-inter-bold">{item.name.charAt(0).toUpperCase()}</Text>
         </View>
       </View>
       <View className="flex-1 justify-center">
@@ -115,7 +115,7 @@ const VetsListScreen = () => {
         <Text className="text-sm text-gray-600 dark:text-gray-300">{item.email}</Text>
       </View>
       <View className="ml-2 justify-center">
-        <FontAwesome name="chevron-right" size={20} color={isDark ? "#ffffff" : "#000000ff"} />
+        <FontAwesome name="chevron-right" size={20} color={isDark ? "#fff" : "#000"} />
       </View>
     </TouchableOpacity>
   );
@@ -126,17 +126,17 @@ const VetsListScreen = () => {
         barStyle={isDark ? "light-content" : "dark-content"}
         backgroundColor={isDark ? "#000" : "#fff"}
       />
-      <View className="px-5 py-4 border-b border-gray-200">
+      <View className="px-5 py-4 border-b border-black dark:border-neutral-700">
         <Text className="text-2xl font-inter-bold text-black dark:text-white">Select a Veterinarian</Text>
       </View>
       {loading ? (
         <View className="flex-1 justify-center items-center p-8">
-          <ActivityIndicator size="large" color={isDark ? "#60a5fa" : "#007AFF"} />
+          <ActivityIndicator size="large" color={isDark ? "#fff" : "#000"} />
           <Text className="mt-4 text-base text-gray-600 dark:text-gray-300">Loading veterinarians...</Text>
         </View>
       ) : vets.length === 0 ? (
         <View className="flex-1 justify-center items-center p-8">
-          <FontAwesome name="user-md" size={64} color={isDark ? "#60a5fa" : "#007AFF"} />
+          <FontAwesome name="user-md" size={64} color={isDark ? "#fff" : "#000"} />
           <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">No veterinarians available</Text>
           <Text className="text-base text-gray-600 dark:text-gray-300">Please check back later</Text>
         </View>
@@ -147,7 +147,7 @@ const VetsListScreen = () => {
           renderItem={renderVet}
           className="flex-1"
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? "#60a5fa" : "#007AFF"} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? "#fff" : "#000"} />
           }
         />
       )}

@@ -6,18 +6,12 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
-  FlatList,
-  Image,
-  KeyboardAvoidingView,
-  Modal,
   Platform,
   RefreshControl,
   ScrollView,
   Share,
   StatusBar,
   Text,
-  TextInput,
-  TouchableOpacity,
   useColorScheme,
   View,
 } from "react-native";
@@ -30,11 +24,8 @@ import { useAuth } from "../../providers/AuthProvider";
 import PostCard from "../../components/home/PostCard";
 import Header from "../../components/home/Header";
 import EmptyState from "../../components/home/EmptyState";
-import ChatWithVetsButton from "../../components/home/ChatWithVetsButton";
 import ImageModal from "../../components/home/ImageModal";
 import CommentsModal from "../../components/home/CommentsModal";
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 const NewsFeedScreen = () => {
   const isDark = useColorScheme() === "dark";
@@ -52,9 +43,7 @@ const NewsFeedScreen = () => {
   const [newComment, setNewComment] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
   const [postingComment, setPostingComment] = useState(false);
-  const [numLines, setNumLines] = useState(4); // Default number of lines for analysis text
   const { user } = useAuth();
-  const { showTutorial, startTutorial, closeTutorial } = useTutorial();
   const [tutorialVisible, setTutorialVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState(""); // Search query state
   const [isSearching, setIsSearching] = useState(false); // Search mode state

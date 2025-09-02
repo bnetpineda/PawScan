@@ -185,9 +185,9 @@ const ChatScreen = () => {
     
     return (
       <View className={`mb-3 flex-row ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
-        <View className={`max-w-[80%] p-3 rounded-2xl ${isCurrentUser ? 'bg-blue-500 rounded-br-none' : 'bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-bl-none'}`}>
-          <Text className={`text-base font-inter ${isCurrentUser ? 'text-white' : 'text-black dark:text-white'}`}>{item.content}</Text>
-          <Text className={`text-xs mt-1 text-right ${isCurrentUser ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>
+        <View className={`max-w-[80%] p-3 rounded-2xl ${isCurrentUser ? 'bg-black dark:bg-white rounded-br-none' : 'bg-white dark:bg-neutral-800 border border-black dark:border-neutral-700 rounded-bl-none'}`}>
+          <Text className={`text-base font-inter ${isCurrentUser ? 'text-white dark:text-black' : 'text-black dark:text-white'}`}>{item.content}</Text>
+          <Text className={`text-xs mt-1 text-right ${isCurrentUser ? 'text-gray-300 dark:text-gray-600' : 'text-gray-500 dark:text-gray-400'}`}>
             {messageTime}
           </Text>
         </View>
@@ -217,18 +217,18 @@ const ChatScreen = () => {
           barStyle={isDark ? "light-content" : "dark-content"}
           backgroundColor={isDark ? "#000" : "#fff"}
         />
-        <View className="flex-row items-center px-5 py-4 bg-white border-b border-gray-200 dark:bg-neutral-900 dark:border-neutral-800">
-          <TouchableOpacity onPress={() => router.back()} className="mr-2" activeOpacity={0.7}>
-            <FontAwesome name="arrow-left" size={20} color={isDark ? "#60a5fa" : "#007AFF"} />
+        <View className="flex-row items-center px-5 py-4 bg-white border-b border-black dark:bg-neutral-900 dark:border-neutral-700">
+          <TouchableOpacity onPress={() => router.back()} className="mr-6" activeOpacity={0.7}>
+            <FontAwesome name="arrow-left" size={20} color={isDark ? "#fff" : "#000"} />
           </TouchableOpacity>
           <View className="mr-3">
-            <View className="w-10 h-10 rounded-full bg-blue-500 justify-center items-center">
-              <Text className="text-white text-base font-inter-bold">{vetName?.charAt(0)?.toUpperCase() || 'V'}</Text>
+            <View className="w-10 h-10 rounded-full bg-black dark:bg-white justify-center items-center">
+              <Text className="text-white dark:text-black text-base font-inter-bold">{vetName?.charAt(0)?.toUpperCase() || 'V'}</Text>
             </View>
           </View>
           <View className="flex-1">
             <Text className="text-lg font-inter-bold text-black dark:text-white">{vetName || 'Veterinarian'}</Text>
-            <Text className="text-sm text-blue-500">Online</Text>
+            <Text className="text-sm text-black dark:text-white">Online</Text>
           </View>
         </View>
         
@@ -243,23 +243,23 @@ const ChatScreen = () => {
           onLayout={scrollToBottom}
         />
         
-        <View className="flex-row p-4 bg-white border-t border-gray-200 dark:bg-neutral-900 dark:border-neutral-800">
+        <View className="flex-row p-4 bg-white border-t border-black dark:bg-neutral-900 dark:border-neutral-700">
           <TextInput
             value={newMessage}
             onChangeText={setNewMessage}
             placeholder="Type a message..."
             placeholderTextColor={isDark ? "#8E8E93" : "#6C757D"}
-            className="flex-1 border border-gray-300 dark:border-neutral-700 rounded-full py-2 px-4 max-h-[100px] text-base font-inter bg-white dark:bg-neutral-800 text-black dark:text-white"
+            className="flex-1 border border-black dark:border-neutral-700 rounded-full py-2 px-4 max-h-[100px] text-base font-inter bg-white dark:bg-neutral-800 text-black dark:text-white"
             multiline
             maxLength={1000}
           />
           <TouchableOpacity 
             onPress={sendMessage} 
-            className={`rounded-full w-10 h-10 justify-center items-center ml-2 ${!newMessage.trim() ? 'bg-gray-400' : 'bg-blue-500'}`}
+            className={`rounded-full w-10 h-10 justify-center items-center ml-2 ${!newMessage.trim() ? 'bg-gray-400' : 'bg-black dark:bg-white'}`}
             disabled={!newMessage.trim()}
             activeOpacity={0.8}
           >
-            <FontAwesome name="send" size={20} color="white" />
+            <FontAwesome name="send" size={16} color={isDark ? "#000" : "#fff"} />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
