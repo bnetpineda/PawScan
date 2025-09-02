@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, Alert, RefreshControl, useColorScheme, StatusBar } from 'react-native';
+import { View, Text, FlatList, SafeAreaView, TouchableOpacity, Alert, RefreshControl, useColorScheme, StatusBar } from 'react-native';
 import { useAuth } from '../../../providers/AuthProvider';
 import { supabase } from '../../../lib/supabase';
 import { useRouter } from 'expo-router';
@@ -40,12 +40,23 @@ const VetChatListScreen = () => {
       // Get the latest message for each conversation and user details
       const conversationsWithLatestMessage = await Promise.all(
         conversationsData.map(async (conversation) => {
-          // Get user details from the secure veterinarians view (reusing for users too)
+          // Get user details from the secure user_display_names view
           const { data: userData, error: userError } = await supabase
-            .from('veterinarians')
-            .select('id, raw_user_meta_data, email')
+            .from('user_display_names')
+            .select('id, display_name, email')
             .eq('id', conversation.user_id)
             .single();
+
+          // Handle case where user doesn't exist (might have been deleted)
+          if (userError && userError.code === 'PGRST116') {
+            console.warn('User not found for conversation:', conversation.user_id);
+            // Fallback to a default user name
+            return {
+              ...conversation,
+              latestMessage: null,
+              userName: 'Deleted User'
+            };
+          }
 
           if (userError) {
             console.error('Error fetching user data:', userError);
@@ -57,7 +68,7 @@ const VetChatListScreen = () => {
             };
           }
 
-          const userName = userData?.raw_user_meta_data?.options?.data?.display_name || 'Pet Owner';
+          const userName = userData?.display_name || 'Pet Owner';
 
           const { data: latestMessageData, error: messageError } = await supabase
             .from('messages')
@@ -67,7 +78,11 @@ const VetChatListScreen = () => {
             .limit(1)
             .single();
 
-          if (messageError && messageError.code !== 'PGRST116') {
+          // Handle case where no messages exist yet
+          if (messageError && messageError.code === 'PGRST116') {
+            // This is expected when there are no messages yet
+            console.debug('No messages found for conversation:', conversation.id);
+          } else if (messageError) {
             console.error('Error fetching message:', messageError);
           }
 
@@ -105,12 +120,12 @@ const VetChatListScreen = () => {
 
   const renderConversation = ({ item }) => (
     <TouchableOpacity
-      className="flex-row p-4 bg-white border-b border-gray-200 dark:bg-neutral-900 dark:border-neutral-800"
+      className="flex-row p-4 bg-white border-b border-black dark:bg-neutral-900 dark:border-neutral-700"
       onPress={() => router.push(`/(vet)/chat/${item.user_id}?userName=${encodeURIComponent(item.userName)}`)}
     >
       <View className="mr-3">
-        <View className="w-12 h-12 rounded-full bg-blue-500 justify-center items-center">
-          <Text className="text-white text-xl font-inter-bold">{item.userName.charAt(0).toUpperCase()}</Text>
+        <View className="w-12 h-12 rounded-full bg-black dark:bg-white justify-center items-center">
+          <Text className="text-white dark:text-black text-xl font-inter-bold">{item.userName.charAt(0).toUpperCase()}</Text>
         </View>
       </View>
       <View className="flex-1 justify-center">
@@ -132,17 +147,17 @@ const VetChatListScreen = () => {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-black">
+    <SafeAreaView className="flex-1 bg-white dark:bg-black pt-12">
       <StatusBar
         barStyle={isDark ? "light-content" : "dark-content"}
         backgroundColor={isDark ? "#000" : "#fff"}
       />
-      <View className="flex-row justify-between items-center px-5 py-4 border-b border-gray-200 dark:border-neutral-800">
+      <View className="flex-row justify-between items-center px-5 py-4 border-b border-black dark:border-neutral-700 mt-2">
         <Text className="text-2xl font-inter-bold text-black dark:text-white">Your Chats</Text>
       </View>
       {conversations.length === 0 ? (
         <View className="flex-1 justify-center items-center p-8">
-          <FontAwesome name="commenting-o" size={64} color={isDark ? "#60a5fa" : "#007AFF"} />
+          <FontAwesome name="commenting-o" size={64} color={isDark ? "#fff" : "#000"} />
           <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">No conversations yet</Text>
           <Text className="text-base text-center text-gray-600 dark:text-gray-300">Users will start chats with you. Check back later!</Text>
         </View>
@@ -153,104 +168,12 @@ const VetChatListScreen = () => {
           renderItem={renderConversation}
           className="flex-1"
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? "#60a5fa" : "#007AFF"} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? "#fff" : "#000"} />
           }
         />
       )}
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    padding: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  headerText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  conversationsList: {
-    flex: 1,
-  },
-  conversationItem: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    alignItems: 'center',
-  },
-  avatarContainer: {
-    marginRight: 12,
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  conversationContent: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  conversationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  userName: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#333',
-    flex: 1,
-  },
-  timestamp: {
-    fontSize: 12,
-    color: '#888',
-    marginLeft: 8,
-  },
-  lastMessage: {
-    fontSize: 15,
-    color: '#666',
-  },
-  noMessage: {
-    fontSize: 15,
-    color: '#999',
-    fontStyle: 'italic',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-  },
-});
 
 export default VetChatListScreen;

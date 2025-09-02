@@ -125,6 +125,7 @@ const SettingsModal = ({
   onClose,
   onEmailPress,
   onPasswordPress,
+  onSignOut,
   isDark
 }) => (
   <Modal
@@ -133,10 +134,10 @@ const SettingsModal = ({
     presentationStyle="pageSheet"
     onRequestClose={onClose}
   >
-    <View className={`flex-1 ${isDark ? "bg-gray-900" : "bg-white"}`}>
-      <View className={`pt-16 pb-4 px-6 border-b ${isDark ? "border-gray-800 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
+    <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
+      <View className={`pt-16 pb-4 px-6 border-b ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
         <View className="flex-row justify-between items-center">
-          <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+          <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-black"}`}>
             Settings
           </Text>
           <TouchableOpacity
@@ -150,13 +151,13 @@ const SettingsModal = ({
       <ScrollView className="flex-1 px-6 py-4">
         <View className="space-y-3">
           <TouchableOpacity
-            className={`p-4 rounded-lg border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
+            className={`p-4 rounded-lg border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
             onPress={onEmailPress}
           >
             <View className="flex-row items-center">
               <Ionicons name="mail-outline" size={24} color={isDark ? "white" : "black"} />
               <View className="ml-3 flex-1">
-                <Text className={`text-base font-inter-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
+                <Text className={`text-base font-inter-semibold ${isDark ? "text-white" : "text-black"}`}>
                   Change Email
                 </Text>
                 <Text className={`text-sm font-inter ${isDark ? "text-gray-400" : "text-gray-600"}`}>
@@ -168,13 +169,13 @@ const SettingsModal = ({
           </TouchableOpacity>
 
           <TouchableOpacity
-            className={`p-4 rounded-lg border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
+            className={`p-4 rounded-lg border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
             onPress={onPasswordPress}
           >
             <View className="flex-row items-center">
               <Ionicons name="lock-closed-outline" size={24} color={isDark ? "white" : "black"} />
               <View className="ml-3 flex-1">
-                <Text className={`text-base font-inter-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
+                <Text className={`text-base font-inter-semibold ${isDark ? "text-white" : "text-black"}`}>
                   Change Password
                 </Text>
                 <Text className={`text-sm font-inter ${isDark ? "text-gray-400" : "text-gray-600"}`}>
@@ -182,6 +183,23 @@ const SettingsModal = ({
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={isDark ? "#9CA3AF" : "#6B7280"} />
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className={`p-4 rounded-lg border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
+            onPress={onSignOut}
+          >
+            <View className="flex-row items-center">
+              <Ionicons name="log-out-outline" size={24} color={isDark ? "white" : "black"} />
+              <View className="ml-3 flex-1">
+                <Text className={`text-base font-inter-semibold ${isDark ? "text-white" : "text-black"}`}>
+                  Sign Out
+                </Text>
+                <Text className={`text-sm font-inter ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                  Log out of your account
+                </Text>
+              </View>
             </View>
           </TouchableOpacity>
         </View>
@@ -424,17 +442,14 @@ const ProfileScreen = () => {
       setNewName(displayName);
       setNewEmail(user?.email || "");
       // Load profile image if exists
-      if (user?.user_metadata?.avatar_url) {
-        setProfileImage(user.user_metadata.avatar_url);
+      const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.options?.data?.avatar_url;
+      if (avatarUrl) {
+        setProfileImage(avatarUrl);
       }
     }
   }, [user]);
 
   const navigation = useNavigation();
-
-  const handleGoBack = () => {
-    navigation.goBack();
-  };
 
   const handleSignOut = async () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -463,35 +478,42 @@ const ProfileScreen = () => {
 
     setUpdating(true);
     try {
-      // First update the name
-      const { error: nameError } = await supabase.auth.updateUser({
-        data: {
-          display_name: newName.trim(),
-          options: {
-            data: {
-              display_name: newName.trim(),
-              role: user?.user_metadata?.options?.data?.role || "Veterinarian",
-              ...(profileImage && { avatar_url: profileImage }) // Include avatar if exists
-            }
-          }
-        }
-      });
-
-      if (nameError) throw nameError;
+      let avatarUrl = profileImage;
 
       // If there's a new image, upload it
       if (profileImage && profileImage.startsWith('file:')) {
+        // Delete existing avatar if it exists
+        const { data: existingFiles } = await supabase
+          .storage
+          .from('avatars')
+          .list(`${user.id}/`, {
+            limit: 1,
+            offset: 0,
+            sortBy: { column: 'name', order: 'asc' }
+          });
+
+        if (existingFiles && existingFiles.length > 0) {
+          await supabase
+            .storage
+            .from('avatars')
+            .remove([`${user.id}/avatar.jpg`]);
+        }
+
+        // Upload new avatar - path must match the policy: user ID as folder name
+        const fileName = `${user.id}/avatar.jpg`;
         const formData = new FormData();
         formData.append('file', {
           uri: profileImage,
-          type: 'image/jpeg', // or whatever type your image is
-          name: 'profile.jpg',
+          type: 'image/jpeg',
+          name: 'avatar.jpg',
         });
 
         const { error: uploadError } = await supabase
           .storage
-          .from('avatars') // your bucket name
-          .upload(`user_${user.id}/avatar.jpg`, formData);
+          .from('avatars')
+          .upload(fileName, formData, {
+            upsert: true
+          });
 
         if (uploadError) throw uploadError;
 
@@ -499,24 +521,38 @@ const ProfileScreen = () => {
         const { data: { publicUrl } } = supabase
           .storage
           .from('avatars')
-          .getPublicUrl(`user_${user.id}/avatar.jpg`);
+          .getPublicUrl(fileName);
 
-        // Update user metadata with the new avatar URL
-        const { error: avatarError } = await supabase.auth.updateUser({
-          data: {
-            avatar_url: publicUrl,
-            ...user.user_metadata // keep existing metadata
+        avatarUrl = publicUrl;
+      }
+
+      // Update user metadata with the name and avatar URL
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { 
+          display_name: newName.trim(),
+          avatar_url: avatarUrl,
+          options: {
+            data: {
+              display_name: newName.trim(),
+              role: user?.user_metadata?.options?.data?.role || "Veterinarian",
+              avatar_url: avatarUrl
+            }
           }
-        });
+        }
+      });
 
-        if (avatarError) throw avatarError;
-        setProfileImage(publicUrl);
+      if (updateError) throw updateError;
+
+      // Update local state with the new avatar URL
+      if (avatarUrl) {
+        setProfileImage(avatarUrl);
       }
 
       Alert.alert("Success", "Profile updated successfully!");
       setEditProfileVisible(false);
     } catch (error) {
-      Alert.alert("Error", error.message);
+      console.error("Error updating profile:", error);
+      Alert.alert("Error", error.message || "Failed to update profile. Please try again.");
     } finally {
       setUpdating(false);
     }
@@ -646,12 +682,10 @@ const ProfileScreen = () => {
   if (loading) {
     return (
       <View
-        className={`flex-1 justify-center items-center ${isDark ? "bg-gray-900" : "bg-white"
-          }`}
+        className={`flex-1 justify-center items-center ${isDark ? "bg-black" : "bg-white"}`}
       >
         <Text
-          className={`text-lg font-inter ${isDark ? "text-white" : "text-gray-900"
-            }`}
+          className={`text-lg font-inter ${isDark ? "text-white" : "text-black"}`}
         >
           Loading...
         </Text>
@@ -659,252 +693,152 @@ const ProfileScreen = () => {
     );
   }
 
-  const displayName =
-    user?.user_metadata?.options?.data?.display_name || "Veterinarian";
+  const displayName = user?.user_metadata?.options?.data?.display_name || "Veterinarian";
   const role = user?.user_metadata?.options?.data?.role || "Veterinarian";
   const email = user?.email || "";
 
+  // Mock data for posts
+  const posts = [
+    { id: 1, imageUrl: 'https://placehold.co/300', likes: 42 },
+    { id: 2, imageUrl: 'https://placehold.co/300', likes: 128 },
+    { id: 3, imageUrl: 'https://placehold.co/300', likes: 76 },
+    { id: 4, imageUrl: 'https://placehold.co/300', likes: 203 },
+    { id: 5, imageUrl: 'https://placehold.co/300', likes: 89 },
+    { id: 6, imageUrl: 'https://placehold.co/300', likes: 54 },
+  ];
+
   return (
     <>
-      <ScrollView className={`flex-1 ${isDark ? "bg-gray-900" : "bg-white"}`}>
-        {/* Header */}
-        <View
-          className={`pt-16 pb-8 px-6 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}
-        >
-          <View className="flex-row items-center mb-6">
-            <TouchableOpacity
-              onPress={handleGoBack}
-              className={`p-2 rounded-full mr-4 ${isDark ? "bg-gray-800" : "bg-gray-200"
-                }`}
-            >
-              <Ionicons
-                name="arrow-back-outline"
-                size={24}
-                color={isDark ? "white" : "black"}
-              />
-            </TouchableOpacity>
-            <Text
-              className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-gray-900"
-                }`}
-            >
-              Profile
-            </Text>
-          </View>
-
-          {/* Profile Picture and Basic Info */}
-          <View className="items-center">
-            {profileImage ? (
-              <Image
-                source={{ uri: profileImage }}
-                className="w-32 h-32 rounded-full mb-4"
-              />
-            ) : (
-              <View
-                className={`w-32 h-32 rounded-full justify-center items-center mb-4 ${isDark ? "bg-gray-800" : "bg-gray-300"
-                  }`}
-              >
-                <Text
-                  className={`text-4xl font-inter-bold ${isDark ? "text-white" : "text-gray-900"
-                    }`}
-                >
-                  {getInitials(displayName)}
-                </Text>
-              </View>
-            )}
-
-            <Text
-              className={`text-2xl font-inter-bold mb-2 ${isDark ? "text-white" : "text-gray-900"
-                }`}
-            >
+      <ScrollView className={`flex-1 pt-12 ${isDark ? "bg-black" : "bg-white"} `}>
+        {/* Profile Header */}
+        <View className={`pt-12 pb-4 ${isDark ? "bg-black" : "bg-white"}`}>
+          <View className="flex-row justify-between items-center px-4 mb-4">
+            <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-black"}`}>
               {displayName}
             </Text>
-
-            <Text
-              className={`text-lg font-inter capitalize mb-1 ${isDark ? "text-gray-300" : "text-gray-600"
-                }`}
-            >
-              {role}
-            </Text>
-
-            <Text
-              className={`text-base font-inter ${isDark ? "text-gray-400" : "text-gray-500"
-                }`}
-            >
-              {email}
-            </Text>
-          </View>
-        </View>
-
-        {/* Profile Details */}
-        <View className="px-6 py-4">
-          <Text
-            className={`text-xl font-inter-bold mb-4 ${isDark ? "text-white" : "text-gray-900"
-              }`}
-          >
-            Account Information
-          </Text>
-
-          {/* Info Cards */}
-          <View className="space-y-3">
-            <View
-              className={`p-4 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"
-                }`}
-            >
-              <View className="flex-row items-center mb-2">
-                <Ionicons
-                  name="mail-outline"
-                  size={20}
-                  color={isDark ? "#9CA3AF" : "#6B7280"}
-                />
-                <Text
-                  className={`ml-3 text-base font-inter-semibold ${isDark ? "text-gray-300" : "text-gray-700"
-                    }`}
-                >
-                  Email
-                </Text>
-              </View>
-              <Text
-                className={`text-base font-inter ${isDark ? "text-white" : "text-gray-900"
-                  }`}
-              >
-                {email}
-              </Text>
-            </View>
-
-            <View
-              className={`p-4 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"
-                }`}
-            >
-              <View className="flex-row items-center mb-2">
-                <Ionicons
-                  name="person-outline"
-                  size={20}
-                  color={isDark ? "#9CA3AF" : "#6B7280"}
-                />
-                <Text
-                  className={`ml-3 text-base font-inter-semibold ${isDark ? "text-gray-300" : "text-gray-700"
-                    }`}
-                >
-                  Role
-                </Text>
-              </View>
-              <Text
-                className={`text-base font-inter capitalize ${isDark ? "text-white" : "text-gray-900"
-                  }`}
-              >
-                {role}
-              </Text>
-            </View>
-
-            <View
-              className={`p-4 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"
-                }`}
-            >
-              <View className="flex-row items-center mb-2">
-                <Ionicons
-                  name="calendar-outline"
-                  size={20}
-                  color={isDark ? "#9CA3AF" : "#6B7280"}
-                />
-                <Text
-                  className={`ml-3 text-base font-inter-semibold ${isDark ? "text-gray-300" : "text-gray-700"
-                    }`}
-                >
-                  Member Since
-                </Text>
-              </View>
-              <Text
-                className={`text-base font-inter ${isDark ? "text-white" : "text-gray-900"
-                  }`}
-              >
-                {formatDate(user?.created_at)}
-              </Text>
-            </View>
-
-            <View
-              className={`p-4 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"
-                }`}
-            >
-              <View className="flex-row items-center mb-2">
-                <Ionicons
-                  name="checkmark-circle-outline"
-                  size={20}
-                  color={isDark ? "#10B981" : "#059669"}
-                />
-                <Text
-                  className={`ml-3 text-base font-inter-semibold ${isDark ? "text-gray-300" : "text-gray-700"
-                    }`}
-                >
-                  Email Status
-                </Text>
-              </View>
-              <Text
-                className={`text-base font-inter ${isDark ? "text-green-400" : "text-green-600"
-                  }`}
-              >
-                {user?.role === "authenticated" ? "Verified" : "Not Verified"}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Action Buttons */}
-        <View className="px-6 py-4 space-y-3">
-          <TouchableOpacity
-            className={`p-4 rounded-lg border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-              }`}
-            onPress={() => setEditProfileVisible(true)}
-          >
-            <View className="flex-row items-center justify-center">
-              <Ionicons
-                name="create-outline"
-                size={20}
-                color={isDark ? "white" : "black"}
+            <TouchableOpacity onPress={() => setSettingsVisible(true)}>
+              <Ionicons 
+                name="settings-outline" 
+                size={24} 
+                color={isDark ? "white" : "black"} 
               />
-              <Text
-                className={`ml-2 text-base font-inter-semibold ${isDark ? "text-white" : "text-gray-900"
+            </TouchableOpacity>
+          </View>
+
+          {/* Profile Info */}
+          <View className="flex-row px-4 pb-4">
+            {/* Profile Image */}
+            <View className="mr-6">
+              {profileImage ? (
+                <Image
+                  source={{ uri: profileImage }}
+                  className="w-20 h-20 rounded-full"
+                />
+              ) : (
+                <View
+                  className={`w-20 h-20 rounded-full justify-center items-center ${
+                    isDark ? "bg-gray-800" : "bg-gray-200"
                   }`}
+                >
+                  <Text className={`text-2xl font-inter-bold ${isDark ? "text-white" : "text-black"}`}>
+                    {getInitials(displayName)}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* Stats */}
+            <View className="flex-1 flex-row justify-between">
+              <View className="items-center">
+                <Text className={`text-lg font-inter-bold ${isDark ? "text-white" : "text-black"}`}>
+                  24
+                </Text>
+                <Text className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                  Posts
+                </Text>
+              </View>
+              <View className="items-center">
+                <Text className={`text-lg font-inter-bold ${isDark ? "text-white" : "text-black"}`}>
+                  1.2K
+                </Text>
+                <Text className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                  Followers
+                </Text>
+              </View>
+              <View className="items-center">
+                <Text className={`text-lg font-inter-bold ${isDark ? "text-white" : "text-black"}`}>
+                  356
+                </Text>
+                <Text className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                  Following
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Bio */}
+          <View className="px-4">
+            <Text className={`font-inter-semibold ${isDark ? "text-white" : "text-black"}`}>
+              {displayName}
+            </Text>
+            <Text className={`font-inter ${isDark ? "text-gray-300" : "text-gray-600"}`}>
+              {role} | Pet Health Expert
+            </Text>
+            <Text className={`mt-1 font-inter ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+              Member since {formatDate(user?.created_at)}
+            </Text>
+          </View>
+
+          {/* Action Buttons */}
+          <View className="flex-row px-4 mt-4">
+            <TouchableOpacity
+              className={`flex-1 py-2 rounded-lg ${
+                isDark ? "bg-gray-800" : "bg-gray-200"
+              }`}
+              onPress={() => setEditProfileVisible(true)}
+            >
+              <Text
+                className={`text-center font-inter-semibold ${
+                  isDark ? "text-white" : "text-black"
+                }`}
               >
                 Edit Profile
               </Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className={`p-4 rounded-lg border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-              }`}
-            onPress={() => setSettingsVisible(true)}
-          >
-            <View className="flex-row items-center justify-center">
-              <Ionicons
-                name="settings-outline"
-                size={20}
-                color={isDark ? "white" : "black"}
-              />
-              <Text
-                className={`ml-2 text-base font-inter-semibold ${isDark ? "text-white" : "text-gray-900"
-                  }`}
-              >
-                Settings
-              </Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className="p-4 rounded-lg bg-red-600 border border-red-600"
-            onPress={handleSignOut}
-          >
-            <View className="flex-row items-center justify-center">
-              <Ionicons name="log-out-outline" size={20} color="white" />
-              <Text className="ml-2 text-base font-inter-bold text-white">
-                Sign Out
-              </Text>
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Bottom spacing */}
-        <View className="h-8" />
+        {/* Posts Grid */}
+        <View className="mt-2">
+          <View className="flex-row border-t border-b border-gray-300 dark:border-gray-700">
+            <TouchableOpacity className="flex-1 items-center py-3 border-r border-gray-300 dark:border-gray-700">
+              <Ionicons 
+                name="grid-outline" 
+                size={24} 
+                color={isDark ? "#3B82F6" : "#3B82F6"} 
+              />
+            </TouchableOpacity>
+            <TouchableOpacity className="flex-1 items-center py-3">
+              <Ionicons 
+                name="bookmark-outline" 
+                size={24} 
+                color={isDark ? "white" : "black"} 
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Posts Grid */}
+          <View className="flex-row flex-wrap">
+            {posts.map((post) => (
+              <View key={post.id} className="w-1/3 aspect-square p-1">
+                <Image
+                  source={{ uri: post.imageUrl }}
+                  className="w-full h-full rounded"
+                />
+              </View>
+            ))}
+          </View>
+        </View>
       </ScrollView>
 
       {/* Modals */}
@@ -934,6 +868,7 @@ const ProfileScreen = () => {
           setSettingsVisible(false);
           setChangePasswordVisible(true);
         }}
+        onSignOut={handleSignOut}
         isDark={isDark}
       />
 

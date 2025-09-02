@@ -57,7 +57,7 @@ const ChatListScreen = () => {
           // Get vet details from the secure veterinarians view
           const { data: vetData, error: vetError } = await supabase
             .from("veterinarians")
-            .select("id, raw_user_meta_data, email")
+            .select("id, display_name, email")
             .eq("id", conversation.vet_id)
             .single();
 
@@ -71,9 +71,7 @@ const ChatListScreen = () => {
             };
           }
 
-          const vetName =
-            vetData?.raw_user_meta_data?.options?.data?.display_name ||
-            "Veterinarian";
+          const vetName = vetData?.display_name || "Veterinarian";
 
           // Get the latest message for this conversation
           const { data: latestMessageData, error: messageError } =

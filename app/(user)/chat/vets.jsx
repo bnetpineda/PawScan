@@ -28,8 +28,8 @@ const VetsListScreen = () => {
       // Get all veterinarians from the secure view
       const { data: vetsData, error: vetsError } = await supabase
         .from('veterinarians')
-        .select('id, raw_user_meta_data, email')
-        .order('raw_user_meta_data->options->data->display_name', { ascending: true });
+        .select('id, display_name, email')
+        .order('display_name', { ascending: true });
 
       if (vetsError) {
         console.error('Error loading vets:', vetsError);
@@ -42,7 +42,7 @@ const VetsListScreen = () => {
       const formattedVets = vetsData
         .map(vet => ({
           id: vet.id,
-          name: vet.raw_user_meta_data?.options?.data?.display_name || 'Veterinarian',
+          name: vet.display_name || 'Veterinarian',
           email: vet.email || 'No email provided'
         }))
         .filter(vet => vet.id !== user.id); // Exclude current user if they're also a vet
@@ -79,14 +79,14 @@ const VetsListScreen = () => {
       for (const vetId of vetIds) {
         const { data: vetData, error: vetError } = await supabase
           .from('veterinarians')
-          .select('id, raw_user_meta_data, email')
+          .select('id, display_name, email')
           .eq('id', vetId)
           .single();
 
         if (!vetError && vetData) {
           vetsWithDetails.push({
             id: vetData.id,
-            name: vetData.raw_user_meta_data?.options?.data?.display_name || 'Veterinarian',
+            name: vetData.display_name || 'Veterinarian',
             email: vetData.email || 'No email provided'
           });
         }

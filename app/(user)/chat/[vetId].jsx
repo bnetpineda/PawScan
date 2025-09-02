@@ -228,7 +228,6 @@ const ChatScreen = () => {
           </View>
           <View className="flex-1">
             <Text className="text-lg font-inter-bold text-black dark:text-white">{vetName || 'Veterinarian'}</Text>
-            <Text className="text-sm text-black dark:text-white">Online</Text>
           </View>
         </View>
         
