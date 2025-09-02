@@ -5,7 +5,6 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   Image,
-  Modal,
   ScrollView,
   Text,
   TextInput,
@@ -16,449 +15,11 @@ import {
 } from "react-native";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../providers/AuthProvider";
-
-// Modal Components
-const SettingsModal = ({
-  visible,
-  onClose,
-  onEmailPress,
-  onPasswordPress,
-  onSignOut,
-  isDark,
-}) => (
-  <Modal
-    visible={visible}
-    animationType="slide"
-    presentationStyle="pageSheet"
-    onRequestClose={onClose}
-  >
-    <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
-      <View
-        className={`pt-16 pb-4 px-6 border-b ${
-          isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-gray-50"
-        }`}
-      >
-        <View className="flex-row justify-between items-center">
-          <Text
-            className={`text-2xl font-inter-bold ${
-              isDark ? "text-white" : "text-black"
-            }`}
-          >
-            Settings
-          </Text>
-          <TouchableOpacity
-            onPress={onClose}
-            className={`p-2 rounded-full ${
-              isDark ? "bg-gray-800" : "bg-gray-200"
-            }`}
-          >
-            <FontAwesome
-              name="close"
-              size={24}
-              color={isDark ? "white" : "black"}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView className="flex-1 px-6 py-4">
-        <View className="space-y-3">
-          <TouchableOpacity
-            className={`p-4 rounded-lg border ${
-              isDark
-                ? "bg-gray-900 border-gray-700"
-                : "bg-white border-gray-200"
-            }`}
-            onPress={onEmailPress}
-          >
-            <View className="flex-row items-center">
-              <FontAwesome
-                name="envelope"
-                size={24}
-                color={isDark ? "white" : "black"}
-              />
-              <View className="ml-3 flex-1">
-                <Text
-                  className={`text-base font-inter-semibold ${
-                    isDark ? "text-white" : "text-black"
-                  }`}
-                >
-                  Change Email
-                </Text>
-                <Text
-                  className={`text-sm font-inter ${
-                    isDark ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Update your email address
-                </Text>
-              </View>
-              <FontAwesome
-                name="angle-right"
-                size={20}
-                color={isDark ? "#9CA3AF" : "#6B7280"}
-              />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className={`p-4 rounded-lg border ${
-              isDark
-                ? "bg-gray-900 border-gray-700"
-                : "bg-white border-gray-200"
-            }`}
-            onPress={onPasswordPress}
-          >
-            <View className="flex-row items-center">
-              <FontAwesome
-                name="lock"
-                size={24}
-                color={isDark ? "white" : "black"}
-              />
-              <View className="ml-3 flex-1">
-                <Text
-                  className={`text-base font-inter-semibold ${
-                    isDark ? "text-white" : "text-black"
-                  }`}
-                >
-                  Change Password
-                </Text>
-                <Text
-                  className={`text-sm font-inter ${
-                    isDark ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Update your account password
-                </Text>
-              </View>
-              <FontAwesome
-                name="angle-right"
-                size={20}
-                color={isDark ? "#9CA3AF" : "#6B7280"}
-              />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className={`p-4 rounded-lg border ${
-              isDark
-                ? "bg-gray-900 border-gray-700"
-                : "bg-white border-gray-200"
-            }`}
-            onPress={onSignOut}
-          >
-            <View className="flex-row items-center">
-              <FontAwesome
-                name="sign-out"
-                size={24}
-                color={isDark ? "white" : "black"}
-              />
-              <View className="ml-3 flex-1">
-                <Text
-                  className={`text-base font-inter-semibold ${
-                    isDark ? "text-white" : "text-black"
-                  }`}
-                >
-                  Sign Out
-                </Text>
-                <Text
-                  className={`text-sm font-inter ${
-                    isDark ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Log out of your account
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </View>
-  </Modal>
-);
-
-const ChangeEmailModal = ({
-  visible,
-  onClose,
-  newEmail,
-  setNewEmail,
-  onSubmit,
-  updating,
-  isDark,
-}) => (
-  <Modal
-    visible={visible}
-    animationType="slide"
-    presentationStyle="pageSheet"
-    onRequestClose={onClose}
-  >
-    <View className={`flex-1 ${isDark ? "bg-gray-900" : "bg-white"}`}>
-      <View
-        className={`pt-16 pb-4 px-6 border-b ${
-          isDark ? "border-gray-800 bg-gray-900" : "border-gray-200 bg-gray-50"
-        }`}
-      >
-        <View className="flex-row justify-between items-center">
-          <Text
-            className={`text-2xl font-inter-bold ${
-              isDark ? "text-white" : "text-gray-900"
-            }`}
-          >
-            Change Email
-          </Text>
-          <TouchableOpacity
-            onPress={onClose}
-            className={`p-2 rounded-full ${
-              isDark ? "bg-gray-800" : "bg-gray-200"
-            }`}
-          >
-            <FontAwesome
-              name="close"
-              size={24}
-              color={isDark ? "white" : "black"}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View className="flex-1 px-6 py-6">
-        <Text
-          className={`text-base font-inter mb-2 ${
-            isDark ? "text-gray-300" : "text-gray-700"
-          }`}
-        >
-          New Email Address
-        </Text>
-        <TextInput
-          value={newEmail}
-          onChangeText={setNewEmail}
-          placeholder="Enter new email address"
-          placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
-          className={`p-4 rounded-lg border text-base font-inter ${
-            isDark
-              ? "bg-gray-800 border-gray-700 text-white"
-              : "bg-white border-gray-300 text-gray-900"
-          }`}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoFocus
-        />
-
-        <View
-          className={`mt-4 p-4 rounded-lg ${
-            isDark ? "bg-gray-800" : "bg-blue-50"
-          }`}
-        >
-          <Text
-            className={`text-sm font-inter ${
-              isDark ? "text-gray-400" : "text-blue-700"
-            }`}
-          >
-            A verification email will be sent to your new email address. You'll
-            need to verify it before the change takes effect.
-          </Text>
-        </View>
-
-        <View className="flex-row space-x-3 mt-6">
-          <TouchableOpacity
-            onPress={onClose}
-            className={`flex-1 p-4 rounded-lg border ${
-              isDark
-                ? "border-gray-700 bg-gray-800"
-                : "border-gray-300 bg-gray-100"
-            }`}
-            disabled={updating}
-          >
-            <Text
-              className={`text-center text-base font-inter-semibold ${
-                isDark ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              Cancel
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={onSubmit}
-            className="flex-1 p-4 rounded-lg bg-blue-600"
-            disabled={updating}
-          >
-            <Text className="text-center text-base font-inter-bold text-white">
-              {updating ? "Updating..." : "Update Email"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  </Modal>
-);
-
-const ChangePasswordModal = ({
-  visible,
-  onClose,
-  currentPassword,
-  setCurrentPassword,
-  newPassword,
-  setNewPassword,
-  confirmPassword,
-  setConfirmPassword,
-  onSubmit,
-  updating,
-  isDark,
-  userEmail,
-}) => (
-  <Modal
-    visible={visible}
-    animationType="slide"
-    presentationStyle="pageSheet"
-    onRequestClose={onClose}
-  >
-    <View className={`flex-1 ${isDark ? "bg-gray-900" : "bg-white"}`}>
-      <View
-        className={`pt-16 pb-4 px-6 border-b ${
-          isDark ? "border-gray-800 bg-gray-900" : "border-gray-200 bg-gray-50"
-        }`}
-      >
-        <View className="flex-row justify-between items-center">
-          <Text
-            className={`text-2xl font-inter-bold ${
-              isDark ? "text-white" : "text-gray-900"
-            }`}
-          >
-            Change Password
-          </Text>
-          <TouchableOpacity
-            onPress={onClose}
-            className={`p-2 rounded-full ${
-              isDark ? "bg-gray-800" : "bg-gray-200"
-            }`}
-          >
-            <FontAwesome
-              name="close"
-              size={24}
-              color={isDark ? "white" : "black"}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView className="flex-1 px-6 py-6">
-        <View className="space-y-4">
-          <View>
-            <Text
-              className={`text-base font-inter mb-2 ${
-                isDark ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              Current Password
-            </Text>
-            <TextInput
-              value={currentPassword}
-              onChangeText={setCurrentPassword}
-              placeholder="Enter current password"
-              placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
-              className={`p-4 rounded-lg border text-base font-inter ${
-                isDark
-                  ? "bg-gray-800 border-gray-700 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
-              }`}
-              secureTextEntry
-              autoFocus
-            />
-          </View>
-
-          <View>
-            <Text
-              className={`text-base font-inter mb-2 ${
-                isDark ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              New Password
-            </Text>
-            <TextInput
-              value={newPassword}
-              onChangeText={setNewPassword}
-              placeholder="Enter new password"
-              placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
-              className={`p-4 rounded-lg border text-base font-inter ${
-                isDark
-                  ? "bg-gray-800 border-gray-700 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
-              }`}
-              secureTextEntry
-            />
-          </View>
-
-          <View>
-            <Text
-              className={`text-base font-inter mb-2 ${
-                isDark ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              Confirm New Password
-            </Text>
-            <TextInput
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              placeholder="Confirm new password"
-              placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
-              className={`p-4 rounded-lg border text-base font-inter ${
-                isDark
-                  ? "bg-gray-800 border-gray-700 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
-              }`}
-              secureTextEntry
-            />
-          </View>
-        </View>
-
-        <View
-          className={`mt-4 p-4 rounded-lg ${
-            isDark ? "bg-gray-800" : "bg-yellow-50"
-          }`}
-        >
-          <Text
-            className={`text-sm font-inter ${
-              isDark ? "text-gray-400" : "text-yellow-700"
-            }`}
-          >
-            Password must be at least 6 characters long.
-          </Text>
-        </View>
-
-        <View className="flex-row space-x-3 mt-6">
-          <TouchableOpacity
-            onPress={onClose}
-            className={`flex-1 p-4 rounded-lg border ${
-              isDark
-                ? "border-gray-700 bg-gray-800"
-                : "border-gray-300 bg-gray-100"
-            }`}
-            disabled={updating}
-          >
-            <Text
-              className={`text-center text-base font-inter-semibold ${
-                isDark ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              Cancel
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={onSubmit}
-            className="flex-1 p-4 rounded-lg bg-blue-600"
-            disabled={updating}
-          >
-            <Text className="text-center text-base font-inter-bold text-white">
-              {updating ? "Updating..." : "Update Password"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </View>
-  </Modal>
-);
+import SettingsModal from "../../components/profile/SettingsModal";
+import ChangeEmailModal from "../../components/profile/ChangeEmailModal";
+import ChangePasswordModal from "../../components/profile/ChangePasswordModal";
+import ImageViewerModal from "../../components/profile/ImageViewerModal";
+import useProfileData from "../../hooks/useProfileData";
 
 const ProfileScreen = () => {
   const [current, setCurrentUser] = useState(null);
@@ -468,10 +29,9 @@ const ProfileScreen = () => {
   const [changeEmailVisible, setChangeEmailVisible] = useState(false);
   const [changePasswordVisible, setChangePasswordVisible] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [userPosts, setUserPosts] = useState([]);
-  const [petScanCount, setPetScanCount] = useState(0);
-  const [historyImages, setHistoryImages] = useState([]);
   const [showingHistory, setShowingHistory] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
 
   // Form states
   const [newEmail, setNewEmail] = useState("");
@@ -484,6 +44,17 @@ const ProfileScreen = () => {
   const isDark = colorScheme === "dark";
 
   const { user } = useAuth();
+  const {
+    userPosts,
+    petScanCount,
+    historyImages,
+    postsLoading,
+    historyLoading,
+    fetchUserPosts,
+    fetchPetScanCount,
+    fetchHistoryImages,
+    refreshAllData
+  } = useProfileData(user);
 
   useEffect(() => {
     setCurrentUser(user);
@@ -501,98 +72,16 @@ const ProfileScreen = () => {
       }
 
       // Fetch user posts, pet scan count, and history images
+      console.log('Fetching user data...');
       fetchUserPosts();
       fetchPetScanCount();
       fetchHistoryImages();
     }
   }, [user]);
 
-  const fetchUserPosts = async () => {
-    if (!user) return;
-    
-    try {
-      // Fetch posts from the newsfeed_posts table for this user
-      const { data: posts, error } = await supabase
-        .from('newsfeed_posts')
-        .select('id, image_url, pet_name, created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching user posts:', error);
-        return;
-      }
-
-      // Map the posts to match the expected format
-      const postsWithUrls = posts.map(post => ({
-        id: post.id,
-        url: post.image_url,
-        name: post.pet_name || 'Unnamed Pet',
-        createdAt: post.created_at
-      }));
-
-      setUserPosts(postsWithUrls);
-    } catch (error) {
-      console.error('Error processing user posts:', error);
-    }
-  };
-
-  const fetchPetScanCount = async () => {
-    if (!user) return;
-    
-    try {
-      // Count the number of analysis history records for this user
-      const { count, error } = await supabase
-        .from('analysis_history')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error fetching pet scan count:', error);
-        return;
-      }
-
-      setPetScanCount(count || 0);
-    } catch (error) {
-      console.error('Error processing pet scan count:', error);
-    }
-  };
-
-  const fetchHistoryImages = async () => {
-    if (!user) return;
-    
-    try {
-      // Fetch analysis history records for this user
-      const { data: history, error } = await supabase
-        .from('analysis_history')
-        .select('id, image_url, analysis_result, created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching history images:', error);
-        return;
-      }
-
-      // Map the history to match the expected format
-      const historyWithUrls = history.map(item => ({
-        id: item.id,
-        url: item.image_url,
-        result: item.analysis_result,
-        createdAt: item.created_at
-      }));
-
-      setHistoryImages(historyWithUrls);
-    } catch (error) {
-      console.error('Error processing history images:', error);
-    }
-  };
-
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchUserPosts();
-    await fetchPetScanCount();
-    await fetchHistoryImages();
+    await refreshAllData();
     setRefreshing(false);
   };
 
@@ -833,6 +322,64 @@ const ProfileScreen = () => {
   const role = user?.user_metadata?.options?.data?.role || "Pet Owner";
   const email = user?.email || "";
 
+  // Simplified grid rendering function
+  const renderGridContent = () => {
+    const items = showingHistory ? historyImages : userPosts;
+    const isLoading = showingHistory ? historyLoading : postsLoading;
+    
+    // If loading, show placeholders
+    if (isLoading) {
+      return Array.from({ length: 6 }).map((_, index) => (
+        <View key={index} className="w-1/3 aspect-square p-1">
+          <View
+            className={`w-full h-full rounded ${
+              isDark ? "bg-gray-800" : "bg-gray-200"
+            }`}
+          />
+        </View>
+      ));
+    }
+    
+    // Loaded - show actual items or empty state
+    if (items.length > 0) {
+      return items.map((item) => (
+        <TouchableOpacity 
+          key={item.id} 
+          className="w-1/3 aspect-square p-1"
+          onPress={() => {
+            setSelectedImage(item.url);
+            setImageViewerVisible(true);
+          }}
+        >
+          <Image
+            source={{ uri: item.url }}
+            className="w-full h-full rounded"
+            resizeMode="cover"
+          />
+        </TouchableOpacity>
+      ));
+    } else {
+      // Show empty state message
+      return (
+        <View className="w-full py-10 items-center justify-center">
+          <FontAwesome 
+            name={showingHistory ? "history" : "table"} 
+            size={48} 
+            color={isDark ? "#6B7280" : "#9CA3AF"} 
+          />
+          <Text className={`mt-4 text-lg font-inter ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+            No {showingHistory ? "scan history" : "posts"} yet
+          </Text>
+          <Text className={`mt-2 text-base font-inter ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+            {showingHistory 
+              ? "Your pet scans will appear here" 
+              : "Share posts to see them here"}
+          </Text>
+        </View>
+      );
+    }
+  };
+
   return (
     <>
       <ScrollView 
@@ -992,29 +539,17 @@ const ProfileScreen = () => {
 
           {/* Posts/History Grid */}
           <View className="flex-row flex-wrap w-full">
-            {(showingHistory ? historyImages : userPosts).length > 0
-              ? (showingHistory ? historyImages : userPosts).map((item) => (
-                  <View key={item.id} className="w-1/3 aspect-square p-1">
-                    <Image
-                      source={{ uri: item.url }}
-                      className="w-full h-full rounded"
-                      resizeMode="cover"
-                    />
-                  </View>
-                ))
-              : // Placeholder grid when no items
-                Array.from({ length: 6 }).map((_, index) => (
-                  <View key={index} className="w-1/3 aspect-square p-1">
-                    <View
-                      className={`w-full h-full rounded ${
-                        isDark ? "bg-gray-800" : "bg-gray-200"
-                      }`}
-                    />
-                  </View>
-                ))}
+            {renderGridContent()}
           </View>
         </View>
       </ScrollView>
+
+      {/* Image Viewer Modal */}
+      <ImageViewerModal
+        visible={imageViewerVisible}
+        imageUrl={selectedImage}
+        onClose={() => setImageViewerVisible(false)}
+      />
 
       {/* Modals */}
       <SettingsModal
