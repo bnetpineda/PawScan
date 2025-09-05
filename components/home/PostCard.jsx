@@ -96,7 +96,7 @@ const PostCard = ({ post, isDark, onToggleLike, onOpenComments, onShare, onOpenI
   return (
     <View
       key={post.id}
-      className="mx-4 my-2 rounded-2xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm"
+      className="mx-4 my-2 rounded-2xl border border-gray-200 dark:border-neutral-900 bg-white dark:bg-neutral-900 shadow-sm"
       style={{
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
