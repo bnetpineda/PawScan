@@ -26,9 +26,8 @@ const AnalysisHistoryScreen = () => {
   const [selectedAnalysis, setSelectedAnalysis] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Color themes
+  // Color themes for urgency badges
   const colors = {
-    background: isDark ? "bg-black" : "bg-white",
     badgeHigh: "bg-red-600",
     badgeMedium: "bg-orange-400",
     badgeLow: "bg-green-600",
@@ -155,14 +154,14 @@ ${analysis.analysis_result.substring(
   }
 
   return (
-    <SafeAreaView className={`flex-1 ${colors.background}`}>
+    <SafeAreaView className="flex-1 bg-white dark:bg-black">
       <StatusBar
         barStyle={isDark ? "light-content" : "dark-content"}
         backgroundColor={isDark ? "#000" : "#fff"}
       />
 
       {/* Header */}
-      <View className="flex-row justify-between items-center px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+      <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 dark:border-gray-800">
         <Text className="text-2xl font-inter-bold text-black dark:text-white">
           Analysis History
         </Text>
@@ -174,7 +173,7 @@ ${analysis.analysis_result.substring(
       </View>
 
       <ScrollView
-        className="flex-1"
+        className="flex-1 px-4"
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -187,7 +186,7 @@ ${analysis.analysis_result.substring(
         {analyses.length === 0 ? (
           <EmptyState isDark={isDark} />
         ) : (
-          <View className="p-4">
+          <View className="py-4">
             {analyses.map((analysis) => (
               <AnalysisCard
                 key={analysis.id}

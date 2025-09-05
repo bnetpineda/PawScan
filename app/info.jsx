@@ -108,11 +108,11 @@ const DiseasesInformationScreen = () => {
 
       {/* Header */}
       <View
-        className="px-6 py-4 border-b dark:border-gray-800 border-gray-200"
+        className="px-4 py-3 border-b dark:border-gray-800 border-gray-200"
       >
-        <View className="flex-row items-center justify-between mb-4">
+        <View className="flex-row items-center justify-between mb-3">
           <Text
-            className="text-2xl font-inter-bold dark:text-white text-gray-900"
+            className="text-2xl font-inter-bold dark:text-white text-black"
           >
             Disease Information
           </Text>
@@ -136,7 +136,7 @@ const DiseasesInformationScreen = () => {
       </View>
 
       {/* Disease List */}
-      <View className="flex-1 px-6 py-4">
+      <View className="flex-1 px-4 py-3">
         <DiseaseList
           diseases={filteredDiseases}
           selectedDisease={selectedDisease}

@@ -42,7 +42,7 @@ const DiseaseCard = ({ disease, onPress, isDarkMode }) => {
 
   return (
     <TouchableOpacity
-      className="mb-4 p-4 rounded-2xl border border-gray-200 dark:border-neutral-900 bg-white dark:bg-neutral-900 shadow-sm"
+      className="mb-3 p-4 rounded-xl border dark:bg-black bg-white border-gray-200 dark:border-gray-800"
       onPress={onPress}
       activeOpacity={0.7}
     >
@@ -54,7 +54,7 @@ const DiseaseCard = ({ disease, onPress, isDarkMode }) => {
               size={16}
               color={getIconColor()}
             />
-            <Text className="text-lg font-inter-semibold ml-2 dark:text-white text-gray-900">
+            <Text className="text-lg font-inter-semibold ml-2 dark:text-white text-black">
               {disease.Disease}
             </Text>
           </View>
@@ -65,7 +65,7 @@ const DiseaseCard = ({ disease, onPress, isDarkMode }) => {
             {disease.Overview}
           </Text>
           {disease["Feline vs Canine"] && (
-            <View className="mt-2 px-2 py-1 rounded-full self-start dark:bg-gray-700 bg-gray-200">
+            <View className="mt-2 px-2 py-1 rounded-full self-start dark:bg-gray-800 bg-gray-200">
               <Text
                 className="text-xs font-inter-semibold dark:text-gray-300 text-gray-700"
               >
@@ -77,7 +77,7 @@ const DiseaseCard = ({ disease, onPress, isDarkMode }) => {
         <FontAwesome
           name={ICONS.chevronRight}
           size={20}
-          color={isDarkMode ? "#9CA3AF" : "#6B7280"}
+          color={isDarkMode ? "#fff" : "#000"}
         />
       </View>
     </TouchableOpacity>

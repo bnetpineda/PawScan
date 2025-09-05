@@ -170,33 +170,6 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
 
   if (!visible) return null;
 
-  // Define colors based on the theme
-  const colors = {
-    background: isDark ? "rgba(0, 0, 0, 0.85)" : "rgba(0, 0, 0, 0.7)",
-    cardBg: isDark ? "#1F2937" : "#FFFFFF",
-    titleText: isDark ? "#F3F4F6" : "#111827",
-    descriptionText: isDark ? "#D1D5DB" : "#374151",
-    stepText: isDark ? "#60A5FA" : "#3B82F6",
-    iconColor: "#FFFFFF",
-    iconBg: "#3B82F6",
-    closeIcon: isDark ? "#9CA3AF" : "#6B757D",
-    progressBg: isDark ? "#374151" : "#E5E7EB",
-    progressBar: isDark ? "#60A5FA" : "#3B82F6",
-    prevButtonBg: isDark ? "#374151" : "#F3F4F6",
-    prevButtonText: isDark ? "#F3F4F6" : "#111827",
-    prevButtonDisabledBg: isDark ? "#4B5563" : "#F9FAFB",
-    prevButtonDisabledText: isDark ? "#9CA3AF" : "#D1D5DB",
-    nextButtonBg: "#3B82F6",
-    nextButtonText: "#FFFFFF",
-    dotColor: isDark ? "#60A5FA" : "#3B82F6",
-    dotInactiveColor: isDark ? "#4B5563" : "#D1D5DB",
-    skipLink: isDark ? "#93C5FD" : "#3B82F6",
-    highlightBorder: "#3B82F6",
-    highlightBg: "rgba(59, 130, 246, 0.15)",
-    hintBg: isDark ? "rgba(40, 58, 83, 0.9)" : "rgba(0, 0, 0, 0.6)",
-    hintText: isDark ? "#E5E7EB" : "#FFFFFF",
-  };
-
   return (
     <Modal
       visible={visible}
@@ -207,10 +180,8 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
       <Animated.View
         style={{
           flex: 1,
-          backgroundColor: colors.background,
+          backgroundColor: isDark ? "rgba(0, 0, 0, 0.9)" : "rgba(255, 255, 255, 0.9)",
           opacity: fadeAnim,
-          justifyContent: "center",
-          alignItems: "center",
         }}
       >
         {/* Highlight Area */}
@@ -219,10 +190,10 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
             style={{
               position: "absolute",
               ...currentStepData.highlight,
-              borderRadius: 16,
-              borderWidth: 3,
-              borderColor: colors.highlightBorder,
-              backgroundColor: colors.highlightBg,
+              borderRadius: 12,
+              borderWidth: 2,
+              borderColor: isDark ? "#3B82F6" : "#3B82F6",
+              backgroundColor: isDark ? "rgba(59, 130, 246, 0.1)" : "rgba(59, 130, 246, 0.1)",
             }}
           />
         )}
@@ -239,16 +210,11 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
         >
           <View
             style={{
-              backgroundColor: colors.cardBg,
+              backgroundColor: isDark ? "#000" : "#fff",
               borderRadius: 16,
-              padding: 24,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.4,
-              shadowRadius: 16,
-              elevation: 10,
-              borderWidth: isDark ? 1 : 0,
-              borderColor: isDark ? "#374151" : "transparent",
+              padding: 20,
+              borderWidth: 1,
+              borderColor: isDark ? "#374151" : "#e5e7eb",
             }}
           >
             {/* Header */}
@@ -265,10 +231,10 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
               >
                 <View
                   style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
-                    backgroundColor: colors.iconBg,
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: "#3B82F6",
                     justifyContent: "center",
                     alignItems: "center",
                     marginRight: 12,
@@ -276,16 +242,16 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
                 >
                   <FontAwesome
                     name={currentStepData.icon}
-                    size={20}
-                    color={colors.iconColor}
+                    size={18}
+                    color="#fff"
                   />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text
                     style={{
                       fontSize: 18,
-                      fontWeight: "bold",
-                      color: colors.titleText,
+                      fontWeight: "700",
+                      color: isDark ? "#f9fafb" : "#111827",
                     }}
                   >
                     {currentStepData.title}
@@ -293,7 +259,7 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
                   <Text
                     style={{
                       fontSize: 12,
-                      color: colors.stepText,
+                      color: "#3B82F6",
                       marginTop: 2,
                     }}
                   >
@@ -302,7 +268,7 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
                 </View>
               </View>
               <TouchableOpacity onPress={skipTutorial} style={{ padding: 8 }}>
-                <FontAwesome name="times" size={18} color={colors.closeIcon} />
+                <FontAwesome name="times" size={18} color={isDark ? "#9CA3AF" : "#6B7280"} />
               </TouchableOpacity>
             </View>
 
@@ -310,9 +276,9 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
             <Text
               style={{
                 fontSize: 16,
-                lineHeight: 24,
-                color: colors.descriptionText,
-                marginBottom: 24,
+                lineHeight: 22,
+                color: isDark ? "#d1d5db" : "#374151",
+                marginBottom: 20,
               }}
             >
               {currentStepData.description}
@@ -321,17 +287,17 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
             {/* Progress Bar */}
             <View
               style={{
-                height: 6,
-                backgroundColor: colors.progressBg,
-                borderRadius: 3,
-                marginBottom: 24,
+                height: 4,
+                backgroundColor: isDark ? "#374151" : "#e5e7eb",
+                borderRadius: 2,
+                marginBottom: 20,
               }}
             >
               <View
                 style={{
-                  height: 6,
-                  borderRadius: 3,
-                  backgroundColor: colors.progressBar,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: "#3B82F6",
                   width: `${((currentStep + 1) / tutorialSteps.length) * 100}%`,
                 }}
               />
@@ -352,32 +318,22 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
                   flexDirection: "row",
                   alignItems: "center",
                   paddingHorizontal: 16,
-                  paddingVertical: 10,
+                  paddingVertical: 8,
                   borderRadius: 20,
-                  backgroundColor:
-                    currentStep === 0
-                      ? colors.prevButtonDisabledBg
-                      : colors.prevButtonBg,
-                  opacity: currentStep === 0 ? 0.6 : 1,
+                  backgroundColor: isDark ? "#1f2937" : "#f3f4f6",
+                  opacity: currentStep === 0 ? 0.5 : 1,
                 }}
               >
                 <FontAwesome
                   name="chevron-left"
                   size={14}
-                  color={
-                    currentStep === 0
-                      ? colors.prevButtonDisabledText
-                      : colors.prevButtonText
-                  }
+                  color={isDark ? "#f9fafb" : "#111827"}
                 />
                 <Text
                   style={{
                     marginLeft: 8,
                     fontWeight: "600",
-                    color:
-                      currentStep === 0
-                        ? colors.prevButtonDisabledText
-                        : colors.prevButtonText,
+                    color: isDark ? "#f9fafb" : "#111827",
                   }}
                 >
                   Previous
@@ -389,14 +345,14 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
                   <View
                     key={index}
                     style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
-                      marginHorizontal: 4,
+                      width: 6,
+                      height: 6,
+                      borderRadius: 3,
+                      marginHorizontal: 3,
                       backgroundColor:
                         index === currentStep
-                          ? colors.dotColor
-                          : colors.dotInactiveColor,
+                          ? "#3B82F6"
+                          : isDark ? "#4b5563" : "#d1d5db",
                     }}
                   />
                 ))}
@@ -408,16 +364,16 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
                   flexDirection: "row",
                   alignItems: "center",
                   paddingHorizontal: 16,
-                  paddingVertical: 10,
+                  paddingVertical: 8,
                   borderRadius: 20,
-                  backgroundColor: colors.nextButtonBg,
+                  backgroundColor: "#3B82F6",
                 }}
               >
                 <Text
                   style={{
                     marginRight: 8,
                     fontWeight: "600",
-                    color: colors.nextButtonText,
+                    color: "#fff",
                   }}
                 >
                   {currentStep === tutorialSteps.length - 1 ? "Finish" : "Next"}
@@ -429,7 +385,7 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
                       : "chevron-right"
                   }
                   size={14}
-                  color={colors.nextButtonText}
+                  color="#fff"
                 />
               </TouchableOpacity>
             </View>
@@ -443,7 +399,7 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
                 <Text
                   style={{
                     fontSize: 14,
-                    color: colors.skipLink,
+                    color: "#3B82F6",
                     textDecorationLine: "underline",
                   }}
                 >
@@ -473,16 +429,16 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
                 paddingHorizontal: 16,
                 paddingVertical: 10,
                 borderRadius: 20,
-                backgroundColor: colors.hintBg,
+                backgroundColor: isDark ? "rgba(31, 41, 55, 0.8)" : "rgba(0, 0, 0, 0.6)",
               }}
             >
               <FontAwesome
                 name="hand-pointer-o"
                 size={16}
-                color={colors.hintText}
+                color="#fff"
               />
               <Text
-                style={{ marginLeft: 8, fontSize: 14, color: colors.hintText }}
+                style={{ marginLeft: 8, fontSize: 14, color: "#fff" }}
               >
                 Tap anywhere to continue
               </Text>

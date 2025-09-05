@@ -16,7 +16,7 @@ const DetailSection = ({ title, content, icon, color = "green", isDarkMode }) =>
       <View className="flex-row items-center mb-3">
         <FontAwesome name={icon} size={20} color={colorMap[color]} />
         <Text
-          className="ml-2 text-lg font-inter-semibold dark:text-white text-gray-900"
+          className="ml-2 text-lg font-inter-semibold dark:text-white text-black"
         >
           {title}
         </Text>

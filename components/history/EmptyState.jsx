@@ -8,12 +8,12 @@ const EmptyState = ({ isDark }) => {
       <FontAwesome
         name="history"
         size={48}
-        color={isDark ? "#8E8E93" : "#6C757D"}
+        color={isDark ? "#fff" : "#000"}
       />
       <Text className="mt-4 text-xl font-inter-bold text-black dark:text-white">
         No analyses yet
       </Text>
-      <Text className="mt-2 text-base font-inter text-gray-500 dark:text-gray-400 text-center">
+      <Text className="mt-2 text-base font-inter text-gray-500 dark:text-gray-400 text-center px-8">
         Start by taking a photo of your pet to create your first health
         analysis!
       </Text>

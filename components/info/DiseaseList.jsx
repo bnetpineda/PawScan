@@ -28,7 +28,7 @@ const DiseaseList = ({
     return (
       <>
         <Text
-          className="text-sm font-inter-semibold mb-4 dark:text-gray-400 text-gray-600"
+          className="text-sm font-inter-semibold mb-3 dark:text-gray-400 text-gray-600"
         >
           {diseases.length} disease
           {diseases.length !== 1 ? "s" : ""} found
@@ -55,15 +55,15 @@ const DiseaseList = ({
         <FontAwesome
           name={ICONS.alert}
           size={48}
-          color={isDarkMode ? "#6B7280" : "#9CA3AF"}
+          color={isDarkMode ? "#fff" : "#000"}
         />
         <Text
-          className="text-lg font-inter-semibold mt-4 dark:text-gray-400 text-gray-500"
+          className="mt-4 text-xl font-inter-bold dark:text-white text-black"
         >
           No diseases found
         </Text>
         <Text
-          className="text-sm font-inter mt-2 text-center dark:text-gray-500 text-gray-400"
+          className="mt-2 text-base font-inter text-gray-500 dark:text-gray-400 text-center"
         >
           Try adjusting your search terms or select a different category
         </Text>

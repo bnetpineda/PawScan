@@ -18,17 +18,17 @@ const ICONS = {
 const DiseaseSearchBar = ({ searchQuery, onSearchChange, isDarkMode, onClear }) => {
   return (
     <View
-      className="flex-row items-center px-4 py-3 rounded-xl border border-gray-200 mb-4 dark:border-neutral-900 bg-white dark:bg-neutral-900 shadow-sm"
+      className="flex-row items-center px-4 py-3 rounded-xl dark:bg-gray-900 bg-white mb-3 border border-gray-200 dark:border-gray-800"
     >
       <FontAwesome
         name={ICONS.search}
         size={20}
-        color={isDarkMode ? "#9CA3AF" : "#6B7280"}
+        color={isDarkMode ? "#fff" : "#000"}
       />
       <TextInput
-        className="flex-1 ml-3 text-base font-inter dark:text-white text-gray-900"
+        className="flex-1 ml-3 text-base font-inter dark:text-white text-black"
         placeholder="Search diseases..."
-        placeholderTextColor={isDarkMode ? "#9CA3AF" : "#6B7280"}
+        placeholderTextColor={isDarkMode ? "#8E8E93" : "#6C757D"}
         value={searchQuery}
         onChangeText={onSearchChange}
       />
@@ -37,7 +37,7 @@ const DiseaseSearchBar = ({ searchQuery, onSearchChange, isDarkMode, onClear }) 
           <FontAwesome
             name={ICONS.close}
             size={20}
-            color={isDarkMode ? "#9CA3AF" : "#6B7280"}
+            color={isDarkMode ? "#fff" : "#000"}
           />
         </TouchableOpacity>
       )}

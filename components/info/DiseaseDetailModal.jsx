@@ -27,26 +27,26 @@ const DiseaseDetailModal = ({ visible, disease, isDarkMode, onClose }) => {
       onRequestClose={onClose}
     >
       <View
-        className="flex-row items-center justify-between p-6 border-b dark:border-gray-800 border-gray-200"
+        className="flex-row items-center justify-between p-4 border-b dark:border-gray-800 border-gray-200"
       >
         <Text
-          className="text-xl font-inter-bold flex-1 dark:text-white text-gray-900"
+          className="text-xl font-inter-bold flex-1 dark:text-white text-black"
         >
           {disease?.Disease}
         </Text>
         <TouchableOpacity
           onPress={onClose}
-          className="p-2 rounded-full dark:bg-gray-800 bg-gray-100"
+          className="p-2"
         >
           <FontAwesome
             name={ICONS.close}
             size={20}
-            color={isDarkMode ? "#9CA3AF" : "#6B7280"}
+            color={isDarkMode ? "#fff" : "#000"}
           />
         </TouchableOpacity>
       </View>
 
-      <ScrollView className="flex-1 p-6">
+      <ScrollView className="flex-1 p-4">
         <DetailSection
           title="Overview"
           content={disease?.Overview}
@@ -95,7 +95,7 @@ const DiseaseDetailModal = ({ visible, disease, isDarkMode, onClose }) => {
               <FontAwesome 
                 name={ICONS.paw} 
                 size={16} 
-                color={isDarkMode ? "#9CA3AF" : "#6B7280"} 
+                color={isDarkMode ? "#fff" : "#000"} 
               />
               <Text
                 className="ml-2 font-inter-semibold mb-2 dark:text-gray-300 text-gray-700"
