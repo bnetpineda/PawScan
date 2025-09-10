@@ -122,7 +122,7 @@ const ChatScreen = () => {
       data.forEach(msg => {
         initialStatus[msg.id] = {
           sent: true,
-          delivered: true,
+          delivered: msg.sender_id !== user.id, // Delivered if sent by other user
           read: msg.read || false
         };
       });
@@ -162,8 +162,16 @@ const ChatScreen = () => {
           if (newMessage.sender_id !== user.id) {
             setMessages((prevMessages) => [...prevMessages, newMessage]);
             
-            // Mark message as read if chat is open
-            markMessageAsRead(newMessage.id);
+            // Mark message as delivered (not read yet)
+            // Read status will be updated when user actually views the message
+            setMessageStatus(prev => ({
+              ...prev,
+              [newMessage.id]: {
+                sent: true,
+                delivered: true,
+                read: false
+              }
+            }));
             
             // Send push notification
             const senderName = vetName || 'Veterinarian';
@@ -188,13 +196,15 @@ const ChatScreen = () => {
               return updatedMessages;
             });
             
-            // Update message status
+            // Update message status - only mark as sent, not delivered or read
+            // Delivered status should be updated when the recipient actually receives it
+            // Read status should be updated when the recipient actually reads it
             setMessageStatus(prev => ({
               ...prev,
               [newMessage.id]: {
                 sent: true,
-                delivered: true,
-                read: newMessage.read || false
+                delivered: false, // Will be updated when recipient receives it
+                read: false // Will be updated when recipient reads it
               }
             }));
           }
@@ -221,15 +231,17 @@ const ChatScreen = () => {
             return updatedMessages;
           });
           
-          // Update message status
-          setMessageStatus(prev => ({
-            ...prev,
-            [updatedMessage.id]: {
-              sent: true,
-              delivered: true,
-              read: updatedMessage.read || false
-            }
-          }));
+          // Update message status only if it exists in our status tracking
+          // This handles cases where the message status is updated (e.g., read status)
+          if (messageStatus[updatedMessage.id]) {
+            setMessageStatus(prev => ({
+              ...prev,
+              [updatedMessage.id]: {
+                ...prev[updatedMessage.id],
+                read: updatedMessage.read || false
+              }
+            }));
+          }
         }
       )
       .subscribe();
@@ -351,6 +363,19 @@ const ChatScreen = () => {
     }
   };
 
+  // Mark messages as read when they are displayed to the user
+  const markMessagesAsRead = async () => {
+    // Find all messages from the other user that haven't been read yet
+    const unreadMessages = messages.filter(
+      msg => msg.sender_id !== user.id && !msg.read
+    );
+    
+    // Mark each unread message as read
+    for (const message of unreadMessages) {
+      await markMessageAsRead(message.id);
+    }
+  };
+
   const retrySendMessage = async (tempMessageId, content, imageUrl = null, retryCount = 0) => {
     const maxRetries = 3;
     
@@ -404,15 +429,19 @@ const ChatScreen = () => {
         return updatedMessages;
       });
       
-      // Update message status
-      setMessageStatus(prev => ({
-        ...prev,
-        [tempMessageId]: {
+      // Update message status - remove the temporary ID and add the real ID
+      setMessageStatus(prev => {
+        const newStatus = { ...prev };
+        // Remove the temporary message status
+        delete newStatus[tempMessageId];
+        // Add the real message status
+        newStatus[data.id] = {
           sent: true,
-          delivered: true,
-          read: data.read || false
-        }
-      }));
+          delivered: false, // Not delivered yet, will be updated when recipient receives it
+          read: false // Not read yet, will be updated when recipient reads it
+        };
+        return newStatus;
+      });
 
       setNetworkError(null);
       return data;
@@ -622,6 +651,11 @@ const ChatScreen = () => {
   useEffect(() => {
     // Scroll to bottom when messages change
     scrollToBottom();
+    
+    // Mark messages as read when they are displayed
+    if (messages.length > 0) {
+      markMessagesAsRead();
+    }
   }, [messages]);
 
   return (
