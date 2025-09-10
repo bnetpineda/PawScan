@@ -1,20 +1,37 @@
-import { useState, useEffect } from 'react';
-import { View, Text, FlatList, SafeAreaView, TouchableOpacity, Alert, RefreshControl, useColorScheme, StatusBar } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
+import { View, Text, FlatList, SafeAreaView, TouchableOpacity, Alert, RefreshControl, useColorScheme, StatusBar, TextInput, Modal } from 'react-native';
 import { useAuth } from '../../../providers/AuthProvider';
 import { supabase } from '../../../lib/supabase';
 import { useRouter } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 
-const VetChatListScreen = () => {
+const ChatListScreen = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [conversations, setConversations] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredConversations, setFilteredConversations] = useState([]);
+  const [showSearch, setShowSearch] = useState(false);
   const isDark = useColorScheme() === 'dark';
 
   useEffect(() => {
     loadConversations();
   }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredConversations(conversations);
+    } else {
+      const filtered = conversations.filter(conversation => {
+        const userName = conversation.userName?.toLowerCase() || "";
+        const latestMessage = conversation.latestMessage?.content?.toLowerCase() || "";
+        const query = searchQuery.toLowerCase();
+        return userName.includes(query) || latestMessage.includes(query);
+      });
+      setFilteredConversations(filtered);
+    }
+  }, [searchQuery, conversations]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -95,6 +112,7 @@ const VetChatListScreen = () => {
       );
 
       setConversations(conversationsWithLatestMessage);
+      setFilteredConversations(conversationsWithLatestMessage);
     } catch (error) {
       console.error('Error loading conversations:', error);
       Alert.alert('Error', 'Could not load conversations');
@@ -154,16 +172,76 @@ const VetChatListScreen = () => {
       />
       <View className="flex-row justify-between items-center px-5 py-4 border-b border-black dark:border-neutral-700 mt-2">
         <Text className="text-2xl font-inter-bold text-black dark:text-white">Your Chats</Text>
+        <TouchableOpacity 
+          onPress={() => setShowSearch(true)}
+          className="p-2"
+        >
+          <FontAwesome 
+            name="search" 
+            size={20} 
+            color={isDark ? "#fff" : "#000"} 
+          />
+        </TouchableOpacity>
       </View>
-      {conversations.length === 0 ? (
+      
+      {/* Search Modal */}
+      <Modal
+        animationType="slide"
+        transparent={false}
+        visible={showSearch}
+        onRequestClose={() => setShowSearch(false)}
+      >
+        <SafeAreaView className="flex-1 bg-white dark:bg-black">
+          <View className="flex-row items-center px-4 py-3 border-b border-gray-300 dark:border-neutral-700">
+            <TouchableOpacity 
+              onPress={() => setShowSearch(false)}
+              className="p-2 mr-2"
+            >
+              <FontAwesome 
+                name="arrow-left" 
+                size={20} 
+                color={isDark ? "#fff" : "#000"} 
+              />
+            </TouchableOpacity>
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search chats..."
+              placeholderTextColor={isDark ? "#8E8E93" : "#6C757D"}
+              className="flex-1 border border-gray-300 dark:border-neutral-700 rounded-full px-4 py-2 text-base font-inter bg-white dark:bg-neutral-800 text-black dark:text-white"
+              autoFocus
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity 
+                onPress={() => setSearchQuery("")}
+                className="p-2 ml-2"
+              >
+                <FontAwesome 
+                  name="times-circle" 
+                  size={20} 
+                  color={isDark ? "#8E8E93" : "#6C757D"} 
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        </SafeAreaView>
+      </Modal>
+      
+      {filteredConversations.length === 0 ? (
         <View className="flex-1 justify-center items-center p-8">
           <FontAwesome name="commenting-o" size={64} color={isDark ? "#fff" : "#000"} />
-          <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">No conversations yet</Text>
-          <Text className="text-base text-center text-gray-600 dark:text-gray-300">Users will start chats with you. Check back later!</Text>
+          <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">
+            {searchQuery ? "No chats found" : "No conversations yet"}
+          </Text>
+          <Text className="text-base text-center text-gray-600 dark:text-gray-300">
+            {searchQuery 
+              ? "Try a different search term" 
+              : "Users will start chats with you. Check back later!"}
+          </Text>
         </View>
       ) : (
         <FlatList
-          data={conversations}
+          data={filteredConversations}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderConversation}
           className="flex-1"
@@ -176,4 +254,4 @@ const VetChatListScreen = () => {
   );
 };
 
-export default VetChatListScreen;
+export default ChatListScreen;

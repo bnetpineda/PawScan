@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase"; // make sure this points to your client
 import { Session, User } from "@supabase/supabase-js";
+import notificationService from "../services/notificationService";
 
 const AuthContext = createContext(null);
 
@@ -9,6 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -19,6 +21,12 @@ export const AuthProvider = ({ children }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      // Initialize notifications when user is authenticated
+      if (session?.user && !initialized) {
+        setInitialized(true);
+        notificationService.initialize();
+      }
     };
 
     init();
@@ -28,10 +36,26 @@ export const AuthProvider = ({ children }) => {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      // Initialize notifications when user signs in
+      if (session?.user && !initialized) {
+        setInitialized(true);
+        notificationService.initialize();
+      }
+      
+      // Reset notification service when user logs out
+      if (!session?.user) {
+        notificationService.reset();
+        setInitialized(false);
+      }
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      subscription.unsubscribe();
+      // Clean up notification listeners
+      notificationService.removeNotificationListeners();
+    };
+  }, [initialized]);
 
   const signInWithEmail = async (email, password) => {
     return await supabase.auth.signInWithPassword({ email, password });
@@ -53,6 +77,9 @@ export const AuthProvider = ({ children }) => {
       console.error("Logout error:", error.message);
     } else {
       console.log("User logged out successfully");
+      // Reset notification service
+      notificationService.reset();
+      setInitialized(false);
     }
   };
 
