@@ -17,13 +17,6 @@ export default function ChatLayout() {
           headerShown: false 
         }} 
       />
-      <Stack.Screen 
-        name="vets" 
-        options={{ 
-          title: "Select Veterinarian",
-          headerShown: false 
-        }} 
-      />
     </Stack>
   );
 }

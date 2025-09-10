@@ -456,7 +456,14 @@ const ChatScreen = () => {
         // Retry
         return retrySendMessage(tempMessageId, content, imageUrl, retryCount + 1);
       } else {
-        // Max retries reached
+        // Max retries reached - remove the temporary message
+        setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== tempMessageId));
+        setMessageStatus(prev => {
+          const newStatus = { ...prev };
+          delete newStatus[tempMessageId];
+          return newStatus;
+        });
+        
         setNetworkError('Failed to send message after multiple attempts. Please check your connection.');
         Alert.alert(
           'Message Failed', 
