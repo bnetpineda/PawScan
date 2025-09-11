@@ -60,7 +60,7 @@ const NewsFeedScreen = () => {
       const filtered = filterPosts(searchQuery);
       setPosts(filtered);
     }
-  }, [allPosts, searchQuery, filterPosts]);
+  }, [allPosts, searchQuery]);
 
   const checkFirstTimeUser = async () => {
     try {
@@ -122,13 +122,14 @@ const NewsFeedScreen = () => {
           // Check if current user has liked this post
           let userHasLiked = false;
           if (currentUser) {
-            const { data: userLike } = await supabase
+            const { data: userLike, error: userLikeError } = await supabase
               .from("newsfeed_likes")
               .select("id")
               .eq("post_id", post.id)
               .eq("user_id", currentUser.id)
-              .single();
+              .maybeSingle();
 
+            if (userLikeError) console.error("userLikeError:", userLikeError);
             userHasLiked = !!userLike;
           }
 
@@ -460,10 +461,11 @@ const NewsFeedScreen = () => {
         <EmptyState isDark={isDark} isEmpty={posts.length === 0} />
         
         {posts.map((post) => (
-          <PostCard 
+          <PostCard
             key={post.id}
             post={post}
             isDark={isDark}
+            currentUser={currentUser}
             onToggleLike={toggleLike}
             onOpenComments={openCommentsModal}
             onShare={handleShare}

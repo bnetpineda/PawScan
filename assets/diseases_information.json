@@ -1,21 +1,31 @@
 [
   {
     "Disease": "Feline Chin Acne",
-    "Overview": " A common dermatological condition characterized by blackheads (comedones) and mild to severe inflammation on the chin and lower lip.",
+    "Overview": "A common dermatological condition characterized by blackheads (comedones) and mild to severe inflammation on the chin and lower lip.",
     "Symptoms": "Black dots, pimples, crusts, redness, swelling, pustules, hair loss; may be itchy or sore in more severe cases.",
     "Causes": "Follicular obstruction from excess keratin; bacterial infection; plastic food bowls; poor grooming; stress; allergies; hormonal imbalance.",
     "Prevention Tips": "- Replace plastic dishes with stainless steel, ceramic, or glass and wash daily.\n- Maintain regular cleanliness and grooming.\n- Monitor stress and manage any allergic or hormonal triggers.",
-    "Approved Treatment and Protocols": "1. Cleanse daily with benzoyl peroxide or chlorhexidine wipes/shampoos.\n2. Clip hair around lesions for hygiene.\n3. Topical antibiotics (mupirocin, clindamycin).\n4. Systemic antibiotics, corticosteroids, isotretinoin in severe cases \n5. Omega\u20113 fatty acid supplements to improve skin health.",
-    "Feline vs Canine": "Works similarly in both species, but feline acne is localized to the chin and lower lip."
+    "Approved Treatment and Protocols": "1. Cleanse daily with benzoyl peroxide or chlorhexidine wipes/shampoos.\n2. Clip hair around lesions for hygiene.\n3. Topical antibiotics (mupirocin, clindamycin).\n4. Systemic antibiotics, corticosteroids, isotretinoin in severe cases \n5. Omega-3 fatty acid supplements to improve skin health.",
+    "Feline vs Canine": "Works similarly in both species, but feline acne is localized to the chin and lower lip.",
+    "Severity": "Low",
+    "Species": ["Cat"],
+    "Tags": ["skin", "acne", "chin", "bacterial", "cosmetic"],
+    "When to See a Vet": "If condition worsens despite home care, shows signs of infection (pus, increased swelling), or if your cat seems uncomfortable.",
+    "Treatment Timeline": "Improvement typically seen in 2-4 weeks with consistent treatment."
   },
   {
     "Disease": "Allergies (Generalized Pruritic Dermatitis)",
     "Overview": "Inflammatory skin disease triggered by environmental (atopic) or food allergens.",
-    "Symptoms": "tchy, red, inflamed skin, chewing, licking, scratching, commonly affecting face, paws, ears, belly.",
+    "Symptoms": "Itchy, red, inflamed skin, chewing, licking, scratching, commonly affecting face, paws, ears, belly.",
     "Causes": "Pollen, dust mites, mold, food proteins.",
     "Prevention Tips": "- Allergen avoidance.\n- Hypoallergenic diet trials.\n- Regular grooming and control of environmental allergens.",
     "Approved Treatment and Protocols": "- Antihistamines, corticosteroids, immunotherapy.\n- Topical soothing shampoos, fatty acid supplementation.\n- In severe, chronic cases, oclacitinib or cyclosporine may be used.",
-    "Feline vs Canine": "Present in both; in cats, often results in eosinophilic granuloma complex. In dogs, typically manifests as atopic dermatitis."
+    "Feline vs Canine": "Present in both; in cats, often results in eosinophilic granuloma complex. In dogs, typically manifests as atopic dermatitis.",
+    "Severity": "Medium",
+    "Species": ["Cat", "Dog"],
+    "Tags": ["allergy", "itching", "skin", "environmental", "chronic"],
+    "When to See a Vet": "If symptoms persist despite over-the-counter treatments, worsen, or affect your pet's quality of life.",
+    "Treatment Timeline": "Management is often long-term; initial improvement may take 2-8 weeks depending on treatment."
   },
   {
     "Disease": "Atopic Dermatitis",
@@ -24,25 +34,40 @@
     "Causes": "Environmental allergens (often seasonal).",
     "Prevention Tips": "- Regular baths\n- Allergen control\n- Diet optimization.",
     "Approved Treatment and Protocols": "Antihistamines, steroids, immunotherapy, biologics, fatty acid supplementation.",
-    "Feline vs Canine": "Comparable in both; cats may develop nodules (eosinophilic granuloma complex)."
+    "Feline vs Canine": "Comparable in both; cats may develop nodules (eosinophilic granuloma complex).",
+    "Severity": "Medium",
+    "Species": ["Cat", "Dog"],
+    "Tags": ["allergy", "itching", "skin", "environmental", "chronic"],
+    "When to See a Vet": "For proper diagnosis and treatment plan; this condition typically requires veterinary management.",
+    "Treatment Timeline": "Long-term management; improvement varies from weeks to months depending on treatment approach."
   },
   {
     "Disease": "Pulicosis / Flea Allergy Dermatitis (FAD)",
     "Overview": "Severe hypersensitivity to flea saliva.",
     "Symptoms": "Row of red bumps near the fleas; intense itching and self-trauma.",
-    "Causes": "Flea bites\u2014often 1 bite triggers severe reaction.",
+    "Causes": "Flea bites—often 1 bite triggers severe reaction.",
     "Prevention Tips": "Year-round flea control via approved topical or oral preventives; regular combing.",
     "Approved Treatment and Protocols": "Flea elimination, steroids/antihistamines for itching, antibiotics for secondary infections.",
-    "Feline vs Canine": null
+    "Feline vs Canine": "",
+    "Severity": "High",
+    "Species": ["Cat", "Dog"],
+    "Tags": ["parasite", "flea", "allergy", "itching", "contagious"],
+    "When to See a Vet": "Immediately for proper flea treatment and to address allergic reaction; secondary infections may require antibiotics.",
+    "Treatment Timeline": "Itching may improve in 1-2 weeks once fleas are eliminated, but full recovery can take longer."
   },
   {
     "Disease": "Miliary Dermatitis",
-    "Overview": "Also known as \u201cscabby dermatitis,\u201d denoted by multiple small crusts.",
+    "Overview": "Also known as \"scabby dermatitis,\" denoted by multiple small crusts.",
     "Symptoms": "Tiny scabs, papules, often beneath insulating fur coat.",
     "Causes": "Allergies (flea, food, contact), parasites (fleas, mites), infections.",
     "Prevention Tips": "Address underlying cause; consistent parasite control.",
     "Approved Treatment and Protocols": "Steroids, antibiotics, antiparasitics, soothing shampoos; treat allergies and parasites.",
-    "Feline vs Canine": "Mainly feline; not typical in dogs."
+    "Feline vs Canine": "Mainly feline; not typical in dogs.",
+    "Severity": "Medium",
+    "Species": ["Cat"],
+    "Tags": ["skin", "crusting", "allergy", "parasite"],
+    "When to See a Vet": "For proper diagnosis as this condition has multiple potential causes requiring different treatments.",
+    "Treatment Timeline": "Improvement typically seen in 2-4 weeks once underlying cause is addressed."
   },
   {
     "Disease": "Ringworm (Dermatophytosis)",
@@ -51,7 +76,12 @@
     "Causes": "Microsporum or Trichophyton species; contagious across species & to humans.",
     "Prevention Tips": "Quarantine infected animals; disinfect environment.",
     "Approved Treatment and Protocols": "Topical antifungals (lime sulfur dips, miconazole), + systemic itraconazole or terbinafine.",
-    "Feline vs Canine": null
+    "Feline vs Canine": "",
+    "Severity": "Medium",
+    "Species": ["Cat", "Dog"],
+    "Tags": ["fungal", "infection", "contagious", "zoonotic"],
+    "When to See a Vet": "Immediately; this condition requires veterinary diagnosis and treatment to prevent spread.",
+    "Treatment Timeline": "Treatment typically continues for 2-4 weeks beyond resolution of visible symptoms."
   },
   {
     "Disease": "Stud Tail (Feline Tail Gland Hyperplasia)",
@@ -60,7 +90,12 @@
     "Causes": "Hyperplasia of tail glands, often hormonally driven.",
     "Prevention Tips": "No specific prevention.",
     "Approved Treatment and Protocols": "Topical keratolytics and seborrheic shampoos, in severe cases surgical gland removal; address hormonal drivers if identifiable.",
-    "Feline vs Canine": "Rare in dogs."
+    "Feline vs Canine": "Rare in dogs.",
+    "Severity": "Low",
+    "Species": ["Cat"],
+    "Tags": ["skin", "tail", "gland", "hormonal"],
+    "When to See a Vet": "If condition worsens or causes discomfort; may require veterinary treatment for severe cases.",
+    "Treatment Timeline": "Improvement may take several weeks with consistent treatment."
   },
   {
     "Disease": "Eosinophilic Granuloma Complex (EGC)",
@@ -69,7 +104,12 @@
     "Causes": "Likely allergy-mediated (flea, food, atopic).",
     "Prevention Tips": "Allergy management.",
     "Approved Treatment and Protocols": "Corticosteroids, antibiotics if infected, address underlying allergies, possibly immunosuppressive therapy.",
-    "Feline vs Canine": "Primarily a feline-specific condition."
+    "Feline vs Canine": "Primarily a feline-specific condition.",
+    "Severity": "High",
+    "Species": ["Cat"],
+    "Tags": ["allergy", "immune", "ulcer", "eosinophil"],
+    "When to See a Vet": "Immediately; this condition requires veterinary diagnosis and treatment.",
+    "Treatment Timeline": "Improvement may take 2-8 weeks depending on severity and response to treatment."
   },
   {
     "Disease": "FeLV Skin Diseases",
@@ -78,7 +118,12 @@
     "Causes": "FeLV infection.",
     "Prevention Tips": "FeLV vaccination, indoor lifestyle, FeLV testing on new cats.",
     "Approved Treatment and Protocols": "Supportive care, antibiotics, antivirals if available; often guarded prognosis.",
-    "Feline vs Canine": null
+    "Feline vs Canine": "",
+    "Severity": "Emergency",
+    "Species": ["Cat"],
+    "Tags": ["viral", "immunocompromised", "infection", "cancer"],
+    "When to See a Vet": "Immediately; this indicates a serious underlying condition requiring urgent veterinary care.",
+    "Treatment Timeline": "Prognosis is often guarded; treatment focuses on managing symptoms and secondary conditions."
   },
   {
     "Disease": "Abscesses",
@@ -87,25 +132,26 @@
     "Causes": "Bite or scratch wounds, often from fighting.",
     "Prevention Tips": "Neutering to reduce roaming/fighting, supervise outdoor exposure.",
     "Approved Treatment and Protocols": "Vet drainage, flushing, antibiotics, analgesics, possible sedated/lanced treatment.",
-    "Feline vs Canine": null
-  },
-  {
-    "Disease": null,
-    "Overview": null,
-    "Symptoms": null,
-    "Causes": null,
-    "Prevention Tips": null,
-    "Approved Treatment and Protocols": null,
-    "Feline vs Canine": null
+    "Feline vs Canine": "",
+    "Severity": "High",
+    "Species": ["Cat", "Dog"],
+    "Tags": ["infection", "trauma", "bacteria", "emergency"],
+    "When to See a Vet": "Immediately; abscesses require professional treatment to prevent complications.",
+    "Treatment Timeline": "Drainage provides immediate relief; antibiotic course typically 7-14 days."
   },
   {
     "Disease": "Canine Chin Acne",
     "Overview": "Similar in mechanism to feline acne, resulting in pimples and inflammation often located near the lips or chin.",
     "Symptoms": "Pimples, swelling, redness, possible crusts in the affected area.",
     "Causes": "Follicular obstruction; bacterial overgrowth (e.g., Staphylococcus); trauma from licking, collars, or plastic bowls; genetic predisposition (common in Boxers, Bulldogs, Great Danes, Weimaraners, Mastiffs, Rottweilers, Dobermans); possible allergies.",
-    "Prevention Tips": "Keep chin area clean; avoid plastic bowls\u2014use ceramic or stainless steel; improve grooming habits; monitor for underlying allergies.",
-    "Approved Treatment and Protocols": "Clean area with benzoyl peroxide or chlorhexidine.\nUse topical antibiotics; in severe cases, systemic antibiotics.\nA 4\u20136 week course often needed; culture and sensitivity if relapse occurs",
-    "Feline vs Canine": "Very similar overall; acne is less common in dogs than cats."
+    "Prevention Tips": "Keep chin area clean; avoid plastic bowls—use ceramic or stainless steel; improve grooming habits; monitor for underlying allergies.",
+    "Approved Treatment and Protocols": "Clean area with benzoyl peroxide or chlorhexidine.\nUse topical antibiotics; in severe cases, systemic antibiotics.\nA 4–6 week course often needed; culture and sensitivity if relapse occurs",
+    "Feline vs Canine": "Very similar overall; acne is less common in dogs than cats.",
+    "Severity": "Low",
+    "Species": ["Dog"],
+    "Tags": ["skin", "acne", "chin", "bacterial", "breed-specific"],
+    "When to See a Vet": "If condition worsens despite home care, shows signs of infection, or if your dog seems uncomfortable.",
+    "Treatment Timeline": "Improvement typically seen in 2-4 weeks with consistent treatment."
   },
   {
     "Disease": "Allergies",
@@ -113,8 +159,13 @@
     "Symptoms": "Itchy, red skin; chewing, scratching; commonly on ears, paws, belly, and face.",
     "Causes": "Pollen, dust mites, mold, food proteins.",
     "Prevention Tips": "Avoid allergens when possible.\nTry hypoallergenic diets.\nMaintain regular grooming and clean environment.",
-    "Approved Treatment and Protocols": "Antihistamines, corticosteroids for relief.\nAllergen-specific immunotherapy.\nTopical shampoos and fatty acid supplements.\nChronic atopy may involve oclacitinib (Apoquel) or cyclosporine (Atopica). ",
-    "Feline vs Canine": "Dogs typically manifest allergic dermatitis; cats may show eosinophilic granulomas or miliary dermatitis."
+    "Approved Treatment and Protocols": "Antihistamines, corticosteroids for relief.\nAllergen-specific immunotherapy.\nTopical shampoos and fatty acid supplements.\nChronic atopy may involve oclacitinib (Apoquel) or cyclosporine (Atopica).",
+    "Feline vs Canine": "Dogs typically manifest allergic dermatitis; cats may show eosinophilic granulomas or miliary dermatitis.",
+    "Severity": "Medium",
+    "Species": ["Cat", "Dog"],
+    "Tags": ["allergy", "itching", "skin", "environmental", "chronic"],
+    "When to See a Vet": "If symptoms persist despite over-the-counter treatments, worsen, or affect your pet's quality of life.",
+    "Treatment Timeline": "Management is often long-term; initial improvement may take 2-8 weeks depending on treatment."
   },
   {
     "Disease": "Atopic Dermatitis",
@@ -123,7 +174,12 @@
     "Causes": "Pollens, molds, dust mites; genetic predisposition.",
     "Prevention Tips": "Frequent baths to remove allergens.\nMinimize allergen exposure.\nDietary optimization to support skin.",
     "Approved Treatment and Protocols": "Antihistamines, corticosteroids.\nImmunotherapy (shots or drops).\nBiologic therapy (e.g., Cytopoint).\nFatty acid supplementation.",
-    "Feline vs Canine": "Both species affected; biologics more commonly used in dogs."
+    "Feline vs Canine": "Both species affected; biologics more commonly used in dogs.",
+    "Severity": "Medium",
+    "Species": ["Cat", "Dog"],
+    "Tags": ["allergy", "itching", "skin", "environmental", "chronic"],
+    "When to See a Vet": "For proper diagnosis and treatment plan; this condition typically requires veterinary management.",
+    "Treatment Timeline": "Long-term management; improvement varies from weeks to months depending on treatment approach."
   },
   {
     "Disease": "Demodectic Mange",
@@ -132,7 +188,12 @@
     "Causes": "Overgrowth of Demodex due to immature or compromised immunity; juvenile onset often resolves; adult onset is more serious.",
     "Prevention Tips": "Maintain general health and parasite prevention; genetic screening in breeding.",
     "Approved Treatment and Protocols": "Localized cases may self-resolve or use topical moxidectin/imidacloprid.\nGeneralized cases: weekly amitraz dips or oral ivermectin/milbemycin, isoxazolines (fluralaner, afoxolaner, sarolaner).\nTreat secondary bacterial infection with antibiotics.",
-    "Feline vs Canine": "Severity and treatment similar, but dogs exhibit both localized and generalized forms frequently."
+    "Feline vs Canine": "Severity and treatment similar, but dogs exhibit both localized and generalized forms frequently.",
+    "Severity": "High",
+    "Species": ["Dog"],
+    "Tags": ["parasite", "mite", "immunocompromised", "infection"],
+    "When to See a Vet": "Localized cases in young dogs may resolve, but generalized cases require immediate veterinary treatment.",
+    "Treatment Timeline": "Treatment typically continues until 2 consecutive negative skin scrapes, often 6-12 weeks."
   },
   {
     "Disease": "Hot Spots (Acute Moist Dermatitis)",
@@ -140,26 +201,41 @@
     "Symptoms": "Red, moist, oozing lesion with hair loss and pain; typically single site.",
     "Causes": "Minor irritants (bites, damp fur), allergies, poor grooming, curiosity licking.",
     "Prevention Tips": "Keep coat dry.\nMaintain flea control.\nGroom regularly.\nOffer mental stimulation to reduce licking.",
-    "Approved Treatment and Protocols": "1. Clip fur around lesion and clean with chlorhexidine or mild antiseptic.\n2. Apply topical antibacterial and corticosteroid sprays or ointments.\n3. Use 1% hydrocortisone creams or astringents (Domeboro).\n4. Administer oral antibiotics (e.g., cephalexin for ~2 weeks) if infection is deeper.\n5. Use corticosteroids (prednisone 0.5\u202fmg/kg short course) to reduce inflammation.\n6. Use an Elizabethan collar or recovery suit to prevent self-trauma.\n7. Address underlying cause (allergies, parasites, moisture).\nTypical healing in 3\u20137 days.",
-    "Feline vs Canine": "Rare in cats; predominantly a canine condition.\n"
+    "Approved Treatment and Protocols": "1. Clip fur around lesion and clean with chlorhexidine or mild antiseptic.\n2. Apply topical antibacterial and corticosteroid sprays or ointments.\n3. Use 1% hydrocortisone creams or astringents (Domeboro).\n4. Administer oral antibiotics (e.g., cephalexin for ~2 weeks) if infection is deeper.\n5. Use corticosteroids (prednisone 0.5 mg/kg short course) to reduce inflammation.\n6. Use an Elizabethan collar or recovery suit to prevent self-trauma.\n7. Address underlying cause (allergies, parasites, moisture).\nTypical healing in 3–7 days.",
+    "Feline vs Canine": "Rare in cats; predominantly a canine condition.",
+    "Severity": "High",
+    "Species": ["Dog"],
+    "Tags": ["infection", "bacteria", "acute", "emergency"],
+    "When to See a Vet": "Immediately; hot spots can worsen rapidly and require professional treatment.",
+    "Treatment Timeline": "Initial improvement in 2-3 days; full healing typically 1-2 weeks."
   },
   {
     "Disease": "Mast Cell Tumors",
-    "Overview": "Skin tumors of mast cells with variable behavior\u2014from benign to malignant.",
+    "Overview": "Skin tumors of mast cells with variable behavior—from benign to malignant.",
     "Symptoms": "Firm, sometimes itchy or red lumps on the skin.",
     "Causes": "Likely genetic; some breeds predisposed; exact etiology unclear.",
     "Prevention Tips": "No known prevention.",
     "Approved Treatment and Protocols": "Surgical removal with clean margins.\nPossible chemotherapy or radiation depending on grade/staging.",
-    "Feline vs Canine": null
+    "Feline vs Canine": "",
+    "Severity": "High",
+    "Species": ["Cat", "Dog"],
+    "Tags": ["tumor", "cancer", "lump", "mast cell"],
+    "When to See a Vet": "Immediately for any new or changing skin lumps; biopsy needed for diagnosis.",
+    "Treatment Timeline": "Depends on grade and staging; surgical removal is typically first step."
   },
   {
     "Disease": "Pyoderma",
-    "Overview": "Bacterial skin infection\u2014superficial or deep; often secondary to allergies, parasites, hormone issues.",
+    "Overview": "Bacterial skin infection—superficial or deep; often secondary to allergies, parasites, hormone issues.",
     "Symptoms": "Redness, swelling, pustules, crusts, possible odor or oozing.",
     "Causes": "Overgrowth of Staphylococcus and other bacteria due to compromised skin.",
-    "Prevention Tips": "Manage underlying allergies and parasites.\nUse proper hygiene.\nSupplement with omega\u20113 fatty acids.",
+    "Prevention Tips": "Manage underlying allergies and parasites.\nUse proper hygiene.\nSupplement with omega-3 fatty acids.",
     "Approved Treatment and Protocols": "Topical antibacterial shampoos/creams (chlorhexidine, benzoyl peroxide).\nSystemic antibiotics for deeper infections.",
-    "Feline vs Canine": null
+    "Feline vs Canine": "",
+    "Severity": "Medium",
+    "Species": ["Cat", "Dog"],
+    "Tags": ["infection", "bacteria", "secondary", "staph"],
+    "When to See a Vet": "For proper diagnosis and treatment; bacterial infections often require prescription medications.",
+    "Treatment Timeline": "Improvement typically seen in 1-2 weeks; full course of antibiotics important."
   },
   {
     "Disease": "Ringworm (Dermatophytosis)",
@@ -168,7 +244,12 @@
     "Causes": "Microsporum or Trichophyton species; zoonotic potential.",
     "Prevention Tips": "Quarantine affected pets; disinfect environment; use fungus-killing products.",
     "Approved Treatment and Protocols": "Topical antifungals (lime sulfur dips, miconazole); systemic itraconazole or terbinafine.",
-    "Feline vs Canine": null
+    "Feline vs Canine": "",
+    "Severity": "Medium",
+    "Species": ["Cat", "Dog"],
+    "Tags": ["fungal", "infection", "contagious", "zoonotic"],
+    "When to See a Vet": "Immediately; this condition requires veterinary diagnosis and treatment to prevent spread.",
+    "Treatment Timeline": "Treatment typically continues for 2-4 weeks beyond resolution of visible symptoms."
   },
   {
     "Disease": "Sarcoptic Mange (Scabies)",
@@ -177,7 +258,12 @@
     "Causes": "Infestation from infected animals or environment.",
     "Prevention Tips": "Isolate infected pets; treat all in household; maintain regular flea/tick preventives.",
     "Approved Treatment and Protocols": "Oral or topical ivermectin, selamectin, moxidectin; isoxazolines; topical lime sulfur dips; treat all contacts; clean environment.",
-    "Feline vs Canine": null
+    "Feline vs Canine": "",
+    "Severity": "High",
+    "Species": ["Cat", "Dog"],
+    "Tags": ["parasite", "mite", "contagious", "itching", "zoonotic"],
+    "When to See a Vet": "Immediately; this condition requires prescription medications and environmental treatment.",
+    "Treatment Timeline": "Itching may improve in 1-2 weeks, but full treatment course is 4-6 weeks."
   },
   {
     "Disease": "Seborrhea",
@@ -185,7 +271,12 @@
     "Symptoms": "Dandruff, greasiness, odor, flaking, itchiness.",
     "Causes": "Primary (genetic) or secondary to allergies, infections, endocrine disorder, sebaceous adenitis",
     "Prevention Tips": "Manage underlying disease; regular grooming; medicated baths.",
-    "Approved Treatment and Protocols": "Use medicated shampoos (keratolytic, antifungal, antibacterial); supplement with omega\u20113s; treat any primary disease.",
-    "Feline vs Canine": null
+    "Approved Treatment and Protocols": "Use medicated shampoos (keratolytic, antifungal, antibacterial); supplement with omega-3s; treat any primary disease.",
+    "Feline vs Canine": "",
+    "Severity": "Low",
+    "Species": ["Cat", "Dog"],
+    "Tags": ["skin", "flaking", "greasy", "chronic"],
+    "When to See a Vet": "If symptoms persist or worsen despite home care; underlying conditions may need treatment.",
+    "Treatment Timeline": "Management is often long-term; improvement varies depending on underlying cause."
   }
 ]

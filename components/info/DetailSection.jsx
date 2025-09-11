@@ -11,6 +11,9 @@ const DetailSection = ({ title, content, icon, color = "green", isDarkMode }) =>
     purple: isDarkMode ? "#A78BFA" : "#7C3AED",
   };
 
+  // Split content by newlines to create paragraphs
+  const paragraphs = content.split('\n').filter(paragraph => paragraph.trim() !== '');
+
   return (
     <View className="mb-6">
       <View className="flex-row items-center mb-3">
@@ -21,11 +24,14 @@ const DetailSection = ({ title, content, icon, color = "green", isDarkMode }) =>
           {title}
         </Text>
       </View>
-      <Text
-        className="text-base font-inter leading-6 dark:text-gray-300 text-gray-700"
-      >
-        {content}
-      </Text>
+      {paragraphs.map((paragraph, index) => (
+        <Text
+          key={index}
+          className="text-base font-inter leading-6 dark:text-gray-300 text-gray-700 mb-2"
+        >
+          {paragraph.trim()}
+        </Text>
+      ))}
     </View>
   );
 };

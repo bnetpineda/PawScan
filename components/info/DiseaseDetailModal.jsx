@@ -2,6 +2,9 @@ import { FontAwesome } from "@expo/vector-icons";
 import { TouchableOpacity, Text, View, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DetailSection from "./DetailSection";
+import SeverityIndicator from "./SeverityIndicator";
+import TagList from "./TagList";
+import BookmarkButton from "./BookmarkButton";
 
 const ICONS = {
   search: "search",
@@ -15,9 +18,34 @@ const ICONS = {
   paw: "paw",
   heart: "heart",
   filter: "filter",
+  cat: "paw",
+  dog: "paw",
+  clock: "clock-o",
+  medkit: "medkit",
+  tag: "tag",
 };
 
-const DiseaseDetailModal = ({ visible, disease, isDarkMode, onClose }) => {
+const DiseaseDetailModal = ({ visible, disease, isDarkMode, onClose, isBookmarked, onBookmarkPress }) => {
+  // Get species icons
+  const getSpeciesIcons = () => {
+    const species = disease?.Species || [];
+    return species.map((s, index) => {
+      const isCat = s.toLowerCase() === "cat";
+      return (
+        <View key={index} className="flex-row items-center mr-2">
+          <FontAwesome
+            name="paw"
+            size={16}
+            color={isCat ? (isDarkMode ? "#60A5FA" : "#3B82F6") : (isDarkMode ? "#FBBF24" : "#F59E0B")}
+          />
+          <Text className={`ml-1 text-sm font-inter ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            {s}
+          </Text>
+        </View>
+      );
+    });
+  };
+
   return (
     <SafeAreaView
       className="flex-1 bg-white dark:bg-black"
@@ -29,14 +57,30 @@ const DiseaseDetailModal = ({ visible, disease, isDarkMode, onClose }) => {
       <View
         className="flex-row items-center justify-between p-4 border-b dark:border-gray-800 border-gray-200"
       >
-        <Text
-          className="text-xl font-inter-bold flex-1 dark:text-white text-black"
-        >
-          {disease?.Disease}
-        </Text>
+        <View className="flex-1">
+          <View className="flex-row items-center justify-between">
+            <Text
+              className="text-xl font-inter-bold flex-1 dark:text-white text-black"
+              numberOfLines={2}
+            >
+              {disease?.Disease}
+            </Text>
+            <BookmarkButton 
+              isBookmarked={isBookmarked} 
+              onPress={onBookmarkPress} 
+              isDarkMode={isDarkMode} 
+            />
+          </View>
+          <View className="flex-row items-center mt-2">
+            <SeverityIndicator severity={disease?.Severity} isDarkMode={isDarkMode} />
+            <View className="flex-row items-center ml-3">
+              {getSpeciesIcons()}
+            </View>
+          </View>
+        </View>
         <TouchableOpacity
           onPress={onClose}
-          className="p-2"
+          className="p-2 ml-2"
         >
           <FontAwesome
             name={ICONS.close}
@@ -87,6 +131,22 @@ const DiseaseDetailModal = ({ visible, disease, isDarkMode, onClose }) => {
           isDarkMode={isDarkMode}
         />
 
+        <DetailSection
+          title="When to See a Vet"
+          content={disease?.["When to See a Vet"]}
+          icon={ICONS.medkit}
+          color="blue"
+          isDarkMode={isDarkMode}
+        />
+
+        <DetailSection
+          title="Treatment Timeline"
+          content={disease?.["Treatment Timeline"]}
+          icon={ICONS.clock}
+          color="green"
+          isDarkMode={isDarkMode}
+        />
+
         {disease?.["Feline vs Canine"] && (
           <View
             className="p-4 rounded-xl mb-6 dark:bg-gray-900 bg-gray-100"
@@ -108,6 +168,24 @@ const DiseaseDetailModal = ({ visible, disease, isDarkMode, onClose }) => {
             >
               {disease["Feline vs Canine"]}
             </Text>
+          </View>
+        )}
+
+        {disease?.Tags && disease.Tags.length > 0 && (
+          <View className="mb-6">
+            <View className="flex-row items-center mb-3">
+              <FontAwesome 
+                name={ICONS.tag} 
+                size={20} 
+                color={isDarkMode ? "#60A5FA" : "#2563EB"} 
+              />
+              <Text
+                className="ml-2 text-lg font-inter-semibold dark:text-white text-black"
+              >
+                Related Tags
+              </Text>
+            </View>
+            <TagList tags={disease.Tags} isDarkMode={isDarkMode} />
           </View>
         )}
       </ScrollView>

@@ -22,7 +22,8 @@ const DiseaseList = ({
   onSelectDisease, 
   isDarkMode, 
   onClearFilters,
-  selectedCategory 
+  selectedCategory,
+  searchQuery
 }) => {
   if (diseases.length > 0) {
     return (
@@ -33,6 +34,7 @@ const DiseaseList = ({
           {diseases.length} disease
           {diseases.length !== 1 ? "s" : ""} found
           {selectedCategory !== "All" && ` in ${selectedCategory}`}
+          {searchQuery && ` for "${searchQuery}"`}
         </Text>
         <FlatList
           data={diseases}
@@ -65,16 +67,20 @@ const DiseaseList = ({
         <Text
           className="mt-2 text-base font-inter text-gray-500 dark:text-gray-400 text-center"
         >
-          Try adjusting your search terms or select a different category
+          {searchQuery || selectedCategory !== "All" 
+            ? "Try adjusting your search terms or filters" 
+            : "No diseases available"}
         </Text>
-        <TouchableOpacity
-          className="mt-4 px-4 py-2 rounded-full dark:bg-gray-800 bg-gray-200"
-          onPress={onClearFilters}
-        >
-          <Text className="font-inter-semibold dark:text-gray-300 text-gray-700">
-            Clear Filters
-          </Text>
-        </TouchableOpacity>
+        {(searchQuery || selectedCategory !== "All") && (
+          <TouchableOpacity
+            className="mt-4 px-4 py-2 rounded-full dark:bg-gray-800 bg-gray-200"
+            onPress={onClearFilters}
+          >
+            <Text className="font-inter-semibold dark:text-gray-300 text-gray-700">
+              Clear Filters
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   }

@@ -71,6 +71,32 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+  const resetPassword = async (email) => {
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      throw new Error("Email is required");
+    }
+    
+    const trimmedEmail = email.trim();
+    if (!emailRegex.test(trimmedEmail)) {
+      throw new Error(`"${trimmedEmail}" is not a valid email address`);
+    }
+
+    // Ensure we have a valid redirect URL
+    let redirectTo;
+    try {
+      redirectTo = `${window.location.origin}/reset-password`;
+    } catch (error) {
+      // Fallback for environments where window.location.origin is not available
+      redirectTo = "https://pawscan.app/reset-password"; // Replace with your actual domain
+    }
+    
+    return await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+      redirectTo,
+    });
+  };
+
   const logout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -91,6 +117,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         signInWithEmail,
         signUpWithEmail,
+        resetPassword,
         logout,
       }}
     >

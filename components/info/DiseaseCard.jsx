@@ -1,5 +1,7 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { TouchableOpacity, Text, View } from "react-native";
+import SeverityIndicator from "./SeverityIndicator";
+import TagList from "./TagList";
 
 const ICONS = {
   search: "search",
@@ -13,6 +15,8 @@ const ICONS = {
   paw: "paw",
   heart: "heart",
   filter: "filter",
+  cat: "paw",
+  dog: "paw",
 };
 
 const DiseaseCard = ({ disease, onPress, isDarkMode }) => {
@@ -40,6 +44,26 @@ const DiseaseCard = ({ disease, onPress, isDarkMode }) => {
     }
   };
 
+  // Get species icons
+  const getSpeciesIcons = () => {
+    const species = disease.Species || [];
+    return species.map((s, index) => {
+      const isCat = s.toLowerCase() === "cat";
+      return (
+        <View key={index} className="flex-row items-center mr-2">
+          <FontAwesome
+            name="paw"
+            size={14}
+            color={isCat ? (isDarkMode ? "#60A5FA" : "#3B82F6") : (isDarkMode ? "#FBBF24" : "#F59E0B")}
+          />
+          <Text className={`ml-1 text-xs font-inter ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            {s}
+          </Text>
+        </View>
+      );
+    });
+  };
+
   return (
     <TouchableOpacity
       className="mb-3 p-4 rounded-xl border dark:bg-black bg-white border-gray-200 dark:border-gray-800"
@@ -48,31 +72,32 @@ const DiseaseCard = ({ disease, onPress, isDarkMode }) => {
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-1 mr-3">
-          <View className="flex-row items-center mb-1">
-            <FontAwesome
-              name={getDiseaseIcon()}
-              size={16}
-              color={getIconColor()}
-            />
-            <Text className="text-lg font-inter-semibold ml-2 dark:text-white text-black">
-              {disease.Disease}
-            </Text>
+          <View className="flex-row items-center justify-between mb-1">
+            <View className="flex-row items-center">
+              <FontAwesome
+                name={getDiseaseIcon()}
+                size={16}
+                color={getIconColor()}
+              />
+              <Text className="text-lg font-inter-semibold ml-2 dark:text-white text-black">
+                {disease.Disease}
+              </Text>
+            </View>
+            <SeverityIndicator severity={disease.Severity} isDarkMode={isDarkMode} />
           </View>
+          
           <Text
             className="text-sm font-inter leading-5 dark:text-gray-300 text-gray-600"
             numberOfLines={2}
           >
             {disease.Overview}
           </Text>
-          {disease["Feline vs Canine"] && (
-            <View className="mt-2 px-2 py-1 rounded-full self-start dark:bg-gray-800 bg-gray-200">
-              <Text
-                className="text-xs font-inter-semibold dark:text-gray-300 text-gray-700"
-              >
-                Species Specific
-              </Text>
-            </View>
-          )}
+          
+          <View className="flex-row items-center mt-2">
+            {getSpeciesIcons()}
+          </View>
+          
+          <TagList tags={disease.Tags} isDarkMode={isDarkMode} />
         </View>
         <FontAwesome
           name={ICONS.chevronRight}

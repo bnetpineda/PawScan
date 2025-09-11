@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
+import { supabase } from "../../lib/supabase";
+import { submitPostReport } from "../../services/reportService";
 
-const PostCard = ({ post, isDark, onToggleLike, onOpenComments, onShare, onOpenImageModal }) => {
+const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onShare, onOpenImageModal }) => {
   const isAnonymous = post.is_anonymous;
   const userDisplayName = isAnonymous
     ? "Anonymous User"
@@ -10,6 +12,8 @@ const PostCard = ({ post, isDark, onToggleLike, onOpenComments, onShare, onOpenI
 
   // Track expanded state per post
   const [expanded, setExpanded] = useState(false);
+  // Track dropdown visibility
+  const [showDropdown, setShowDropdown] = useState(false);
 
   // Function to determine urgency level from analysis text
   const getUrgencyLevel = (analysisText) => {
@@ -90,6 +94,158 @@ const PostCard = ({ post, isDark, onToggleLike, onOpenComments, onShare, onOpenI
     return `${date}   ${time}  ${timeAgo}`;
   };
 
+  // Check if current user is the post owner
+  const isPostOwner = currentUser && post.user_id === currentUser.id;
+
+  // Handle delete post
+  const handleDeletePost = () => {
+    Alert.alert(
+      "Delete Post",
+      "Are you sure you want to delete this post? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // Delete associated likes
+              await supabase
+                .from("newsfeed_likes")
+                .delete()
+                .eq("post_id", post.id);
+
+              // Delete associated comments
+              await supabase
+                .from("newsfeed_comments")
+                .delete()
+                .eq("post_id", post.id);
+
+              // Delete the post
+              const { error } = await supabase
+                .from("newsfeed_posts")
+                .delete()
+                .eq("id", post.id);
+
+              if (error) {
+                throw error;
+              }
+
+              // Refresh the feed (this would need to be handled by the parent component)
+              Alert.alert("Success", "Post deleted successfully");
+            } catch (error) {
+              console.error("Error deleting post:", error);
+              Alert.alert("Error", "Failed to delete post. Please try again.");
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  // Handle report post
+  const handleReportPost = () => {
+    if (!currentUser) {
+      Alert.alert("Error", "You must be logged in to report a post");
+      return;
+    }
+
+    // Define report reasons
+    const reportReasons = [
+      "Inappropriate content",
+      "Spam",
+      "Harassment",
+      "False information",
+      "Other"
+    ];
+
+    // Create alert with report options
+    const alertButtons = reportReasons.map(reason => ({
+      text: reason,
+      onPress: () => {
+        if (reason === "Other") {
+          // For "Other" reason, show a text input
+          Alert.prompt(
+            "Report Post",
+            "Please provide additional details about why you're reporting this post:",
+            [
+              {
+                text: "Cancel",
+                style: "cancel"
+              },
+              {
+                text: "Report",
+                onPress: async (description) => {
+                  const result = await submitPostReport(
+                    post.id,
+                    currentUser.id,
+                    reason,
+                    description || ""
+                  );
+                  
+                  if (result.success) {
+                    Alert.alert(
+                      "Post Reported",
+                      "Thank you for reporting this post. Our team will review it."
+                    );
+                  } else {
+                    Alert.alert("Error", result.error || "Failed to submit report");
+                  }
+                }
+              }
+            ],
+            "plain-text"
+          );
+        } else {
+          // For other reasons, submit directly
+          Alert.alert(
+            "Confirm Report",
+            `Are you sure you want to report this post for "${reason}"?`,
+            [
+              {
+                text: "Cancel",
+                style: "cancel"
+              },
+              {
+                text: "Report",
+                onPress: async () => {
+                  const result = await submitPostReport(
+                    post.id,
+                    currentUser.id,
+                    reason
+                  );
+                  
+                  if (result.success) {
+                    Alert.alert(
+                      "Post Reported",
+                      "Thank you for reporting this post. Our team will review it."
+                    );
+                  } else {
+                    Alert.alert("Error", result.error || "Failed to submit report");
+                  }
+                }
+              }
+            ]
+          );
+        }
+      }
+    }));
+
+    alertButtons.unshift({
+      text: "Cancel",
+      style: "cancel"
+    });
+
+    Alert.alert(
+      "Report Post",
+      "Why are you reporting this post?",
+      alertButtons
+    );
+  };
+
   // Get urgency level for this post
   const urgencyInfo = getUrgencyLevel(post.analysis_result);
 
@@ -141,13 +297,59 @@ const PostCard = ({ post, isDark, onToggleLike, onOpenComments, onShare, onOpenI
             </Text>
           </View>
         </View>
-        <TouchableOpacity className="p-2">
-          <FontAwesome
-            name="ellipsis-h"
-            size={16}
-            color={isDark ? "#8E8E93" : "#6C757D"}
-          />
-        </TouchableOpacity>
+        <View className="relative">
+          <TouchableOpacity 
+            className="p-2"
+            onPress={() => setShowDropdown(!showDropdown)}
+          >
+            <FontAwesome
+              name="ellipsis-h"
+              size={16}
+              color={isDark ? "#8E8E93" : "#6C757D"}
+            />
+          </TouchableOpacity>
+          
+          {/* Simple Dropdown */}
+          {showDropdown && (
+            <View className="absolute right-0 top-8 bg-white dark:bg-neutral-800 rounded-lg shadow-lg w-40 z-10">
+              <TouchableOpacity
+                className="flex-row items-center p-3 border-b border-gray-200 dark:border-neutral-700"
+                onPress={() => {
+                  handleReportPost();
+                  setShowDropdown(false);
+                }}
+              >
+                <FontAwesome
+                  name="flag"
+                  size={16}
+                  color={isDark ? "#8E8E93" : "#6C757D"}
+                />
+                <Text className="ml-3 text-base font-inter text-black dark:text-white">
+                  Report
+                </Text>
+              </TouchableOpacity>
+              
+              {isPostOwner && (
+                <TouchableOpacity
+                  className="flex-row items-center p-3"
+                  onPress={() => {
+                    handleDeletePost();
+                    setShowDropdown(false);
+                  }}
+                >
+                  <FontAwesome
+                    name="trash"
+                    size={16}
+                    color="#EF4444"
+                  />
+                  <Text className="ml-3 text-base font-inter text-red-500">
+                    Delete
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+        </View>
       </View>
 
       {/* Image - Now clickable */}
@@ -243,6 +445,15 @@ const PostCard = ({ post, isDark, onToggleLike, onOpenComments, onShare, onOpenI
           </TouchableOpacity>
         )}
       </View>
+      
+      {/* Touchable overlay to close dropdown when tapping elsewhere */}
+      {showDropdown && (
+        <TouchableOpacity
+          className="absolute top-0 left-0 right-0 bottom-0"
+          onPress={() => setShowDropdown(false)}
+          activeOpacity={1}
+        />
+      )}
     </View>
   );
 };

@@ -18,6 +18,8 @@ import DiseaseDetailModal from "../components/info/DiseaseDetailModal";
 import DiseaseSearchBar from "../components/info/DiseaseSearchBar";
 import DiseaseCategoryFilter from "../components/info/DiseaseCategoryFilter";
 import DiseaseList from "../components/info/DiseaseList";
+import DiseaseComparison from "../components/info/DiseaseComparison";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ICONS = {
   search: "search",
@@ -31,6 +33,9 @@ const ICONS = {
   paw: "paw",
   heart: "heart",
   filter: "filter",
+  bookmark: "bookmark",
+  bookmarked: "bookmark",
+  exchange: "exchange",
 };
 
 const DiseasesInformationScreen = () => {
@@ -39,6 +44,48 @@ const DiseasesInformationScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDisease, setSelectedDisease] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [bookmarkedDiseases, setBookmarkedDiseases] = useState([]);
+  const [sortBy, setSortBy] = useState("name"); // name, severity, species
+  const [showComparison, setShowComparison] = useState(false);
+
+  // Load bookmarked diseases from AsyncStorage
+  useState(() => {
+    const loadBookmarks = async () => {
+      try {
+        const bookmarks = await AsyncStorage.getItem("bookmarkedDiseases");
+        if (bookmarks) {
+          setBookmarkedDiseases(JSON.parse(bookmarks));
+        }
+      } catch (error) {
+        console.error("Error loading bookmarks:", error);
+      }
+    };
+    loadBookmarks();
+  }, []);
+
+  // Save bookmarked diseases to AsyncStorage
+  const saveBookmarks = async (bookmarks) => {
+    try {
+      await AsyncStorage.setItem("bookmarkedDiseases", JSON.stringify(bookmarks));
+    } catch (error) {
+      console.error("Error saving bookmarks:", error);
+    }
+  };
+
+  // Toggle bookmark for a disease
+  const toggleBookmark = (disease) => {
+    const isBookmarked = bookmarkedDiseases.some(d => d.Disease === disease.Disease);
+    let updatedBookmarks;
+    
+    if (isBookmarked) {
+      updatedBookmarks = bookmarkedDiseases.filter(d => d.Disease !== disease.Disease);
+    } else {
+      updatedBookmarks = [...bookmarkedDiseases, disease];
+    }
+    
+    setBookmarkedDiseases(updatedBookmarks);
+    saveBookmarks(updatedBookmarks);
+  };
 
   // Categorize diseases
   const categorizedDiseases = useMemo(() => {
@@ -48,6 +95,7 @@ const DiseasesInformationScreen = () => {
       "Infections": [],
       "Parasites": [],
       "Allergies": [],
+      "Tumors/Cancer": [],
       "Other": []
     };
 
@@ -57,15 +105,17 @@ const DiseasesInformationScreen = () => {
       categories["All"].push(disease);
       
       const diseaseName = disease.Disease.toLowerCase();
-      const overview = disease.Overview?.toLowerCase() || "";
+      const tags = disease.Tags?.map(tag => tag.toLowerCase()) || [];
       
-      if (diseaseName.includes("dermatitis") || diseaseName.includes("allergy") || diseaseName.includes("allergic")) {
-        categories["Allergies"].push(disease);
-      } else if (diseaseName.includes("mite") || diseaseName.includes("flea") || diseaseName.includes("lice") || diseaseName.includes("tick")) {
+      if (tags.includes("parasite") || tags.includes("flea") || tags.includes("mite") || tags.includes("tick") || tags.includes("lice")) {
         categories["Parasites"].push(disease);
-      } else if (diseaseName.includes("bacteria") || diseaseName.includes("bacterial") || diseaseName.includes("fungi") || diseaseName.includes("fungal")) {
+      } else if (tags.includes("infection") || tags.includes("bacterial") || tags.includes("fungal") || tags.includes("viral")) {
         categories["Infections"].push(disease);
-      } else if (diseaseName.includes("skin") || diseaseName.includes("dermatitis") || diseaseName.includes("acne")) {
+      } else if (tags.includes("allergy") || tags.includes("allergic")) {
+        categories["Allergies"].push(disease);
+      } else if (tags.includes("tumor") || tags.includes("cancer")) {
+        categories["Tumors/Cancer"].push(disease);
+      } else if (tags.includes("skin") || diseaseName.includes("dermatitis") || diseaseName.includes("acne")) {
         categories["Skin Conditions"].push(disease);
       } else {
         categories["Other"].push(disease);
@@ -83,18 +133,47 @@ const DiseasesInformationScreen = () => {
 
     if (!searchQuery.trim()) return diseasesToFilter;
 
+    const query = searchQuery.toLowerCase();
     return diseasesToFilter.filter(
       (disease) =>
         disease.Disease &&
-        (disease.Disease.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          disease.Overview?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          disease.Symptoms?.toLowerCase().includes(searchQuery.toLowerCase()))
+        (disease.Disease.toLowerCase().includes(query) ||
+          disease.Overview?.toLowerCase().includes(query) ||
+          disease.Symptoms?.toLowerCase().includes(query) ||
+          disease.Tags?.some(tag => tag.toLowerCase().includes(query)))
     );
   }, [searchQuery, selectedCategory, categorizedDiseases]);
+
+  // Sort diseases
+  const sortedDiseases = useMemo(() => {
+    const diseases = [...filteredDiseases];
+    
+    switch (sortBy) {
+      case "name":
+        return diseases.sort((a, b) => a.Disease.localeCompare(b.Disease));
+      case "severity":
+        const severityOrder = { "Emergency": 4, "High": 3, "Medium": 2, "Low": 1 };
+        return diseases.sort((a, b) => (severityOrder[b.Severity] || 0) - (severityOrder[a.Severity] || 0));
+      case "species":
+        return diseases.sort((a, b) => {
+          const speciesA = a.Species?.join(", ") || "";
+          const speciesB = b.Species?.join(", ") || "";
+          return speciesA.localeCompare(speciesB);
+        });
+      default:
+        return diseases;
+    }
+  }, [filteredDiseases, sortBy]);
 
   const handleClearFilters = () => {
     setSearchQuery("");
     setSelectedCategory("All");
+    setSortBy("name");
+  };
+
+  // Filter by tag
+  const handleTagFilter = (tag) => {
+    setSearchQuery(tag);
   };
 
   return (
@@ -116,6 +195,33 @@ const DiseasesInformationScreen = () => {
           >
             Disease Information
           </Text>
+          <View className="flex-row">
+            {bookmarkedDiseases.length > 0 && (
+              <TouchableOpacity 
+                className="flex-row items-center p-2 mr-2"
+                onPress={() => setSelectedCategory("Bookmarks")}
+              >
+                <FontAwesome
+                  name="bookmark"
+                  size={20}
+                  color={isDark ? "#FBBF24" : "#F59E0B"}
+                />
+                <Text className="ml-1 text-sm font-inter-semibold dark:text-gray-300 text-gray-700">
+                  {bookmarkedDiseases.length}
+                </Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity 
+              className="p-2"
+              onPress={() => setShowComparison(true)}
+            >
+              <FontAwesome
+                name="exchange"
+                size={20}
+                color={isDark ? "#fff" : "#000"}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Search Bar */}
@@ -124,26 +230,46 @@ const DiseasesInformationScreen = () => {
           onSearchChange={setSearchQuery}
           isDarkMode={isDark}
           onClear={() => setSearchQuery("")}
+          diseases={diseasesData.filter(d => d.Disease)}
         />
 
         {/* Category Filter */}
         <DiseaseCategoryFilter
-          categories={categorizedDiseases}
+          categories={{...categorizedDiseases, "Bookmarks": bookmarkedDiseases}}
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
           isDarkMode={isDark}
         />
+
+        {/* Sort Options */}
+        <View className="flex-row items-center mt-3">
+          <Text className="font-inter-semibold mr-2 dark:text-white text-black">Sort by:</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {["name", "severity", "species"].map((option) => (
+              <TouchableOpacity
+                key={option}
+                className={`px-3 py-1 rounded-full mr-2 ${sortBy === option ? (isDark ? 'bg-gray-700' : 'bg-gray-800') : (isDark ? 'bg-gray-800' : 'bg-gray-200')}`}
+                onPress={() => setSortBy(option)}
+              >
+                <Text className={`text-sm font-inter-semibold ${sortBy === option ? (isDark ? 'text-white' : 'text-white') : (isDark ? 'text-gray-300' : 'text-gray-700')}`}>
+                  {option.charAt(0).toUpperCase() + option.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
       </View>
 
       {/* Disease List */}
       <View className="flex-1 px-4 py-3">
         <DiseaseList
-          diseases={filteredDiseases}
+          diseases={selectedCategory === "Bookmarks" ? bookmarkedDiseases : sortedDiseases}
           selectedDisease={selectedDisease}
           onSelectDisease={setSelectedDisease}
           isDarkMode={isDark}
           onClearFilters={handleClearFilters}
           selectedCategory={selectedCategory}
+          searchQuery={searchQuery}
         />
       </View>
 
@@ -159,6 +285,22 @@ const DiseasesInformationScreen = () => {
           disease={selectedDisease}
           isDarkMode={isDark}
           onClose={() => setSelectedDisease(null)}
+          isBookmarked={selectedDisease ? bookmarkedDiseases.some(d => d.Disease === selectedDisease.Disease) : false}
+          onBookmarkPress={() => selectedDisease && toggleBookmark(selectedDisease)}
+        />
+      </Modal>
+
+      {/* Disease Comparison Modal */}
+      <Modal
+        visible={showComparison}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowComparison(false)}
+      >
+        <DiseaseComparison
+          diseases={diseasesData.filter(d => d.Disease)}
+          isDarkMode={isDark}
+          onClose={() => setShowComparison(false)}
         />
       </Modal>
     </SafeAreaView>

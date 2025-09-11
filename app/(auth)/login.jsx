@@ -7,6 +7,7 @@ import {
   StatusBar,
   TouchableOpacity,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,9 +20,12 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [isResetLoading, setIsResetLoading] = useState(false);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { signInWithEmail } = useAuth();
+  const { signInWithEmail, resetPassword } = useAuth();
   const router = useRouter();
 
   const handleLogin = async () => {
@@ -39,6 +43,42 @@ export default function Login() {
     }
   };
 
+  const handlePasswordReset = async () => {
+    const trimmedEmail = resetEmail.trim();
+    
+    if (!trimmedEmail) {
+      Alert.alert("Error", "Please enter your email address");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      Alert.alert("Error", "Please enter a valid email address");
+      return;
+    }
+
+    setIsResetLoading(true);
+    try {
+      const result = await resetPassword(trimmedEmail);
+      
+      if (result.error) {
+        Alert.alert("Error", result.error.message);
+        return;
+      }
+      
+      Alert.alert(
+        "Password Reset Email Sent",
+        "Check your email for instructions to reset your password"
+      );
+      setShowForgotPassword(false);
+      setResetEmail("");
+    } catch (error) {
+      Alert.alert("Error", error.message || "An unexpected error occurred");
+    } finally {
+      setIsResetLoading(false);
+    }
+  };
+
   const navigateToRegister = () => {
     router.replace("/(auth)/register");
   };
@@ -46,6 +86,11 @@ export default function Login() {
   const isEmailPasswordValid = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email.trim()) && password.trim().length >= 6;
+  };
+
+  const isResetEmailValid = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return resetEmail && emailRegex.test(resetEmail.trim());
   };
 
   return (
@@ -107,7 +152,7 @@ export default function Login() {
 
         <TouchableOpacity
           className="self-end mb-4"
-          onPress={() => Alert.alert("Reset Password", "Feature coming soon!")}
+          onPress={() => setShowForgotPassword(true)}
         >
           <Text className="text-black dark:text-white font-inter-bold text-sm">
             Forgot password?
@@ -170,6 +215,81 @@ export default function Login() {
           </Text>
         </View>
       </View>
+
+      {/* Forgot Password Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showForgotPassword}
+        onRequestClose={() => setShowForgotPassword(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
+          <View className="w-11/12 max-w-md bg-white dark:bg-black rounded-2xl p-6">
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-xl font-inter-bold text-black dark:text-white">
+                Reset Password
+              </Text>
+              <TouchableOpacity
+                onPress={() => setShowForgotPassword(false)}
+                className="p-2"
+              >
+                <Text className="text-2xl text-gray-400">✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text className="text-gray-600 dark:text-gray-400 mb-4">
+              Enter your email address and we'll send you a link to reset your password.
+            </Text>
+
+            <View className="mb-5 rounded-2xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-neutral-900">
+              <TextInput
+                className="h-14 px-4 font-inter-bold text-black dark:text-white bg-transparent"
+                placeholder="Email"
+                placeholderTextColor="#888"
+                value={resetEmail}
+                onChangeText={setResetEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+
+            <TouchableOpacity
+              className={`items-center rounded-lg py-3.5 mb-3
+        ${
+          isResetEmailValid()
+            ? "bg-black dark:bg-white"
+            : "bg-gray-300 dark:bg-gray-700"
+        }`}
+              onPress={handlePasswordReset}
+              disabled={!isResetEmailValid() || isResetLoading}
+            >
+              {isResetLoading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text
+                  className={`font-inter-bold text-base ${
+                    isResetEmailValid()
+                      ? "text-white dark:text-black"
+                      : "text-gray-600 dark:text-gray-400"
+                  }`}
+                >
+                  Send Reset Link
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className="items-center py-3"
+              onPress={() => setShowForgotPassword(false)}
+            >
+              <Text className="text-black dark:text-white font-inter-bold">
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

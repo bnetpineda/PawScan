@@ -60,7 +60,7 @@ const NewsFeedScreen = () => {
       const filtered = filterPosts(searchQuery);
       setPosts(filtered);
     }
-  }, [allPosts, searchQuery, filterPosts]);
+  }, [allPosts, searchQuery]);
 
   const checkFirstTimeUser = async () => {
     try {
@@ -107,28 +107,31 @@ const NewsFeedScreen = () => {
       // Get likes count and user's like status for each post
       const processedPosts = await Promise.all(
         (postsData || []).map(async (post) => {
-          // Get total likes count for this post
-          const { count: likesCount } = await supabase
+          // Likes count
+          const { count: likesCount, error: likesError } = await supabase
             .from("newsfeed_likes")
             .select("*", { count: "exact", head: true })
             .eq("post_id", post.id);
+          if (likesError) console.error("likesError:", likesError);
 
-          // Get total comments count for this post
-          const { count: commentsCount } = await supabase
+          // Comments count
+          const { count: commentsCount, error: commentsError } = await supabase
             .from("newsfeed_comments")
             .select("*", { count: "exact", head: true })
             .eq("post_id", post.id);
+          if (commentsError) console.error("commentsError:", commentsError);
 
-          // Check if current user has liked this post
+          // User like status
           let userHasLiked = false;
           if (currentUser) {
-            const { data: userLike } = await supabase
+            const { data: userLike, error: userLikeError } = await supabase
               .from("newsfeed_likes")
               .select("id")
               .eq("post_id", post.id)
               .eq("user_id", currentUser.id)
-              .single();
+              .maybeSingle();
 
+            if (userLikeError) console.error("userLikeError:", userLikeError);
             userHasLiked = !!userLike;
           }
 
@@ -136,7 +139,7 @@ const NewsFeedScreen = () => {
             ...post,
             likes_count: likesCount || 0,
             user_has_liked: userHasLiked,
-            comments_count: commentsCount || 0, // You can implement this similarly if needed
+            comments_count: commentsCount || 0,
           };
         })
       );
@@ -158,36 +161,48 @@ const NewsFeedScreen = () => {
   }, []);
 
   // Filter posts based on search query
-  const filterPosts = useCallback((query) => {
-    if (!query.trim()) {
-      return allPosts;
-    }
-    
-    const normalizedQuery = query.toLowerCase().trim();
-    return allPosts.filter(post => {
-      // Check pet name
-      if (post.pet_name && post.pet_name.toLowerCase().includes(normalizedQuery)) {
-        return true;
+  const filterPosts = useCallback(
+    (query) => {
+      if (!query.trim()) {
+        return allPosts;
       }
-      
-      // Check display name
-      if (post.display_name && post.display_name.toLowerCase().includes(normalizedQuery)) {
-        return true;
-      }
-      
-      // Check analysis result
-      if (post.analysis_result && post.analysis_result.toLowerCase().includes(normalizedQuery)) {
-        return true;
-      }
-      
-      // Check if anonymous and query matches "anonymous"
-      if (post.is_anonymous && normalizedQuery === "anonymous") {
-        return true;
-      }
-      
-      return false;
-    });
-  }, [allPosts]);
+
+      const normalizedQuery = query.toLowerCase().trim();
+      return allPosts.filter((post) => {
+        // Check pet name
+        if (
+          post.pet_name &&
+          post.pet_name.toLowerCase().includes(normalizedQuery)
+        ) {
+          return true;
+        }
+
+        // Check display name
+        if (
+          post.display_name &&
+          post.display_name.toLowerCase().includes(normalizedQuery)
+        ) {
+          return true;
+        }
+
+        // Check analysis result
+        if (
+          post.analysis_result &&
+          post.analysis_result.toLowerCase().includes(normalizedQuery)
+        ) {
+          return true;
+        }
+
+        // Check if anonymous and query matches "anonymous"
+        if (post.is_anonymous && normalizedQuery === "anonymous") {
+          return true;
+        }
+
+        return false;
+      });
+    },
+    [allPosts]
+  );
 
   // Handle search input changes
   const handleSearch = (query) => {
@@ -214,10 +229,10 @@ const NewsFeedScreen = () => {
       prev.map((post) =>
         post.id === postId
           ? {
-            ...post,
-            likes_count: post.likes_count + (isLiked ? -1 : 1),
-            user_has_liked: !isLiked,
-          }
+              ...post,
+              likes_count: post.likes_count + (isLiked ? -1 : 1),
+              user_has_liked: !isLiked,
+            }
           : post
       )
     );
@@ -250,10 +265,10 @@ const NewsFeedScreen = () => {
         prev.map((post) =>
           post.id === postId
             ? {
-              ...post,
-              likes_count: post.likes_count + (isLiked ? 1 : -1),
-              user_has_liked: isLiked,
-            }
+                ...post,
+                likes_count: post.likes_count + (isLiked ? 1 : -1),
+                user_has_liked: isLiked,
+              }
             : post
         )
       );
@@ -391,8 +406,10 @@ const NewsFeedScreen = () => {
     let timeAgo;
     if (secondsAgo < 60) timeAgo = "Just now";
     else if (secondsAgo < 3600) timeAgo = `${Math.floor(secondsAgo / 60)}m ago`;
-    else if (secondsAgo < 86400) timeAgo = `${Math.floor(secondsAgo / 3600)}h ago`;
-    else if (secondsAgo < 604800) timeAgo = `${Math.floor(secondsAgo / 86400)}d ago`;
+    else if (secondsAgo < 86400)
+      timeAgo = `${Math.floor(secondsAgo / 3600)}h ago`;
+    else if (secondsAgo < 604800)
+      timeAgo = `${Math.floor(secondsAgo / 86400)}d ago`;
     else timeAgo = postTime.toLocaleDateString();
 
     return timeAgo;
@@ -401,18 +418,18 @@ const NewsFeedScreen = () => {
   const formatFullDateTime = (timestamp) => {
     const postTime = new Date(timestamp);
     const dateOptions = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     };
     const timeOptions = {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
     };
 
-    const date = postTime.toLocaleDateString('en-US', dateOptions);
-    const time = postTime.toLocaleTimeString('en-US', timeOptions);
+    const date = postTime.toLocaleDateString("en-US", dateOptions);
+    const time = postTime.toLocaleTimeString("en-US", timeOptions);
     const timeAgo = formatTimeAgo(timestamp);
 
     return `${date}   ${time}  ${timeAgo}`;
@@ -447,7 +464,7 @@ const NewsFeedScreen = () => {
           />
         }
       >
-        <Header 
+        <Header
           isDark={isDark}
           onShowTutorial={handleShowTutorial}
           onSearch={handleSearch}
@@ -456,14 +473,15 @@ const NewsFeedScreen = () => {
           onClearSearch={clearSearch}
           setIsSearching={setIsSearching}
         />
-        
+
         <EmptyState isDark={isDark} isEmpty={posts.length === 0} />
-        
+
         {posts.map((post) => (
-          <PostCard 
+          <PostCard
             key={post.id}
             post={post}
             isDark={isDark}
+            currentUser={currentUser}
             onToggleLike={toggleLike}
             onOpenComments={openCommentsModal}
             onShare={handleShare}
@@ -472,7 +490,7 @@ const NewsFeedScreen = () => {
         ))}
       </ScrollView>
 
-      <ImageModal 
+      <ImageModal
         visible={imageModalVisible}
         onClose={closeImageModal}
         imageUrl={selectedImage}
@@ -492,7 +510,7 @@ const NewsFeedScreen = () => {
         selectedPost={posts.find((p) => p.id === selectedPostId)}
         formatFullDateTime={formatFullDateTime}
       />
-      
+
       <TutorialModal
         visible={tutorialVisible}
         onClose={handleTutorialClose}
