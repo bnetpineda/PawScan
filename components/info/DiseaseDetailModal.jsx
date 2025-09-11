@@ -55,13 +55,13 @@ const DiseaseDetailModal = ({ visible, disease, isDarkMode, onClose, isBookmarke
       onRequestClose={onClose}
     >
       <View
-        className="flex-row items-center justify-between p-4 border-b dark:border-gray-800 border-gray-200"
+        className="flex-row items-start justify-between p-4 border-b dark:border-gray-800 border-gray-200"
       >
         <View className="flex-1">
-          <View className="flex-row items-center justify-between">
+          <View className="flex-row items-start justify-between">
             <Text
-              className="text-xl font-inter-bold flex-1 dark:text-white text-black"
-              numberOfLines={2}
+              className="text-xl font-inter-bold flex-1 dark:text-white text-black pr-2"
+              numberOfLines={3}
             >
               {disease?.Disease}
             </Text>
@@ -71,9 +71,9 @@ const DiseaseDetailModal = ({ visible, disease, isDarkMode, onClose, isBookmarke
               isDarkMode={isDarkMode} 
             />
           </View>
-          <View className="flex-row items-center mt-2">
+          <View className="flex-row items-center mt-3 flex-wrap">
             <SeverityIndicator severity={disease?.Severity} isDarkMode={isDarkMode} />
-            <View className="flex-row items-center ml-3">
+            <View className="flex-row items-center ml-3 mt-1">
               {getSpeciesIcons()}
             </View>
           </View>

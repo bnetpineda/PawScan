@@ -80,6 +80,21 @@ const ChatListScreen = () => {
             .eq("id", conversation.vet_id)
             .single();
 
+          // If we get a permission error, try to get the user's display name from the user_display_names view
+          if (vetError && vetError.code === "42501") {
+            console.warn("Permission denied for veterinarians view, falling back to user_display_names view");
+            const { data: userData, error: userError } = await supabase
+              .from("user_display_names")
+              .select("id, display_name, email")
+              .eq("id", conversation.vet_id)
+              .single();
+            
+            if (!userError && userData) {
+              vetData = userData;
+              vetError = null;
+            }
+          }
+
           if (vetError) {
             console.error("Error fetching vet data:", vetError);
             // Fallback to a default vet name

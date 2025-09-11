@@ -70,16 +70,17 @@ const DiseaseCard = ({ disease, onPress, isDarkMode }) => {
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <View className="flex-row items-center justify-between">
+      <View className="flex-row items-start justify-between">
         <View className="flex-1 mr-3">
-          <View className="flex-row items-center justify-between mb-1">
-            <View className="flex-row items-center">
+          <View className="flex-row items-start justify-between mb-1">
+            <View className="flex-row items-start flex-1">
               <FontAwesome
                 name={getDiseaseIcon()}
                 size={16}
                 color={getIconColor()}
+                style={{ marginTop: 2 }}
               />
-              <Text className="text-lg font-inter-semibold ml-2 dark:text-white text-black">
+              <Text className="text-lg font-inter-semibold ml-2 dark:text-white text-black flex-1 flex-wrap" numberOfLines={2}>
                 {disease.Disease}
               </Text>
             </View>
@@ -87,13 +88,13 @@ const DiseaseCard = ({ disease, onPress, isDarkMode }) => {
           </View>
           
           <Text
-            className="text-sm font-inter leading-5 dark:text-gray-300 text-gray-600"
+            className="text-sm font-inter leading-5 dark:text-gray-300 text-gray-600 mt-1"
             numberOfLines={2}
           >
             {disease.Overview}
           </Text>
           
-          <View className="flex-row items-center mt-2">
+          <View className="flex-row items-center mt-2 flex-wrap">
             {getSpeciesIcons()}
           </View>
           
@@ -103,6 +104,7 @@ const DiseaseCard = ({ disease, onPress, isDarkMode }) => {
           name={ICONS.chevronRight}
           size={20}
           color={isDarkMode ? "#fff" : "#000"}
+          style={{ marginTop: 2 }}
         />
       </View>
     </TouchableOpacity>

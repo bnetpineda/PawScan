@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
 import diseasesData from "../assets/diseases_information.json";
 import DiseaseCard from "../components/info/DiseaseCard";
 import DetailSection from "../components/info/DetailSection";
@@ -190,8 +191,18 @@ const DiseasesInformationScreen = () => {
         className="px-4 py-3 border-b dark:border-gray-800 border-gray-200"
       >
         <View className="flex-row items-center justify-between mb-3">
+          <TouchableOpacity 
+            className="p-2"
+            onPress={() => router.push('/(user)/home')}
+          >
+            <FontAwesome
+              name="arrow-left"
+              size={20}
+              color={isDark ? "#fff" : "#000"}
+            />
+          </TouchableOpacity>
           <Text
-            className="text-2xl font-inter-bold dark:text-white text-black"
+            className="text-2xl font-inter-bold dark:text-white text-black flex-1 text-center"
           >
             Disease Information
           </Text>

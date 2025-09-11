@@ -31,6 +31,30 @@ const VetsListScreen = () => {
         .select('id, display_name, email')
         .order('display_name', { ascending: true });
 
+      // If we get a permission error, try to get all users with display names
+      if (vetsError && vetsError.code === "42501") {
+        console.warn("Permission denied for veterinarians view, falling back to user_display_names view");
+        const { data: allUsersData, error: allUsersError } = await supabase
+          .from('user_display_names')
+          .select('id, display_name, email')
+          .order('display_name', { ascending: true });
+        
+        if (!allUsersError && allUsersData) {
+          // Format the data for display
+          const formattedVets = allUsersData
+            .map(user => ({
+              id: user.id,
+              name: user.display_name || 'Veterinarian',
+              email: user.email || 'No email provided'
+            }))
+            .filter(user => user.id !== user.id); // Exclude current user
+          
+          setVets(formattedVets);
+          setLoading(false);
+          return;
+        }
+      }
+
       if (vetsError) {
         console.error('Error loading vets:', vetsError);
         // Fallback: try to get from conversations
@@ -82,6 +106,25 @@ const VetsListScreen = () => {
           .select('id, display_name, email')
           .eq('id', vetId)
           .single();
+
+        // If we get a permission error, try to get the user's display name from the user_display_names view
+        if (vetError && vetError.code === "42501") {
+          console.warn("Permission denied for veterinarians view, falling back to user_display_names view");
+          const { data: userData, error: userError } = await supabase
+            .from('user_display_names')
+            .select('id, display_name, email')
+            .eq('id', vetId)
+            .single();
+          
+          if (!userError && userData) {
+            vetsWithDetails.push({
+              id: userData.id,
+              name: userData.display_name || 'Veterinarian',
+              email: userData.email || 'No email provided'
+            });
+            continue; // Skip to the next iteration
+          }
+        }
 
         if (!vetError && vetData) {
           vetsWithDetails.push({
