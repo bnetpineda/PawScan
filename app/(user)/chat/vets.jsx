@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, useColorScheme, StatusBar } from 'react-native';
+import { View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, useColorScheme, StatusBar, TextInput } from 'react-native';
 import { useAuth } from '../../../providers/AuthProvider';
 import { supabase } from '../../../lib/supabase';
 import { useRouter } from 'expo-router';
@@ -9,13 +9,29 @@ const VetsListScreen = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [vets, setVets] = useState([]);
+  const [filteredVets, setFilteredVets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const isDark = useColorScheme() === 'dark';
 
   useEffect(() => {
     loadVets();
   }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredVets(vets);
+    } else {
+      const filtered = vets.filter(vet => {
+        const vetName = vet.name?.toLowerCase() || '';
+        const vetEmail = vet.email?.toLowerCase() || '';
+        const query = searchQuery.toLowerCase();
+        return vetName.includes(query) || vetEmail.includes(query);
+      });
+      setFilteredVets(filtered);
+    }
+  }, [searchQuery, vets]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -50,6 +66,7 @@ const VetsListScreen = () => {
             .filter(user => user.id !== user.id); // Exclude current user
           
           setVets(formattedVets);
+          setFilteredVets(formattedVets);
           setLoading(false);
           return;
         }
@@ -72,6 +89,7 @@ const VetsListScreen = () => {
         .filter(vet => vet.id !== user.id); // Exclude current user if they're also a vet
 
       setVets(formattedVets);
+      setFilteredVets(formattedVets);
     } catch (error) {
       console.error('Error loading vets:', error);
       Alert.alert('Error', 'Could not load veterinarians. Please try again later.');
@@ -95,6 +113,7 @@ const VetsListScreen = () => {
 
       if (vetIds.length === 0) {
         setVets([]);
+        setFilteredVets([]);
         return;
       }
 
@@ -136,9 +155,11 @@ const VetsListScreen = () => {
       }
 
       setVets(vetsWithDetails);
+      setFilteredVets(vetsWithDetails);
     } catch (error) {
       console.error('Error loading vets from conversations:', error);
       setVets([]);
+      setFilteredVets([]);
     }
   };
 
@@ -163,6 +184,10 @@ const VetsListScreen = () => {
     </TouchableOpacity>
   );
 
+  const clearSearch = () => {
+    setSearchQuery('');
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-black pt-12">
       <StatusBar
@@ -170,22 +195,42 @@ const VetsListScreen = () => {
         backgroundColor={isDark ? "#000" : "#fff"}
       />
       <View className="px-5 py-4 border-b border-black dark:border-neutral-700">
-        <Text className="text-2xl font-inter-bold text-black dark:text-white">Select a Veterinarian</Text>
+        <Text className="text-2xl font-inter-bold text-black dark:text-white mb-3">Select a Veterinarian</Text>
+        {/* Search Input */}
+        <View className="flex-row items-center bg-gray-100 dark:bg-neutral-800 rounded-full mt-2 px-6 py-1">
+          <FontAwesome name="search" size={20} color={isDark ? "#8E8E93" : "#6C757D"} />
+          <TextInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search veterinarians..."
+            placeholderTextColor={isDark ? "#8E8E93" : "#6C757D"}
+            className="flex-1 ml-2 text-base font-inter bg-transparent text-black dark:text-white"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={clearSearch}>
+              <FontAwesome name="times-circle" size={20} color={isDark ? "#8E8E93" : "#6C757D"} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
       {loading ? (
         <View className="flex-1 justify-center items-center p-8">
           <ActivityIndicator size="large" color={isDark ? "#fff" : "#000"} />
           <Text className="mt-4 text-base text-gray-600 dark:text-gray-300">Loading veterinarians...</Text>
         </View>
-      ) : vets.length === 0 ? (
+      ) : filteredVets.length === 0 ? (
         <View className="flex-1 justify-center items-center p-8">
           <FontAwesome name="user-md" size={64} color={isDark ? "#fff" : "#000"} />
-          <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">No veterinarians available</Text>
-          <Text className="text-base text-gray-600 dark:text-gray-300">Please check back later</Text>
+          <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">
+            {searchQuery ? "No veterinarians found" : "No veterinarians available"}
+          </Text>
+          <Text className="text-base text-gray-600 dark:text-gray-300">
+            {searchQuery ? "Try a different search term" : "Please check back later"}
+          </Text>
         </View>
       ) : (
         <FlatList
-          data={vets}
+          data={filteredVets}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderVet}
           className="flex-1"

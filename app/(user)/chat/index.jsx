@@ -26,6 +26,8 @@ const ChatListScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredConversations, setFilteredConversations] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
+  const [veterinarians, setVeterinarians] = useState([]);
+  const [filteredVeterinarians, setFilteredVeterinarians] = useState([]);
   const isDark = useColorScheme() === "dark";
 
   useEffect(() => {
@@ -35,7 +37,9 @@ const ChatListScreen = () => {
   useEffect(() => {
     if (searchQuery.trim() === "") {
       setFilteredConversations(conversations);
+      setFilteredVeterinarians([]);
     } else {
+      // Filter existing conversations
       const filtered = conversations.filter(conversation => {
         const vetName = conversation.vetName?.toLowerCase() || "";
         const latestMessage = conversation.latestMessage?.content?.toLowerCase() || "";
@@ -43,8 +47,16 @@ const ChatListScreen = () => {
         return vetName.includes(query) || latestMessage.includes(query);
       });
       setFilteredConversations(filtered);
+      
+      // Filter veterinarians for new chats
+      const filteredVets = veterinarians.filter(vet => {
+        const vetName = vet.display_name?.toLowerCase() || "";
+        const query = searchQuery.toLowerCase();
+        return vetName.includes(query);
+      });
+      setFilteredVeterinarians(filteredVets);
     }
-  }, [searchQuery, conversations]);
+  }, [searchQuery, conversations, veterinarians]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -131,9 +143,31 @@ const ChatListScreen = () => {
 
       setConversations(conversationsWithLatestMessage);
       setFilteredConversations(conversationsWithLatestMessage);
+      
+      // Load all veterinarians for search
+      loadVeterinarians();
     } catch (error) {
       console.error("Error loading conversations:", error);
       Alert.alert("Error", "Could not load conversations");
+    }
+  };
+
+  const loadVeterinarians = async () => {
+    try {
+      // Get all veterinarians
+      const { data: vetsData, error: vetsError } = await supabase
+        .from("veterinarians")
+        .select("id, display_name, email")
+        .order("display_name", { ascending: true });
+
+      if (vetsError) {
+        console.error("Error fetching veterinarians:", vetsError);
+        return;
+      }
+
+      setVeterinarians(vetsData);
+    } catch (error) {
+      console.error("Error loading veterinarians:", error);
     }
   };
 
@@ -205,6 +239,40 @@ const ChatListScreen = () => {
     </TouchableOpacity>
   );
 
+  const renderVeterinarian = ({ item }) => (
+    <TouchableOpacity
+      className="flex-row p-4 bg-white border-b border-black dark:bg-neutral-900 dark:border-neutral-700"
+      onPress={() => {
+        router.push(
+          `/(user)/chat/${item.id}?vetName=${encodeURIComponent(
+            item.display_name
+          )}`
+        );
+        setShowSearch(false);
+        setSearchQuery("");
+      }}
+    >
+      <View className="mr-3">
+        <View className="w-12 h-12 rounded-full bg-black dark:bg-white justify-center items-center">
+          <Text className="text-white dark:text-black text-xl font-inter-bold">
+            {item.display_name.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+      </View>
+      <View className="flex-1 justify-center">
+        <Text
+          className="text-base font-inter-bold text-black dark:text-white"
+          numberOfLines={1}
+        >
+          {item.display_name}
+        </Text>
+        <Text className="text-sm text-gray-600 dark:text-gray-300">
+          Veterinarian
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-black pt-12">
       <StatusBar
@@ -237,7 +305,10 @@ const ChatListScreen = () => {
         <SafeAreaView className="flex-1 bg-white dark:bg-black">
           <View className="flex-row items-center px-4 py-3 border-b border-gray-300 dark:border-neutral-700">
             <TouchableOpacity 
-              onPress={() => setShowSearch(false)}
+              onPress={() => {
+                setShowSearch(false);
+                setSearchQuery("");
+              }}
               className="p-2 mr-2"
             >
               <FontAwesome 
@@ -249,7 +320,7 @@ const ChatListScreen = () => {
             <TextInput
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholder="Search chats..."
+              placeholder="Search chats or veterinarians..."
               placeholderTextColor={isDark ? "#8E8E93" : "#6C757D"}
               className="flex-1 border border-gray-300 dark:border-neutral-700 rounded-full px-4 py-2 text-base font-inter bg-white dark:bg-neutral-800 text-black dark:text-white"
               autoFocus
@@ -267,10 +338,62 @@ const ChatListScreen = () => {
               </TouchableOpacity>
             )}
           </View>
+          
+          {/* Search Results */}
+          {searchQuery.trim() !== "" && (
+            <View className="flex-1">
+              {/* Existing Conversations */}
+              {filteredConversations.length > 0 && (
+                <View>
+                  <Text className="px-4 py-2 text-lg font-inter-bold text-black dark:text-white">
+                    Your Chats
+                  </Text>
+                  <FlatList
+                    data={filteredConversations}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={renderConversation}
+                    scrollEnabled={false}
+                  />
+                </View>
+              )}
+              
+              {/* Veterinarians for New Chats */}
+              {filteredVeterinarians.length > 0 && (
+                <View>
+                  <Text className="px-4 py-2 text-lg font-inter-bold text-black dark:text-white mt-2">
+                    Veterinarians
+                  </Text>
+                  <FlatList
+                    data={filteredVeterinarians}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={renderVeterinarian}
+                    scrollEnabled={false}
+                  />
+                </View>
+              )}
+              
+              {/* No Results */}
+              {filteredConversations.length === 0 && filteredVeterinarians.length === 0 && (
+                <View className="flex-1 justify-center items-center p-8">
+                  <FontAwesome
+                    name="search"
+                    size={64}
+                    color={isDark ? "#fff" : "#000"}
+                  />
+                  <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">
+                    No results found
+                  </Text>
+                  <Text className="text-base text-center text-gray-600 dark:text-gray-300">
+                    Try a different search term
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
         </SafeAreaView>
       </Modal>
       
-      {filteredConversations.length === 0 ? (
+      {filteredConversations.length === 0 && !showSearch ? (
         <View className="flex-1 justify-center items-center p-8">
           <FontAwesome
             name="commenting-o"
@@ -278,24 +401,24 @@ const ChatListScreen = () => {
             color={isDark ? "#fff" : "#000"}
           />
           <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">
-            {searchQuery ? "No chats found" : "No conversations yet"}
+            No conversations yet
           </Text>
           <Text className="text-base text-center text-gray-600 dark:text-gray-300">
-            {searchQuery 
-              ? "Try a different search term" 
-              : "Start a chat with a veterinarian to begin"}
+            Start a chat with a veterinarian to begin
           </Text>
         </View>
       ) : (
-        <FlatList
-          data={filteredConversations}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderConversation}
-          className="flex-1"
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? "#fff" : "#000"} />
-          }
-        />
+        !showSearch && (
+          <FlatList
+            data={filteredConversations}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderConversation}
+            className="flex-1"
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? "#fff" : "#000"} />
+            }
+          />
+        )
       )}
       <View className="p-4 bg-white border-t border-black dark:bg-neutral-900 dark:border-neutral-700">
         <TouchableOpacity

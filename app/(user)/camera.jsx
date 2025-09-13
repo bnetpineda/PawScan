@@ -69,24 +69,33 @@ export default function CameraScreen() {
 
   if (!cameraPermission.granted) {
     return (
-      <View className="flex-1 justify-center items-center bg-white dark:bg-black px-8">
-        <FontAwesome
-          name="camera"
-          size={48}
-          color={isDark ? COLORS.lightGray : COLORS.textSecondary}
-          style={{ marginBottom: 20 }}
-        />
-        <Text className="text-center text-lg text-gray-700 dark:text-gray-300 mb-6 leading-6">
-          We need your permission to show the camera
-        </Text>
-        <TouchableOpacity
-          className="bg-[#007AFF] py-3 px-8 rounded-full" // Primary blue button, often looks good in both modes
-          onPress={requestCameraPermission}
-        >
-          <Text className="text-white text-base font-inter-bold">
-            Grant Camera Permission
+      <View className="flex-1 bg-white dark:bg-black">
+        <View className="flex-1 justify-center items-center px-8">
+          <View className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-900 items-center justify-center mb-8">
+            <FontAwesome
+              name="camera"
+              size={48}
+              color={isDark ? COLORS.lightGray : COLORS.textSecondary}
+            />
+          </View>
+          <Text className="text-center text-2xl font-inter-bold text-black dark:text-white mb-4">
+            Camera Access Needed
           </Text>
-        </TouchableOpacity>
+          <Text className="text-center text-base text-gray-600 dark:text-gray-400 mb-8 leading-6">
+            To capture pet photos for health analysis, we need access to your camera.
+          </Text>
+          <TouchableOpacity
+            className="bg-black dark:bg-white py-4 px-8 rounded-full w-full max-w-xs items-center"
+            onPress={requestCameraPermission}
+          >
+            <Text className="text-white dark:text-black text-base font-inter-bold">
+              Allow Camera Access
+            </Text>
+          </TouchableOpacity>
+          <Text className="text-center text-xs text-gray-500 dark:text-gray-500 mt-6">
+            You can change this anytime in Settings
+          </Text>
+        </View>
       </View>
     );
   }

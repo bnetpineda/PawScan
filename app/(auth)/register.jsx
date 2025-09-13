@@ -17,12 +17,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome } from "@expo/vector-icons";
 import { useAuth } from "../../providers/AuthProvider";
 import { useColorScheme } from "react-native";
+import { supabase } from "../../lib/supabase";
 
 export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [licenseNumber, setLicenseNumber] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -41,11 +43,16 @@ export default function Register() {
 
     setLoading(true);
     try {
+      // For veterinarians, we register them with a "pending_veterinarian" role
+      // For regular users, we register them with a "user" role
+      const role = userRole === "Veterinarian" ? "pending_veterinarian" : userRole;
+      
       const { error } = await signUpWithEmail(email, password, {
         options: {
           data: {
             display_name: fullName,
-            role: userRole,
+            role: role,
+            license_number: userRole === "Veterinarian" ? licenseNumber : undefined
           },
         },
       });
@@ -53,9 +60,13 @@ export default function Register() {
       if (error) {
         Alert.alert("Registration Failed", error.message);
       } else {
+        const successMessage = userRole === "Veterinarian" 
+          ? "Your application has been submitted for review. You will receive an email once verified by an administrator."
+          : "Please check your email for verification instructions.";
+          
         Alert.alert(
           "Registration Successful",
-          "Please check your email for verification instructions.",
+          successMessage,
           [{ text: "OK", onPress: () => router.replace("/(auth)/login") }]
         );
       }
@@ -83,6 +94,17 @@ export default function Register() {
     }
     if (password !== confirmPassword) {
       return { valid: false, message: "Passwords don't match." };
+    }
+    // For veterinarians, we also require a license number
+    if (userRole === "Veterinarian") {
+      if (!licenseNumber.trim()) {
+        return { valid: false, message: "Please enter your license number." };
+      }
+      // Validate that license number is exactly 7 digits
+      const licenseRegex = /^\d{7}$/;
+      if (!licenseRegex.test(licenseNumber.trim())) {
+        return { valid: false, message: "License number must be exactly 7 digits." };
+      }
     }
     return { valid: true };
   };
@@ -134,6 +156,16 @@ export default function Register() {
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
+              {userRole === "Veterinarian" && (
+                <TextInput
+                  className="h-14 border-b border-gray-200 dark:border-gray-700 px-4 font-inter-bold text-black dark:text-white bg-transparent"
+                  placeholder="License Number"
+                  placeholderTextColor="#888"
+                  value={licenseNumber}
+                  onChangeText={setLicenseNumber}
+                  autoCapitalize="none"
+                />
+              )}
               <View className="flex-row items-center border-b border-gray-200 dark:border-gray-700">
                 <TextInput
                   className="h-14 flex-1 px-4 font-inter-bold text-black dark:text-white bg-transparent"

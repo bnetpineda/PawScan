@@ -31,10 +31,31 @@ export default function Login() {
   const handleLogin = async () => {
     setIsLoading(true);
     try {
-      const { error } = await signInWithEmail(email, password);
+      const { error, data } = await signInWithEmail(email, password);
       if (error) {
         Alert.alert("Login Failed", error.message);
         return;
+      }
+      
+      // Check if the user is a veterinarian and if they're verified
+      if (data.user?.user_metadata?.role === "Veterinarian") {
+        // Check if the user exists in the auth.users table (meaning they're verified)
+        const { data: userData, error: userError } = await supabase
+          .from('veterinarians')
+          .select('id')
+          .eq('id', data.user.id)
+          .single();
+          
+        if (userError || !userData) {
+          // User is a veterinarian but not found in the verified veterinarians view
+          // This means they're not yet verified by an admin
+          await supabase.auth.signOut(); // Log them out
+          Alert.alert(
+            "Account Not Verified", 
+            "Your veterinarian account is pending verification by an administrator. You will receive an email once verified."
+          );
+          return;
+        }
       }
     } catch (error) {
       Alert.alert("Error", error.message || "An unexpected error occurred");

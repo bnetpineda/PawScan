@@ -27,16 +27,16 @@ const ChangePasswordModal = ({
     presentationStyle="pageSheet"
     onRequestClose={onClose}
   >
-    <View className={`flex-1 ${isDark ? "bg-gray-900" : "bg-white"}`}>
+    <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
       <View
         className={`pt-16 pb-4 px-6 border-b ${
-          isDark ? "border-gray-800 bg-gray-900" : "border-gray-200 bg-gray-50"
+          isDark ? "border-gray-700 bg-neutral" : "border-gray-200 bg-gray-50"
         }`}
       >
         <View className="flex-row justify-between items-center">
           <Text
             className={`text-2xl font-inter-bold ${
-              isDark ? "text-white" : "text-gray-900"
+              isDark ? "text-white" : "text-black"
             }`}
           >
             Change Password
@@ -44,7 +44,7 @@ const ChangePasswordModal = ({
           <TouchableOpacity
             onPress={onClose}
             className={`p-2 rounded-full ${
-              isDark ? "bg-gray-800" : "bg-gray-200"
+              isDark ? "bg-neutral" : "bg-gray-200"
             }`}
           >
             <FontAwesome
@@ -57,7 +57,7 @@ const ChangePasswordModal = ({
       </View>
 
       <ScrollView className="flex-1 px-6 py-6">
-        <View className="space-y-4">
+        <View>
           <View>
             <Text
               className={`text-base font-inter mb-2 ${
@@ -73,15 +73,15 @@ const ChangePasswordModal = ({
               placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
               className={`p-4 rounded-lg border text-base font-inter ${
                 isDark
-                  ? "bg-gray-800 border-gray-700 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
+                  ? "bg-neutral border-gray-700 text-white"
+                  : "bg-white border-gray-300 text-black"
               }`}
               secureTextEntry
               autoFocus
             />
           </View>
 
-          <View>
+          <View className="mt-4">
             <Text
               className={`text-base font-inter mb-2 ${
                 isDark ? "text-gray-300" : "text-gray-700"
@@ -96,14 +96,14 @@ const ChangePasswordModal = ({
               placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
               className={`p-4 rounded-lg border text-base font-inter ${
                 isDark
-                  ? "bg-gray-800 border-gray-700 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
+                  ? "bg-neutral border-gray-700 text-white"
+                  : "bg-white border-gray-300 text-black"
               }`}
               secureTextEntry
             />
           </View>
 
-          <View>
+          <View className="mt-4">
             <Text
               className={`text-base font-inter mb-2 ${
                 isDark ? "text-gray-300" : "text-gray-700"
@@ -118,8 +118,8 @@ const ChangePasswordModal = ({
               placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
               className={`p-4 rounded-lg border text-base font-inter ${
                 isDark
-                  ? "bg-gray-800 border-gray-700 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
+                  ? "bg-neutral border-gray-700 text-white"
+                  : "bg-white border-gray-300 text-black"
               }`}
               secureTextEntry
             />
@@ -128,24 +128,24 @@ const ChangePasswordModal = ({
 
         <View
           className={`mt-4 p-4 rounded-lg ${
-            isDark ? "bg-gray-800" : "bg-yellow-50"
+            isDark ? "bg-neutral" : "bg-gray-100"
           }`}
         >
           <Text
             className={`text-sm font-inter ${
-              isDark ? "text-gray-400" : "text-yellow-700"
+              isDark ? "text-gray-400" : "text-gray-700"
             }`}
           >
             Password must be at least 6 characters long.
           </Text>
         </View>
 
-        <View className="flex-row space-x-3 mt-6">
+        <View className="flex-row mt-6">
           <TouchableOpacity
             onPress={onClose}
-            className={`flex-1 p-4 rounded-lg border ${
+            className={`flex-1 p-4 rounded-lg border mr-3 ${
               isDark
-                ? "border-gray-700 bg-gray-800"
+                ? "border-gray-700 bg-gray-700"
                 : "border-gray-300 bg-gray-100"
             }`}
             disabled={updating}
@@ -161,10 +161,16 @@ const ChangePasswordModal = ({
 
           <TouchableOpacity
             onPress={onSubmit}
-            className="flex-1 p-4 rounded-lg bg-blue-600"
+            className={`flex-1 p-4 rounded-lg border ${
+              isDark
+                ? "border-gray-700 bg-white"
+                : "border-gray-300 bg-gray-100"
+            }`}
             disabled={updating}
           >
-            <Text className="text-center text-base font-inter-bold text-white">
+            <Text className={`text-center text-base font-inter-bold ${
+              isDark ? "text-black" : "text-black"
+            }`}>
               {updating ? "Updating..." : "Update Password"}
             </Text>
           </TouchableOpacity>
