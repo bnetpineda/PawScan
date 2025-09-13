@@ -42,7 +42,7 @@ const Header = ({
             <FontAwesome
               name="search"
               size={18}
-              color={isDark ? "#8E8E93" : "#6C757D"}
+              color={isDark ? "#8E8E93" : "#0A0A0A"}
             />
             <TextInput
               value={searchQuery}
@@ -56,7 +56,7 @@ const Header = ({
               <FontAwesome
                 name="times"
                 size={18}
-                color={isDark ? "#8E8E93" : "#6C757D"}
+                color={isDark ? "#8E8E93" : "#0A0A0A"}
               />
             </TouchableOpacity>
           </View>
@@ -71,7 +71,7 @@ const Header = ({
             <FontAwesome
               name="search"
               size={20}
-              color={isDark ? "#fff" : "#6C757D"}
+              color={isDark ? "#fff" : "#0A0A0A"}
             />
           </TouchableOpacity>
           <TouchableOpacity
@@ -81,7 +81,7 @@ const Header = ({
             <FontAwesome
               name="info"
               size={20}
-              color={isDark ? "#fff" : "#6C757D"}
+              color={isDark ? "#fff" : "#0A0A0A"}
             />
           </TouchableOpacity>
           <TouchableOpacity
@@ -91,7 +91,7 @@ const Header = ({
             <FontAwesome
               name="history"
               size={20}
-              color={isDark ? "#fff" : "#6C757D"}
+              color={isDark ? "#fff" : "#0A0A0A"}
             />
           </TouchableOpacity>
         </View>

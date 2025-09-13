@@ -22,8 +22,7 @@ export default function VetLayout() {
         tabBarActiveTintColor: isDarkMode ? "#fff" : "#000",
         tabBarInactiveTintColor: isDarkMode ? "#6B7280" : "#9CA3AF", // Gray shades
         tabBarStyle: {
-          backgroundColor: isDarkMode ? "#1F2937" : "#FFFFFF", // Dark Gray or White
-          borderTopColor: isDarkMode ? "#374151" : "#E5E7EB",
+          backgroundColor: isDarkMode ? "#0A0A0A" : "#FFFFFF", // Dark Gray or White
           height: 75,
         },
       }}
