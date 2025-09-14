@@ -18,7 +18,7 @@ const AnalysisCard = ({
   return (
     <TouchableOpacity
       key={analysis.id}
-      className="mb-4 rounded-xl bg-white dark:bg-black border border-gray-200 dark:border-gray-800"
+      className="mb-4 rounded-xl bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800"
       onPress={() => onOpenModal(analysis)}
       activeOpacity={0.7}
     >
@@ -32,7 +32,7 @@ const AnalysisCard = ({
       {/* Content */}
       <View className="p-4">
         <View className="flex-row justify-between items-center mb-3">
-          <Text className="text-sm font-inter text-gray-500 dark:text-gray-400">
+          <Text className="text-sm font-inter text-neutral-500 dark:text-neutral-400">
             {formatDate(analysis.created_at)}
           </Text>
           <View

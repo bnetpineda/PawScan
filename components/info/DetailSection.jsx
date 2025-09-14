@@ -27,7 +27,7 @@ const DetailSection = ({ title, content, icon, color = "green", isDarkMode }) =>
       {paragraphs.map((paragraph, index) => (
         <Text
           key={index}
-          className="text-base font-inter leading-6 dark:text-gray-300 text-gray-700 mb-2"
+          className="text-base font-inter leading-6 dark:text-neutral-300 text-neutral-700 mb-2"
         >
           {paragraph.trim()}
         </Text>

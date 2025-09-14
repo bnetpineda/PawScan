@@ -13,7 +13,7 @@ const EmptyState = ({ isDark }) => {
       <Text className="mt-4 text-xl font-inter-bold text-black dark:text-white">
         No analyses yet
       </Text>
-      <Text className="mt-2 text-base font-inter text-gray-500 dark:text-gray-400 text-center px-8">
+      <Text className="mt-2 text-base font-inter text-neutral-500 dark:text-neutral-400 text-center px-8">
         Start by taking a photo of your pet to create your first health
         analysis!
       </Text>

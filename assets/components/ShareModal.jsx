@@ -31,7 +31,7 @@ export default function ShareModal({
       <View className="flex-1 justify-center items-center bg-black/50">
         <View
           className={`bg-neutral-100 dark:bg-neutral-700 rounded-2xl p-6 mx-6 w-11/12 ${
-            isDark ? "" : "border border-gray-300"
+            isDark ? "" : "border border-neutral-300"
           }`}
         >
           <Text className="text-xl font-inter-bold text-center mb-4 text-black dark:text-white">
@@ -42,7 +42,7 @@ export default function ShareModal({
             Pet Name (Optional)
           </Text>
           <TextInput
-            className="border border-gray-300 dark:border-gray-600 rounded-lg pl-2 p-4 mb-4 font-inter text-black dark:text-white"
+            className="border border-neutral-300 dark:border-neutral-600 rounded-lg pl-2 p-4 mb-4 font-inter text-black dark:text-white"
             placeholder="Enter your pet's name"
             placeholderTextColor={isDark ? "#6C757D" : "#6C757D"}
             value={petName}

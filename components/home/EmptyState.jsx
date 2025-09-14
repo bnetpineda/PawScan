@@ -14,7 +14,7 @@ const EmptyState = ({ isDark, isEmpty }) => {
         <Text className="text-xl font-inter-semibold text-black dark:text-white mt-4">
           No posts yet
         </Text>
-        <Text className="text-base font-inter text-gray-500 dark:text-gray-400 text-center px-8">
+        <Text className="text-base font-inter text-neutral-500 dark:text-neutral-400 text-center px-8">
           Share your pet's health analysis to be the first!
         </Text>
       </View>

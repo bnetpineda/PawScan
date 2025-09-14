@@ -31,7 +31,7 @@ const COLORS = {
   error: "#DC3545",
   white: "#FFFFFF",
   black: "#000000",
-  lightGray: "#E9ECEF",
+  lightneutral: "#E9ECEF",
   success: "#28A745",
 };
 
@@ -73,7 +73,7 @@ export default function CameraScreen() {
         <FontAwesome
           name="camera"
           size={48}
-          color={isDark ? COLORS.lightGray : COLORS.textSecondary}
+          color={isDark ? COLORS.lightneutral : COLORS.textSecondary}
           style={{ marginBottom: 20 }}
         />
         <Text className="text-center text-lg text-neutral-700 dark:text-neutral-300 mb-6 leading-6">

@@ -252,7 +252,7 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
   return (
     <View
       key={post.id}
-      className="mx-4 my-2 rounded-2xl border border-gray-200 dark:border-neutral-900 bg-white dark:bg-neutral-900 shadow-sm"
+      className="mx-4 my-2 rounded-2xl border border-neutral-200 dark:border-neutral-900 bg-white dark:bg-neutral-900 shadow-sm"
       style={{
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
@@ -288,11 +288,11 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
               {userDisplayName}
             </Text>
             {post.pet_name && (
-              <Text className="text-sm font-inter text-gray-500 dark:text-gray-400">
+              <Text className="text-sm font-inter text-neutral-500 dark:text-neutral-400">
                 Pet: {post.pet_name}
               </Text>
             )}
-            <Text className="text-xs font-inter text-gray-400 dark:text-gray-500">
+            <Text className="text-xs font-inter text-neutral-400 dark:text-neutral-500">
               {formatFullDateTime(post.created_at)}
             </Text>
           </View>
@@ -313,7 +313,7 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
           {showDropdown && (
             <View className="absolute right-0 top-8 bg-white dark:bg-neutral-800 rounded-lg shadow-lg w-40 z-10">
               <TouchableOpacity
-                className="flex-row items-center p-3 border-b border-gray-200 dark:border-neutral-700"
+                className="flex-row items-center p-3 border-b border-neutral-200 dark:border-neutral-700"
                 onPress={() => {
                   handleReportPost();
                   setShowDropdown(false);
@@ -378,7 +378,7 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
               post.user_has_liked ? "#FF3B30" : isDark ? "#8E8E93" : "#6C757D"
             }
           />
-          <Text className="ml-2 text-sm font-inter text-gray-600 dark:text-gray-400">
+          <Text className="ml-2 text-sm font-inter text-neutral-600 dark:text-neutral-400">
             {post.likes_count || 0}
           </Text>
         </TouchableOpacity>
@@ -393,7 +393,7 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
             size={20}
             color={isDark ? "#8E8E93" : "#6C757D"}
           />
-          <Text className="ml-2 text-sm font-inter text-gray-600 dark:text-gray-400">
+          <Text className="ml-2 text-sm font-inter text-neutral-600 dark:text-neutral-400">
             {post.comments_count || 0}
           </Text>
         </TouchableOpacity>
@@ -432,7 +432,7 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
           Pet Health Analysis
         </Text>
         <Text
-          className="text-sm text-gray-600 font-inter dark:text-gray-400 mb-2"
+          className="text-sm text-neutral-600 font-inter dark:text-neutral-400 mb-2"
           numberOfLines={expanded ? undefined : 4}
         >
           {post.analysis_result}

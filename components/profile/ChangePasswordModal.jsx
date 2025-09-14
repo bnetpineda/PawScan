@@ -30,7 +30,7 @@ const ChangePasswordModal = ({
     <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
       <View
         className={`pt-16 pb-4 px-6 border-b ${
-          isDark ? "border-gray-700 bg-neutral-800" : "border-gray-200 bg-neutral-100"
+          isDark ? "border-neutral-700 bg-neutral-800" : "border-neutral-200 bg-neutral-100"
         }`}
       >
         <View className="flex-row justify-between items-center">
@@ -61,7 +61,7 @@ const ChangePasswordModal = ({
           <View>
             <Text
               className={`text-base font-inter mb-2 ${
-                isDark ? "text-gray-300" : "text-gray-700"
+                isDark ? "text-neutral-300" : "text-neutral-700"
               }`}
             >
               Current Password
@@ -73,8 +73,8 @@ const ChangePasswordModal = ({
               placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
               className={`p-4 rounded-lg border text-base font-inter ${
                 isDark
-                  ? "bg-neutral border-gray-700 text-white"
-                  : "bg-white border-gray-300 text-black"
+                  ? "bg-neutral border-neutral-700 text-white"
+                  : "bg-white border-neutral-300 text-black"
               }`}
               secureTextEntry
               autoFocus
@@ -84,7 +84,7 @@ const ChangePasswordModal = ({
           <View className="mt-4">
             <Text
               className={`text-base font-inter mb-2 ${
-                isDark ? "text-gray-300" : "text-gray-700"
+                isDark ? "text-neutral-300" : "text-neutral-700"
               }`}
             >
               New Password
@@ -96,8 +96,8 @@ const ChangePasswordModal = ({
               placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
               className={`p-4 rounded-lg border text-base font-inter ${
                 isDark
-                  ? "bg-neutral border-gray-700 text-white"
-                  : "bg-white border-gray-300 text-black"
+                  ? "bg-neutral border-neutral-700 text-white"
+                  : "bg-white border-neutral-300 text-black"
               }`}
               secureTextEntry
             />
@@ -106,7 +106,7 @@ const ChangePasswordModal = ({
           <View className="mt-4">
             <Text
               className={`text-base font-inter mb-2 ${
-                isDark ? "text-gray-300" : "text-gray-700"
+                isDark ? "text-neutral-300" : "text-neutral-700"
               }`}
             >
               Confirm New Password
@@ -118,8 +118,8 @@ const ChangePasswordModal = ({
               placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
               className={`p-4 rounded-lg border text-base font-inter ${
                 isDark
-                  ? "bg-neutral border-gray-700 text-white"
-                  : "bg-white border-gray-300 text-black"
+                  ? "bg-neutral border-neutral-700 text-white"
+                  : "bg-white border-neutral-300 text-black"
               }`}
               secureTextEntry
             />
@@ -133,7 +133,7 @@ const ChangePasswordModal = ({
         >
           <Text
             className={`text-sm font-inter ${
-              isDark ? "text-gray-400" : "text-gray-700"
+              isDark ? "text-neutral-400" : "text-neutral-700"
             }`}
           >
             Password must be at least 6 characters long.
@@ -145,14 +145,14 @@ const ChangePasswordModal = ({
             onPress={onClose}
             className={`flex-1 p-4 rounded-lg border mr-3 ${
               isDark
-                ? "border-gray-700 bg-neutral-700"
-                : "border-gray-300 bg-neutral-100"
+                ? "border-neutral-700 bg-neutral-700"
+                : "border-neutral-300 bg-neutral-100"
             }`}
             disabled={updating}
           >
             <Text
               className={`text-center text-base font-inter-semibold ${
-                isDark ? "text-gray-300" : "text-gray-700"
+                isDark ? "text-neutral-300" : "text-neutral-700"
               }`}
             >
               Cancel
@@ -163,8 +163,8 @@ const ChangePasswordModal = ({
             onPress={onSubmit}
             className={`flex-1 p-4 rounded-lg border ${
               isDark
-                ? "border-gray-700 bg-white"
-                : "border-gray-300 bg-neutral-100"
+                ? "border-neutral-700 bg-white"
+                : "border-neutral-300 bg-neutral-100"
             }`}
             disabled={updating}
           >

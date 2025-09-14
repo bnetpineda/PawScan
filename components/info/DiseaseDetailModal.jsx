@@ -55,7 +55,7 @@ const DiseaseDetailModal = ({ visible, disease, isDarkMode, onClose, isBookmarke
       onRequestClose={onClose}
     >
       <View
-        className="flex-row items-start justify-between p-4 border-b dark:border-gray-800 border-gray-200"
+        className="flex-row items-start justify-between p-4 border-b dark:border-neutral-800 border-neutral-200"
       >
         <View className="flex-1">
           <View className="flex-row items-start justify-between">

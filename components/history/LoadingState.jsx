@@ -7,7 +7,7 @@ const LoadingState = ({ isDark }) => {
       className="flex-1 justify-center items-center bg-white dark:bg-black"
     >
       <ActivityIndicator size="large" color={isDark ? "#fff" : "#000"} />
-      <Text className="mt-4 text-base font-inter text-gray-500 dark:text-gray-400">
+      <Text className="mt-4 text-base font-inter text-neutral-500 dark:text-neutral-400">
         Loading your analyses...
       </Text>
     </View>

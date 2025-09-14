@@ -14,7 +14,7 @@ const Header = ({
   return (
     <>
       {/* Top Header */}
-      <View className="flex-row items-center px-5 py-4 border-b border-gray-200 dark:border-neutral-800">
+      <View className="flex-row items-center px-5 py-4 border-b border-neutral-200 dark:border-neutral-800">
         <Image
           source={require("../../assets/images/home-logo.png")}
           className="w-8 h-9"
@@ -37,7 +37,7 @@ const Header = ({
       
       {/* Search Bar or Icons */}
       {isSearching ? (
-        <View className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
+        <View className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
           <View className="flex-row items-center bg-neutral-100 dark:bg-neutral-800 rounded-full px-4 py-2">
             <FontAwesome
               name="search"
@@ -63,7 +63,7 @@ const Header = ({
         </View>
       ) : (
         /* Top Header with Icons */
-        <View className="flex-row justify-center items-center px-5 py-4 border-b border-gray-200 dark:border-neutral-800 divide-x divide-gray-200 dark:divide-neutral-800">
+        <View className="flex-row justify-center items-center px-5 py-4 border-b border-neutral-200 dark:border-neutral-800 divide-x divide-neutral-200 dark:divide-neutral-800">
           <TouchableOpacity
             className="flex-1 items-center"
             onPress={() => setIsSearching(true)}

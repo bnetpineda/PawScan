@@ -44,7 +44,7 @@ const CommentsModal = ({
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
           {/* Comments Header */}
-          <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
+          <View className="flex-row justify-between items-center px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
             <Text className="text-lg font-inter-semibold text-black dark:text-white">
               Comments
             </Text>
@@ -62,7 +62,7 @@ const CommentsModal = ({
             {loadingComments ? (
               <View className="flex-1 justify-center items-center">
                 <ActivityIndicator size="large" color="#007AFF" />
-                <Text className="mt-2 font-inter-bold text-gray-500 dark:text-gray-400">
+                <Text className="mt-2 font-inter-bold text-neutral-500 dark:text-neutral-400">
                   Loading comments...
                 </Text>
               </View>
@@ -76,7 +76,7 @@ const CommentsModal = ({
                 <Text className="text-lg font-inter-semibold text-black dark:text-white mt-4 text-center">
                   No comments yet
                 </Text>
-                <Text className="text-gray-500 font-inter dark:text-gray-400 text-center mt-2">
+                <Text className="text-neutral-500 font-inter dark:text-neutral-400 text-center mt-2">
                   Be the first to share your thoughts!
                 </Text>
               </View>
@@ -87,7 +87,7 @@ const CommentsModal = ({
                 className="flex-1 px-4"
                 showsVerticalScrollIndicator={false}
                 renderItem={({ item }) => (
-                  <View className="py-3 border-b border-gray-100 dark:border-neutral-800">
+                  <View className="py-3 border-b border-neutral-100 dark:border-neutral-800">
                     <View className="flex-row items-start">
                       <View className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 justify-center items-center mr-3 mt-1">
                         <FontAwesome
@@ -109,11 +109,11 @@ const CommentsModal = ({
                               style={{ marginRight: 4 }}
                             />
                           )}
-                          <Text className="text-xs font-inter text-gray-400 dark:text-gray-500">
+                          <Text className="text-xs font-inter text-neutral-400 dark:text-neutral-500">
                             {formatFullDateTime(item.created_at)}
                           </Text>
                         </View>
-                        <Text className="text-gray-800 font-inter dark:text-gray-200 leading-5">
+                        <Text className="text-neutral-800 font-inter dark:text-neutral-200 leading-5">
                           {item.comment_text}
                         </Text>
                       </View>
@@ -126,7 +126,7 @@ const CommentsModal = ({
 
           {/* Comment Input */}
           {selectedPost && (isOwner || isVet) ? (
-            <View className="border-t border-gray-200 dark:border-neutral-800 px-4 py-3">
+            <View className="border-t border-neutral-200 dark:border-neutral-800 px-4 py-3">
               <View className="flex-row items-end">
                 <View className="flex-1 mr-3">
                   <TextInput
@@ -138,7 +138,7 @@ const CommentsModal = ({
                     }
                     multiline
                     maxLength={500}
-                    className="border border-gray-300 dark:border-neutral-600 rounded-2xl px-4 py-3 text-black dark:text-white font-inter bg-neutral-50 dark:bg-neutral-800 max-h-24"
+                    className="border border-neutral-300 dark:border-neutral-600 rounded-2xl px-4 py-3 text-black dark:text-white font-inter bg-neutral-50 dark:bg-neutral-800 max-h-24"
                     style={{ textAlignVertical: "top" }}
                   />
                 </View>
@@ -169,8 +169,8 @@ const CommentsModal = ({
               </View>
             </View>
           ) : selectedPost ? (
-            <View className="border-t border-gray-200 dark:border-neutral-800 px-4 py-3">
-              <Text className="text-center text-gray-500 dark:text-gray-400 font-inter">
+            <View className="border-t border-neutral-200 dark:border-neutral-800 px-4 py-3">
+              <Text className="text-center text-neutral-500 dark:text-neutral-400 font-inter">
                 Only the post owner and veterinarians can comment.
               </Text>
             </View>

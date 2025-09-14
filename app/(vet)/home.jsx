@@ -423,7 +423,7 @@ const NewsFeedScreen = () => {
     return (
       <View className="flex-1 justify-center items-center bg-white dark:bg-black">
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text className="mt-4 text-base font-inter-bold text-gray-400 dark:text-gray-500">
+        <Text className="mt-4 text-base font-inter-bold text-neutral-400 dark:text-neutral-500">
           Loading newsfeed...
         </Text>
       </View>

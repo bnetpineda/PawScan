@@ -28,7 +28,7 @@ const SettingsModal = ({
     <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
       <View
         className={`pt-8 pb-4 px-6 border-b ${
-          isDark ? "border-gray-600 bg-neutral" : "border-gray-200 bg-neutral-50"
+          isDark ? "border-neutral-600 bg-neutral" : "border-neutral-400 bg-neutral-50"
         }`}
       >
         <View className="flex-row justify-between items-center">
@@ -41,7 +41,7 @@ const SettingsModal = ({
           </Text>
           <TouchableOpacity
             onPress={onClose}
-            className={`p-2  ${isDark ? "bg-neutral " : "bg-neutral-200"}`}
+            className="p-2"
           >
             <FontAwesome
               name="close"
@@ -56,7 +56,7 @@ const SettingsModal = ({
         <View>
           <TouchableOpacity
             className={`p-4 rounded-lg border ${
-              isDark ? "bg-neutral border-gray-600" : "bg-white border-gray-200"
+              isDark ? "bg-neutral border-neutral-600" : "bg-white border-neutral-400"
             }`}
             onPress={onEmailPress}
           >
@@ -76,7 +76,7 @@ const SettingsModal = ({
                 </Text>
                 <Text
                   className={`text-sm font-inter mt-1 ${
-                    isDark ? "text-gray-400" : "text-gray-600"
+                    isDark ? "text-neutral-400" : "text-neutral-600"
                   }`}
                 >
                   Update your email address
@@ -92,7 +92,7 @@ const SettingsModal = ({
 
           <TouchableOpacity
             className={`p-4 rounded-lg border mt-4 ${
-              isDark ? "bg-neutral border-gray-700" : "bg-white border-gray-200"
+              isDark ? "bg-neutral border-neutral-700" : "bg-white border-neutral-400"
             }`}
             onPress={onPasswordPress}
           >
@@ -112,7 +112,7 @@ const SettingsModal = ({
                 </Text>
                 <Text
                   className={`text-sm font-inter mt-1 ${
-                    isDark ? "text-gray-400" : "text-gray-600"
+                    isDark ? "text-neutral-400" : "text-neutral-600"
                   }`}
                 >
                   Update your account password
@@ -128,7 +128,7 @@ const SettingsModal = ({
 
           <TouchableOpacity
             className={`p-4 rounded-lg border mt-8 ${
-              isDark ? "bg-neutral border-gray-700" : "bg-white border-gray-200"
+              isDark ? "bg-neutral border-neutral-700" : "bg-white border-neutral-400"
             }`}
             onPress={onSignOut}
           >
@@ -148,7 +148,7 @@ const SettingsModal = ({
                 </Text>
                 <Text
                   className={`text-sm font-inter mt-1 ${
-                    isDark ? "text-gray-400" : "text-gray-600"
+                    isDark ? "text-neutral-400" : "text-neutral-600"
                   }`}
                 >
                   Log out of your account

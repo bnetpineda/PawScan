@@ -22,7 +22,7 @@ const AnalysisModal = ({
     >
       <View className="flex-1 bg-white dark:bg-black">
         {/* Modal Header */}
-        <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+        <View className="flex-row justify-between items-center px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
           <TouchableOpacity
             onPress={onClose}
             className="p-2"
@@ -49,7 +49,7 @@ const AnalysisModal = ({
             
             <View className="p-4">
               <View className="flex-row justify-between items-center mb-3">
-                <Text className="text-sm font-inter text-gray-500 dark:text-gray-400">
+                <Text className="text-sm font-inter text-neutral-500 dark:text-neutral-400">
                   {formatDate(selectedAnalysis.created_at)}
                 </Text>
                 <View
@@ -67,7 +67,7 @@ const AnalysisModal = ({
                 {selectedAnalysis.analysis_result}
               </Text>
               
-              <View className="flex-row justify-around border-t border-gray-200 dark:border-gray-800 pt-3">
+              <View className="flex-row justify-around border-t border-neutral-200 dark:border-neutral-800 pt-3">
                 <TouchableOpacity
                   className="flex-row items-center"
                   onPress={() => {

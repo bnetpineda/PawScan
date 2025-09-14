@@ -56,7 +56,7 @@ const DiseaseCard = ({ disease, onPress, isDarkMode }) => {
             size={14}
             color={isCat ? (isDarkMode ? "#60A5FA" : "#3B82F6") : (isDarkMode ? "#FBBF24" : "#F59E0B")}
           />
-          <Text className={`ml-1 text-xs font-inter ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+          <Text className={`ml-1 text-xs font-inter ${isDarkMode ? 'text-neutral-300' : 'text-neutral-700'}`}>
             {s}
           </Text>
         </View>
@@ -66,7 +66,7 @@ const DiseaseCard = ({ disease, onPress, isDarkMode }) => {
 
   return (
     <TouchableOpacity
-      className="mb-3 p-4 rounded-xl border dark:bg-black bg-white border-gray-200 dark:border-gray-800"
+      className="mb-3 p-4 rounded-xl border dark:bg-black bg-white border-neutral-200 dark:border-neutral-800"
       onPress={onPress}
       activeOpacity={0.7}
     >
@@ -88,7 +88,7 @@ const DiseaseCard = ({ disease, onPress, isDarkMode }) => {
           </View>
           
           <Text
-            className="text-sm font-inter leading-5 dark:text-gray-300 text-gray-600 mt-1"
+            className="text-sm font-inter leading-5 dark:text-neutral-300 text-neutral-600 mt-1"
             numberOfLines={2}
           >
             {disease.Overview}

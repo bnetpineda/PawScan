@@ -373,9 +373,9 @@ const styles = StyleSheet.create({
     color: "#000", // dark:text-black
   },
   buttonTextInactive: {
-    color: "#4B5563", // text-gray-600
+    color: "#4B5563", // text-neutral-600
   },
   buttonTextInactiveDark: {
-    color: "#9CA3AF", // dark:text-gray-400
+    color: "#9CA3AF", // dark:text-neutral-400
   },
 });
