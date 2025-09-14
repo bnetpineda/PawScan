@@ -188,7 +188,7 @@ const DiseasesInformationScreen = () => {
 
       {/* Header */}
       <View
-        className="px-4 py-3 border-b dark:border-gray-800 border-gray-200"
+        className="px-4 py-3 border-b dark:border-neutral-800 border-neutral-200"
       >
         <View className="flex-row items-center justify-between mb-3">
           <TouchableOpacity 
@@ -217,7 +217,7 @@ const DiseasesInformationScreen = () => {
                   size={20}
                   color={isDark ? "#FBBF24" : "#F59E0B"}
                 />
-                <Text className="ml-1 text-sm font-inter-semibold dark:text-gray-300 text-gray-700">
+                <Text className="ml-1 text-sm font-inter-semibold dark:text-neutral-300 text-neutral-700">
                   {bookmarkedDiseases.length}
                 </Text>
               </TouchableOpacity>
@@ -259,10 +259,10 @@ const DiseasesInformationScreen = () => {
             {["name", "severity", "species"].map((option) => (
               <TouchableOpacity
                 key={option}
-                className={`px-3 py-1 rounded-full mr-2 ${sortBy === option ? (isDark ? 'bg-gray-700' : 'bg-gray-800') : (isDark ? 'bg-gray-800' : 'bg-gray-200')}`}
+                className={`px-3 py-1 rounded-full mr-2 ${sortBy === option ? (isDark ? 'bg-neutral-700' : 'bg-neutral-800') : (isDark ? 'bg-neutral-800' : 'bg-neutral-200')}`}
                 onPress={() => setSortBy(option)}
               >
-                <Text className={`text-sm font-inter-semibold ${sortBy === option ? (isDark ? 'text-white' : 'text-white') : (isDark ? 'text-gray-300' : 'text-gray-700')}`}>
+                <Text className={`text-sm font-inter-semibold ${sortBy === option ? (isDark ? 'text-white' : 'text-white') : (isDark ? 'text-neutral-300' : 'text-neutral-700')}`}>
                   {option.charAt(0).toUpperCase() + option.slice(1)}
                 </Text>
               </TouchableOpacity>

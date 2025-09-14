@@ -126,21 +126,21 @@ export default function Register() {
               className="absolute left-5 top-3 z-10"
               onPress={() => router.replace("/")}
             >
-              <Text className="text-2xl text-gray-400">✕</Text>
+              <Text className="text-2xl text-neutral-400">✕</Text>
             </TouchableOpacity>
 
             <View className="mt-12 mb-8">
               <Text className="text-3xl font-inter-bold text-black dark:text-white mb-2">
                 Create Account
               </Text>
-              <Text className="font-inter text-gray-500 dark:text-gray-400">
+              <Text className="font-inter text-neutral-500 dark:text-neutral-400">
                 Sign up to get started with PawScan
               </Text>
             </View>
 
-            <View className="mb-5 rounded-2xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-neutral-900">
+            <View className="mb-5 rounded-2xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900">
               <TextInput
-                className="h-14 border-b border-gray-200 dark:border-gray-700 px-4 font-inter-bold text-black dark:text-white bg-transparent"
+                className="h-14 border-b border-neutral-200 dark:border-neutral-700 px-4 font-inter-bold text-black dark:text-white bg-transparent"
                 placeholder="Full Name"
                 placeholderTextColor="#888"
                 value={fullName}
@@ -148,7 +148,7 @@ export default function Register() {
                 autoCapitalize="none"
               />
               <TextInput
-                className="h-14 border-b border-gray-200 dark:border-gray-700 px-4 font-inter-bold text-black dark:text-white bg-transparent"
+                className="h-14 border-b border-neutral-200 dark:border-neutral-700 px-4 font-inter-bold text-black dark:text-white bg-transparent"
                 placeholder="Email address"
                 placeholderTextColor="#888"
                 value={email}
@@ -158,7 +158,7 @@ export default function Register() {
               />
               {userRole === "Veterinarian" && (
                 <TextInput
-                  className="h-14 border-b border-gray-200 dark:border-gray-700 px-4 font-inter-bold text-black dark:text-white bg-transparent"
+                  className="h-14 border-b border-neutral-200 dark:border-neutral-700 px-4 font-inter-bold text-black dark:text-white bg-transparent"
                   placeholder="License Number"
                   placeholderTextColor="#888"
                   value={licenseNumber}
@@ -166,7 +166,7 @@ export default function Register() {
                   autoCapitalize="none"
                 />
               )}
-              <View className="flex-row items-center border-b border-gray-200 dark:border-gray-700">
+              <View className="flex-row items-center border-b border-neutral-200 dark:border-neutral-700">
                 <TextInput
                   className="h-14 flex-1 px-4 font-inter-bold text-black dark:text-white bg-transparent"
                   placeholder="Password (min. 6 characters)"
@@ -227,7 +227,7 @@ export default function Register() {
             </View>
 
             {/* Modern Segmented Role Selection */}
-            <View className="mb-6 rounded-full border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-neutral-800 p-1 flex-row">
+            <View className="mb-6 rounded-full border border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 p-1 flex-row">
               <TouchableOpacity
                 style={[
                   styles.buttonBase,
@@ -284,7 +284,7 @@ export default function Register() {
               className={`mb-4 items-center justify-center rounded-2xl py-4 ${
                 isFormValid().valid && !loading
                   ? "bg-black dark:bg-white"
-                  : "bg-gray-300 dark:bg-gray-700"
+                  : "bg-neutral-300 dark:bg-neutral-700"
               }`}
               onPress={handleRegister}
               disabled={!isFormValid().valid || loading}
@@ -296,7 +296,7 @@ export default function Register() {
                   className={`font-inter-bold text-base ${
                     isFormValid().valid
                       ? "text-white dark:text-black"
-                      : "text-gray-600 dark:text-gray-400"
+                      : "text-neutral-600 dark:text-neutral-400"
                   }`}
                 >
                   Create Account
@@ -305,13 +305,13 @@ export default function Register() {
             </TouchableOpacity>
 
             <View className="flex-row items-center my-6">
-              <View className="flex-1 h-0.5 bg-gray-900 dark:bg-gray-500" />
-              <Text className="mx-4 text-gray-700 dark:text-gray-600">or</Text>
-              <View className="flex-1 h-0.5 bg-gray-900 dark:bg-gray-500" />
+              <View className="flex-1 h-0.5 bg-neutral-900 dark:bg-neutral-500" />
+              <Text className="mx-4 text-neutral-700 dark:text-neutral-600">or</Text>
+              <View className="flex-1 h-0.5 bg-neutral-900 dark:bg-neutral-500" />
             </View>
 
             <View className="flex-row justify-center mt-4 mb-6">
-              <Text className="text-gray-600 dark:text-gray-400">
+              <Text className="text-neutral-600 dark:text-neutral-400">
                 Already have an account?{" "}
               </Text>
               <TouchableOpacity onPress={navigateToLogin}>
@@ -321,7 +321,7 @@ export default function Register() {
               </TouchableOpacity>
             </View>
 
-            <Text className="text-center text-xs text-gray-500 dark:text-gray-400 mt-6">
+            <Text className="text-center text-xs text-neutral-500 dark:text-neutral-400 mt-6">
               By creating an account, you agree to our{" "}
               <Text className="font-inter-bold text-black dark:text-white">
                 Terms of Service

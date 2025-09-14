@@ -76,7 +76,7 @@ export default function CameraScreen() {
           color={isDark ? COLORS.lightGray : COLORS.textSecondary}
           style={{ marginBottom: 20 }}
         />
-        <Text className="text-center text-lg text-gray-700 dark:text-gray-300 mb-6 leading-6">
+        <Text className="text-center text-lg text-neutral-700 dark:text-neutral-300 mb-6 leading-6">
           We need your permission to show the camera
         </Text>
         <TouchableOpacity
@@ -200,7 +200,7 @@ export default function CameraScreen() {
             size="large"
             color={isDark ? COLORS.white : COLORS.primary}
           />
-          <Text className="text-center text-base text-gray-700 dark:text-gray-300 mt-2">
+          <Text className="text-center text-base text-neutral-700 dark:text-neutral-300 mt-2">
             Processing...
           </Text>
         </View>
@@ -268,7 +268,7 @@ export default function CameraScreen() {
 
           {analysisResult ? (
             <View
-              className="w-11/12 p-4 bg-white dark:bg-gray-800 rounded-xl shadow"
+              className="w-11/12 p-4 bg-white dark:bg-neutral-800 rounded-xl shadow"
               style={{ maxHeight: 600 }}
             >
               <ScrollView

@@ -87,12 +87,12 @@ export default function ResetPassword() {
           <Text className="text-center font-inter-bold text-3xl text-black dark:text-white">
             Reset Password
           </Text>
-          <Text className="text-center text-gray-500 dark:text-gray-400 mt-2">
+          <Text className="text-center text-neutral-500 dark:text-neutral-400 mt-2">
             Enter your new password below
           </Text>
         </View>
 
-        <View className="mb-5 rounded-2xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-neutral-900">
+        <View className="mb-5 rounded-2xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900">
           <View className="flex-row items-center">
             <TextInput
               className="h-14 flex-1 px-4 font-inter-bold text-black dark:text-white bg-transparent"
@@ -114,7 +114,7 @@ export default function ResetPassword() {
           </View>
         </View>
 
-        <View className="mb-5 rounded-2xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-neutral-900">
+        <View className="mb-5 rounded-2xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900">
           <View className="flex-row items-center">
             <TextInput
               className="h-14 flex-1 px-4 font-inter-bold text-black dark:text-white bg-transparent"
@@ -141,7 +141,7 @@ export default function ResetPassword() {
     ${
       isPasswordValid()
         ? "bg-black dark:bg-white"
-        : "bg-gray-300 dark:bg-gray-700"
+        : "bg-neutral-300 dark:bg-neutral-700"
     }`}
           onPress={handleResetPassword}
           disabled={!isPasswordValid() || isLoading}
@@ -153,7 +153,7 @@ export default function ResetPassword() {
               className={`font-inter-bold text-base ${
                 isPasswordValid()
                   ? "text-white dark:text-black"
-                  : "text-gray-600 dark:text-gray-400"
+                  : "text-neutral-600 dark:text-neutral-400"
               }`}
             >
               Update Password

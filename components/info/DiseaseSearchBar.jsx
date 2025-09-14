@@ -68,7 +68,7 @@ const DiseaseSearchBar = ({ searchQuery, onSearchChange, isDarkMode, onClear, di
   return (
     <View className="relative">
       <View
-        className="flex-row items-center px-4 py-3 rounded-xl dark:bg-gray-900 bg-white mb-3 border border-gray-200 dark:border-gray-800"
+        className="flex-row items-center px-4 py-3 rounded-xl dark:bg-neutral-900 bg-white mb-3 border border-gray-200 dark:border-gray-800"
       >
         <FontAwesome
           name={ICONS.search}

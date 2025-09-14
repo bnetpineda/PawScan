@@ -125,21 +125,21 @@ export default function Login() {
           className="absolute left-0 top-3 z-10"
           onPress={() => router.replace("/")}
         >
-          <Text className="text-2xl text-gray-400">✕</Text>
+          <Text className="text-2xl text-neutral-400">✕</Text>
         </TouchableOpacity>
 
         <View className="mt-16 mb-8">
           <Text className="text-center font-inter-bold text-3xl text-black dark:text-white">
             Welcome Back
           </Text>
-          <Text className="text-center text-gray-500 dark:text-gray-400 mt-2">
+          <Text className="text-center text-neutral-500 dark:text-neutral-400 mt-2">
             Sign in to your PawScan account
           </Text>
         </View>
 
-        <View className="mb-5 rounded-2xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-neutral-900">
+        <View className="mb-5 rounded-2xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900">
           <TextInput
-            className="h-14 border-b border-gray-200 dark:border-gray-700 px-4 font-inter-bold text-black dark:text-white bg-transparent"
+            className="h-14 border-b border-neutral-200 dark:border-neutral-700 px-4 font-inter-bold text-black dark:text-white bg-transparent"
             placeholder="Email"
             placeholderTextColor="#888"
             value={email}
@@ -185,7 +185,7 @@ export default function Login() {
     ${
       isEmailPasswordValid()
         ? "bg-black dark:bg-white"
-        : "bg-gray-300 dark:bg-gray-700"
+        : "bg-neutral-300 dark:bg-neutral-700"
     }`}
           onPress={handleLogin}
           disabled={!isEmailPasswordValid() || isLoading}
@@ -197,7 +197,7 @@ export default function Login() {
               className={`font-inter-bold text-base ${
                 isEmailPasswordValid()
                   ? "text-white dark:text-black"
-                  : "text-gray-600 dark:text-gray-400"
+                  : "text-neutral-600 dark:text-neutral-400"
               }`}
             >
               Sign In
@@ -206,14 +206,14 @@ export default function Login() {
         </TouchableOpacity>
 
         <View className="flex-row items-center my-6">
-          <View className="flex-1 h-0.5 bg-gray-900 dark:bg-gray-500" />
-          <Text className="mx-4 text-gray-700 dark:text-gray-600">or</Text>
-          <View className="flex-1 h-0.5 bg-gray-900 dark:bg-gray-500" />
+          <View className="flex-1 h-0.5 bg-neutral-900 dark:bg-neutral-500" />
+          <Text className="mx-4 text-neutral-700 dark:text-neutral-600">or</Text>
+          <View className="flex-1 h-0.5 bg-neutral-900 dark:bg-neutral-500" />
         </View>
 
         <View className="mt-6">
           <View className="flex-row justify-center">
-            <Text className="text-gray-500 dark:text-gray-400 font-inter">
+            <Text className="text-neutral-500 dark:text-neutral-400 font-inter">
               Don't have an account?{" "}
             </Text>
             <TouchableOpacity onPress={navigateToRegister}>
@@ -223,7 +223,7 @@ export default function Login() {
             </TouchableOpacity>
           </View>
 
-          <Text className="text-center text-xs text-gray-500 dark:text-gray-400 mt-6 font font-inter">
+          <Text className="text-center text-xs text-neutral-500 dark:text-neutral-400 mt-6 font font-inter">
             By signing in to PawScan, you agree to our{" "}
             <Text className="text-black dark:text-white font-inter-bold">
               Terms
@@ -254,15 +254,15 @@ export default function Login() {
                 onPress={() => setShowForgotPassword(false)}
                 className="p-2"
               >
-                <Text className="text-2xl text-gray-400">✕</Text>
+                <Text className="text-2xl text-neutral-400">✕</Text>
               </TouchableOpacity>
             </View>
 
-            <Text className="text-gray-600 dark:text-gray-400 mb-4">
+            <Text className="text-neutral-600 dark:text-neutral-400 mb-4">
               Enter your email address and we'll send you a link to reset your password.
             </Text>
 
-            <View className="mb-5 rounded-2xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-neutral-900">
+            <View className="mb-5 rounded-2xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900">
               <TextInput
                 className="h-14 px-4 font-inter-bold text-black dark:text-white bg-transparent"
                 placeholder="Email"
@@ -280,7 +280,7 @@ export default function Login() {
         ${
           isResetEmailValid()
             ? "bg-black dark:bg-white"
-            : "bg-gray-300 dark:bg-gray-700"
+            : "bg-neutral-300 dark:bg-neutral-700"
         }`}
               onPress={handlePasswordReset}
               disabled={!isResetEmailValid() || isResetLoading}
@@ -292,7 +292,7 @@ export default function Login() {
                   className={`font-inter-bold text-base ${
                     isResetEmailValid()
                       ? "text-white dark:text-black"
-                      : "text-gray-600 dark:text-gray-400"
+                      : "text-neutral-600 dark:text-neutral-400"
                   }`}
                 >
                   Send Reset Link

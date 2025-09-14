@@ -30,7 +30,7 @@ export default function ShareModal({
     >
       <View className="flex-1 justify-center items-center bg-black/50">
         <View
-          className={`bg-gray-100 dark:bg-gray-700 rounded-2xl p-6 mx-6 w-11/12 ${
+          className={`bg-neutral-100 dark:bg-neutral-700 rounded-2xl p-6 mx-6 w-11/12 ${
             isDark ? "" : "border border-gray-300"
           }`}
         >
@@ -38,7 +38,7 @@ export default function ShareModal({
             Share to Newsfeed
           </Text>
 
-          <Text className="text-gray-600 font-inter dark:text-gray-300 mb-2">
+          <Text className="text-neutral-600 font-inter dark:text-neutral-300 mb-2">
             Pet Name (Optional)
           </Text>
           <TextInput

@@ -30,7 +30,7 @@ const ChangePasswordModal = ({
     <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
       <View
         className={`pt-16 pb-4 px-6 border-b ${
-          isDark ? "border-gray-700 bg-neutral" : "border-gray-200 bg-gray-50"
+          isDark ? "border-gray-700 bg-neutral-800" : "border-gray-200 bg-neutral-100"
         }`}
       >
         <View className="flex-row justify-between items-center">
@@ -44,7 +44,7 @@ const ChangePasswordModal = ({
           <TouchableOpacity
             onPress={onClose}
             className={`p-2 rounded-full ${
-              isDark ? "bg-neutral" : "bg-gray-200"
+              isDark ? "bg-neutral-800" : "bg-neutral-200"
             }`}
           >
             <FontAwesome
@@ -128,7 +128,7 @@ const ChangePasswordModal = ({
 
         <View
           className={`mt-4 p-4 rounded-lg ${
-            isDark ? "bg-neutral" : "bg-gray-100"
+            isDark ? "bg-neutral-800" : "bg-neutral-100"
           }`}
         >
           <Text
@@ -145,8 +145,8 @@ const ChangePasswordModal = ({
             onPress={onClose}
             className={`flex-1 p-4 rounded-lg border mr-3 ${
               isDark
-                ? "border-gray-700 bg-gray-700"
-                : "border-gray-300 bg-gray-100"
+                ? "border-gray-700 bg-neutral-700"
+                : "border-gray-300 bg-neutral-100"
             }`}
             disabled={updating}
           >
@@ -164,7 +164,7 @@ const ChangePasswordModal = ({
             className={`flex-1 p-4 rounded-lg border ${
               isDark
                 ? "border-gray-700 bg-white"
-                : "border-gray-300 bg-gray-100"
+                : "border-gray-300 bg-neutral-100"
             }`}
             disabled={updating}
           >

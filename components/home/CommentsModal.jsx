@@ -89,7 +89,7 @@ const CommentsModal = ({
                 renderItem={({ item }) => (
                   <View className="py-3 border-b border-gray-100 dark:border-neutral-800">
                     <View className="flex-row items-start">
-                      <View className="w-8 h-8 rounded-full bg-gray-200 dark:bg-neutral-700 justify-center items-center mr-3 mt-1">
+                      <View className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 justify-center items-center mr-3 mt-1">
                         <FontAwesome
                           name="user"
                           size={14}
@@ -138,7 +138,7 @@ const CommentsModal = ({
                     }
                     multiline
                     maxLength={500}
-                    className="border border-gray-300 dark:border-neutral-600 rounded-2xl px-4 py-3 text-black dark:text-white font-inter bg-gray-50 dark:bg-neutral-800 max-h-24"
+                    className="border border-gray-300 dark:border-neutral-600 rounded-2xl px-4 py-3 text-black dark:text-white font-inter bg-neutral-50 dark:bg-neutral-800 max-h-24"
                     style={{ textAlignVertical: "top" }}
                   />
                 </View>
@@ -146,7 +146,7 @@ const CommentsModal = ({
                   onPress={postComment}
                   disabled={postingComment || !newComment.trim()}
                   className={`w-12 h-12 rounded-full justify-center items-center ${postingComment || !newComment.trim()
-                      ? "bg-gray-200 dark:bg-neutral-700"
+                      ? "bg-neutral-200 dark:bg-neutral-700"
                       : "bg-blue-500"
                     }`}
                 >

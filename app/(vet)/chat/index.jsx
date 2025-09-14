@@ -150,15 +150,15 @@ const ChatListScreen = () => {
         <View className="flex-row justify-between mb-1">
           <Text className="text-base font-inter-bold flex-1 text-black dark:text-white" numberOfLines={1}>{item.userName}</Text>
           {item.latestMessage && (
-            <Text className="text-xs text-gray-500 dark:text-gray-400 ml-2">{formatTime(item.latestMessage.created_at)}</Text>
+            <Text className="text-xs text-neutral-500 dark:text-neutral-400 ml-2">{formatTime(item.latestMessage.created_at)}</Text>
           )}
         </View>
         {item.latestMessage ? (
-          <Text className="text-sm text-gray-600 dark:text-gray-300" numberOfLines={1}>
+          <Text className="text-sm text-neutral-600 dark:text-neutral-300" numberOfLines={1}>
             {item.latestMessage.content}
           </Text>
         ) : (
-          <Text className="text-sm italic text-gray-500 dark:text-gray-400">No messages yet</Text>
+          <Text className="text-sm italic text-neutral-500 dark:text-neutral-400">No messages yet</Text>
         )}
       </View>
     </TouchableOpacity>
@@ -192,7 +192,7 @@ const ChatListScreen = () => {
         onRequestClose={() => setShowSearch(false)}
       >
         <SafeAreaView className="flex-1 bg-white dark:bg-black">
-          <View className="flex-row items-center px-4 py-3 border-b border-gray-300 dark:border-neutral-700">
+          <View className="flex-row items-center px-4 py-3 border-b border-neutral-300 dark:border-neutral-700">
             <TouchableOpacity 
               onPress={() => setShowSearch(false)}
               className="p-2 mr-2"
@@ -208,7 +208,7 @@ const ChatListScreen = () => {
               onChangeText={setSearchQuery}
               placeholder="Search chats..."
               placeholderTextColor={isDark ? "#8E8E93" : "#6C757D"}
-              className="flex-1 border border-gray-300 dark:border-neutral-700 rounded-full px-4 py-2 text-base font-inter bg-white dark:bg-neutral-800 text-black dark:text-white"
+              className="flex-1 border border-neutral-300 dark:border-neutral-700 rounded-full px-4 py-2 text-base font-inter bg-white dark:bg-neutral-800 text-black dark:text-white"
               autoFocus
             />
             {searchQuery.length > 0 && (
@@ -233,7 +233,7 @@ const ChatListScreen = () => {
           <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">
             {searchQuery ? "No chats found" : "No conversations yet"}
           </Text>
-          <Text className="text-base text-center text-gray-600 dark:text-gray-300">
+          <Text className="text-base text-center text-neutral-600 dark:text-neutral-300">
             {searchQuery 
               ? "Try a different search term" 
               : "Users will start chats with you. Check back later!"}

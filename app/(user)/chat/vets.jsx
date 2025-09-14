@@ -176,7 +176,7 @@ const VetsListScreen = () => {
       </View>
       <View className="flex-1 justify-center">
         <Text className="text-base font-inter-bold mb-1 text-black dark:text-white">{item.name}</Text>
-        <Text className="text-sm text-gray-600 dark:text-gray-300">{item.email}</Text>
+        <Text className="text-sm text-neutral-600 dark:text-neutral-300">{item.email}</Text>
       </View>
       <View className="ml-2 justify-center">
         <FontAwesome name="chevron-right" size={20} color={isDark ? "#fff" : "#000"} />
@@ -197,7 +197,7 @@ const VetsListScreen = () => {
       <View className="px-5 py-4 border-b border-black dark:border-neutral-700">
         <Text className="text-2xl font-inter-bold text-black dark:text-white mb-3">Select a Veterinarian</Text>
         {/* Search Input */}
-        <View className="flex-row items-center bg-gray-100 dark:bg-neutral-800 rounded-full mt-2 px-6 py-1">
+        <View className="flex-row items-center bg-neutral-100 dark:bg-neutral-800 rounded-full mt-2 px-6 py-1">
           <FontAwesome name="search" size={20} color={isDark ? "#8E8E93" : "#6C757D"} />
           <TextInput
             value={searchQuery}
@@ -216,7 +216,7 @@ const VetsListScreen = () => {
       {loading ? (
         <View className="flex-1 justify-center items-center p-8">
           <ActivityIndicator size="large" color={isDark ? "#fff" : "#000"} />
-          <Text className="mt-4 text-base text-gray-600 dark:text-gray-300">Loading veterinarians...</Text>
+          <Text className="mt-4 text-base text-neutral-600 dark:text-neutral-300">Loading veterinarians...</Text>
         </View>
       ) : filteredVets.length === 0 ? (
         <View className="flex-1 justify-center items-center p-8">
@@ -224,7 +224,7 @@ const VetsListScreen = () => {
           <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">
             {searchQuery ? "No veterinarians found" : "No veterinarians available"}
           </Text>
-          <Text className="text-base text-gray-600 dark:text-gray-300">
+          <Text className="text-base text-neutral-600 dark:text-neutral-300">
             {searchQuery ? "Try a different search term" : "Please check back later"}
           </Text>
         </View>

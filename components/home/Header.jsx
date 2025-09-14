@@ -38,7 +38,7 @@ const Header = ({
       {/* Search Bar or Icons */}
       {isSearching ? (
         <View className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
-          <View className="flex-row items-center bg-gray-100 dark:bg-neutral-800 rounded-full px-4 py-2">
+          <View className="flex-row items-center bg-neutral-100 dark:bg-neutral-800 rounded-full px-4 py-2">
             <FontAwesome
               name="search"
               size={18}

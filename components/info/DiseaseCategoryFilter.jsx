@@ -17,8 +17,8 @@ const DiseaseCategoryFilter = ({ categories, selectedCategory, onSelectCategory,
           key={category}
           className={`px-4 py-2 rounded-full mr-2 ${
             selectedCategory === category
-              ? "dark:bg-gray-700 bg-gray-800"
-              : "dark:bg-gray-800 bg-gray-200"
+              ? "dark:bg-neutral-700 bg-neutral-800"
+              : "dark:bg-neutral-800 bg-neutral-200"
           }`}
           onPress={() => onSelectCategory(category)}
         >
@@ -26,7 +26,7 @@ const DiseaseCategoryFilter = ({ categories, selectedCategory, onSelectCategory,
             className={`text-sm font-inter-semibold ${
               selectedCategory === category
                 ? "dark:text-white text-white"
-                : "dark:text-gray-300 text-gray-700"
+                : "dark:text-neutral-300 text-neutral-700"
             }`}
           >
             {category} 

@@ -29,7 +29,7 @@ const DiseaseList = ({
     return (
       <>
         <Text
-          className="text-sm font-inter-semibold mb-3 dark:text-gray-400 text-gray-600"
+          className="text-sm font-inter-semibold mb-3 dark:text-neutral-400 text-neutral-600"
         >
           {diseases.length} disease
           {diseases.length !== 1 ? "s" : ""} found
@@ -65,7 +65,7 @@ const DiseaseList = ({
           No diseases found
         </Text>
         <Text
-          className="mt-2 text-base font-inter text-gray-500 dark:text-gray-400 text-center"
+          className="mt-2 text-base font-inter text-neutral-500 dark:text-neutral-400 text-center"
         >
           {searchQuery || selectedCategory !== "All" 
             ? "Try adjusting your search terms or filters" 
@@ -73,10 +73,10 @@ const DiseaseList = ({
         </Text>
         {(searchQuery || selectedCategory !== "All") && (
           <TouchableOpacity
-            className="mt-4 px-4 py-2 rounded-full dark:bg-gray-800 bg-gray-200"
+            className="mt-4 px-4 py-2 rounded-full dark:bg-neutral-800 bg-neutral-200"
             onPress={onClearFilters}
           >
-            <Text className="font-inter-semibold dark:text-gray-300 text-gray-700">
+            <Text className="font-inter-semibold dark:text-neutral-300 text-neutral-700">
               Clear Filters
             </Text>
           </TouchableOpacity>

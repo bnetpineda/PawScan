@@ -161,12 +161,12 @@ ${analysis.analysis_result.substring(
       />
 
       {/* Header */}
-      <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+      <View className="flex-row justify-between items-center px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
         <Text className="text-2xl font-inter-bold text-black dark:text-white">
           Analysis History
         </Text>
         <View>
-          <Text className="text-sm font-inter text-gray-500 dark:text-gray-400">
+          <Text className="text-sm font-inter text-neutral-500 dark:text-neutral-400">
             {analyses.length} analyses
           </Text>
         </View>

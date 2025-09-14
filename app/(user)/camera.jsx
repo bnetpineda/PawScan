@@ -71,7 +71,7 @@ export default function CameraScreen() {
     return (
       <View className="flex-1 bg-white dark:bg-black">
         <View className="flex-1 justify-center items-center px-8">
-          <View className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-900 items-center justify-center mb-8">
+          <View className="w-24 h-24 rounded-full bg-neutral-100 dark:bg-neutral-900 items-center justify-center mb-8">
             <FontAwesome
               name="camera"
               size={48}
@@ -81,7 +81,7 @@ export default function CameraScreen() {
           <Text className="text-center text-2xl font-inter-bold text-black dark:text-white mb-4">
             Camera Access Needed
           </Text>
-          <Text className="text-center text-base text-gray-600 dark:text-gray-400 mb-8 leading-6">
+          <Text className="text-center text-base text-neutral-600 dark:text-neutral-400 mb-8 leading-6">
             To capture pet photos for health analysis, we need access to your camera.
           </Text>
           <TouchableOpacity
@@ -92,7 +92,7 @@ export default function CameraScreen() {
               Allow Camera Access
             </Text>
           </TouchableOpacity>
-          <Text className="text-center text-xs text-gray-500 dark:text-gray-500 mt-6">
+          <Text className="text-center text-xs text-neutral-500 dark:text-neutral-500 mt-6">
             You can change this anytime in Settings
           </Text>
         </View>
@@ -209,7 +209,7 @@ export default function CameraScreen() {
             size="large"
             color={isDark ? COLORS.white : COLORS.primary}
           />
-          <Text className="text-center text-base text-gray-700 dark:text-gray-300 mt-2">
+          <Text className="text-center text-base text-neutral-700 dark:text-neutral-300 mt-2">
             Processing...
           </Text>
         </View>
@@ -277,7 +277,7 @@ export default function CameraScreen() {
 
           {analysisResult ? (
             <View
-              className="w-11/12 p-4 bg-white dark:bg-gray-800 rounded-xl shadow"
+              className="w-11/12 p-4 bg-white dark:bg-neutral-800 rounded-xl shadow"
               style={{ maxHeight: 600 }}
             >
               <ScrollView

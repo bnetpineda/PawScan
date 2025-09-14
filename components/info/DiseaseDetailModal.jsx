@@ -38,7 +38,7 @@ const DiseaseDetailModal = ({ visible, disease, isDarkMode, onClose, isBookmarke
             size={16}
             color={isCat ? (isDarkMode ? "#60A5FA" : "#3B82F6") : (isDarkMode ? "#FBBF24" : "#F59E0B")}
           />
-          <Text className={`ml-1 text-sm font-inter ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+          <Text className={`ml-1 text-sm font-inter ${isDarkMode ? 'text-neutral-300' : 'text-neutral-700'}`}>
             {s}
           </Text>
         </View>
@@ -149,7 +149,7 @@ const DiseaseDetailModal = ({ visible, disease, isDarkMode, onClose, isBookmarke
 
         {disease?.["Feline vs Canine"] && (
           <View
-            className="p-4 rounded-xl mb-6 dark:bg-gray-900 bg-gray-100"
+            className="p-4 rounded-xl mb-6 dark:bg-neutral-900 bg-neutral-100"
           >
             <View className="flex-row items-center mb-2">
               <FontAwesome 
@@ -158,13 +158,13 @@ const DiseaseDetailModal = ({ visible, disease, isDarkMode, onClose, isBookmarke
                 color={isDarkMode ? "#fff" : "#000"} 
               />
               <Text
-                className="ml-2 font-inter-semibold mb-2 dark:text-gray-300 text-gray-700"
+                className="ml-2 font-inter-semibold mb-2 dark:text-neutral-300 text-neutral-700"
               >
                 Species Comparison
               </Text>
             </View>
             <Text
-              className="text-base font-inter dark:text-gray-300 text-gray-700"
+              className="text-base font-inter dark:text-neutral-300 text-neutral-700"
             >
               {disease["Feline vs Canine"]}
             </Text>

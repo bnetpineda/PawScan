@@ -28,7 +28,7 @@ const SettingsModal = ({
     <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
       <View
         className={`pt-8 pb-4 px-6 border-b ${
-          isDark ? "border-gray-600 bg-neutral" : "border-gray-200 bg-gray-50"
+          isDark ? "border-gray-600 bg-neutral" : "border-gray-200 bg-neutral-50"
         }`}
       >
         <View className="flex-row justify-between items-center">
@@ -41,7 +41,7 @@ const SettingsModal = ({
           </Text>
           <TouchableOpacity
             onPress={onClose}
-            className={`p-2  ${isDark ? "bg-neutral " : "bg-gray-200"}`}
+            className={`p-2  ${isDark ? "bg-neutral " : "bg-neutral-200"}`}
           >
             <FontAwesome
               name="close"

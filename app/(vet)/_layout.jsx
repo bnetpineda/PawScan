@@ -19,10 +19,12 @@ export default function VetLayout() {
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false, // Removes text labels
-        tabBarActiveTintColor: isDarkMode ? "#fff" : "#000",
-        tabBarInactiveTintColor: isDarkMode ? "#6B7280" : "#9CA3AF", // Gray shades
+        tabBarActiveTintColor: isDarkMode ? "#f5f5f5" : "#171717",
+        tabBarInactiveTintColor: isDarkMode ? "#737373" : "#a3a3a3", 
         tabBarStyle: {
-          backgroundColor: isDarkMode ? "#FAFAFA" : "#FFFFFF", // Dark Gray or White
+          backgroundColor: isDarkMode ? "#0A0A0A" : "#FFFFFF", 
+          borderTopColor: isDarkMode ? "#FFFFFF" : "#0A0A0A" ,
+          borderTopWidth: 1,
           height: 75,
         },
       }}

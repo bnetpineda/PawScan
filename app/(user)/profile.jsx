@@ -53,7 +53,7 @@ const ProfileScreen = () => {
     fetchUserPosts,
     fetchPetScanCount,
     fetchHistoryImages,
-    refreshAllData
+    refreshAllData,
   } = useProfileData(user);
 
   useEffect(() => {
@@ -72,7 +72,7 @@ const ProfileScreen = () => {
       }
 
       // Fetch user posts, pet scan count, and history images
-      console.log('Fetching user data...');
+      console.log("Fetching user data...");
       fetchUserPosts();
       fetchPetScanCount();
       fetchHistoryImages();
@@ -326,25 +326,25 @@ const ProfileScreen = () => {
   const renderGridContent = () => {
     const items = showingHistory ? historyImages : userPosts;
     const isLoading = showingHistory ? historyLoading : postsLoading;
-    
+
     // If loading, show placeholders
     if (isLoading) {
       return Array.from({ length: 6 }).map((_, index) => (
         <View key={index} className="w-1/3 aspect-square p-1">
           <View
             className={`w-full h-full rounded ${
-              isDark ? "bg-gray-800" : "bg-gray-200"
+              isDark ? "bg-neutral-800" : "bg-neutral-200"
             }`}
           />
         </View>
       ));
     }
-    
+
     // Loaded - show actual items or empty state
     if (items.length > 0) {
       return items.map((item) => (
-        <TouchableOpacity 
-          key={item.id} 
+        <TouchableOpacity
+          key={item.id}
           className="w-1/3 aspect-square p-1"
           onPress={() => {
             setSelectedImage(item.url);
@@ -362,17 +362,25 @@ const ProfileScreen = () => {
       // Show empty state message
       return (
         <View className="w-full py-10 items-center justify-center">
-          <FontAwesome 
-            name={showingHistory ? "history" : "table"} 
-            size={48} 
-            color={isDark ? "#6B7280" : "#9CA3AF"} 
+          <FontAwesome
+            name={showingHistory ? "history" : "table"}
+            size={48}
+            color={isDark ? "#6B7280" : "#9CA3AF"}
           />
-          <Text className={`mt-4 text-lg font-inter ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+          <Text
+            className={`mt-4 text-lg font-inter ${
+              isDark ? "text-neutral-400" : "text-neutral-500"
+            }`}
+          >
             No {showingHistory ? "scan history" : "posts"} yet
           </Text>
-          <Text className={`mt-2 text-base font-inter ${isDark ? "text-gray-500" : "text-gray-400"}`}>
-            {showingHistory 
-              ? "Your pet scans will appear here" 
+          <Text
+            className={`mt-2 text-base font-inter ${
+              isDark ? "text-neutral-500" : "text-neutral-400"
+            }`}
+          >
+            {showingHistory
+              ? "Your pet scans will appear here"
               : "Share posts to see them here"}
           </Text>
         </View>
@@ -382,13 +390,13 @@ const ProfileScreen = () => {
 
   return (
     <>
-      <ScrollView 
+      <ScrollView
         className={`flex-1 ${isDark ? "bg-black" : "bg-white"} pt-4`}
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh} 
-            tintColor={isDark ? "#fff" : "#000"} 
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={isDark ? "#fff" : "#000"}
           />
         }
       >
@@ -424,7 +432,7 @@ const ProfileScreen = () => {
               ) : (
                 <View
                   className={`w-24 h-24 rounded-full justify-center items-center ${
-                    isDark ? "bg-gray-800" : "bg-gray-200"
+                    isDark ? "bg-neutral-800" : "bg-neutral-200"
                   }`}
                 >
                   <Text
@@ -438,7 +446,7 @@ const ProfileScreen = () => {
               )}
               <View
                 className={`absolute bottom-0 right-0 w-6 h-6 rounded-full items-center justify-center ${
-                  isDark ? "bg-gray-700" : "bg-gray-300"
+                  isDark ? "bg-neutral-700" : "bg-neutral-300"
                 }`}
               >
                 <FontAwesome
@@ -461,23 +469,19 @@ const ProfileScreen = () => {
                 </Text>
                 <Text
                   className={`text-sm ${
-                    isDark ? "text-gray-400" : "text-gray-500"
+                    isDark ? "text-neutral-400" : "text-neutral-500"
                   }`}
                 >
                   Posts
                 </Text>
               </View>
               <View className="items-center">
-                <Text
-                  className={`text-lg font-inter-bold ${
-                    isDark ? "text-white" : "text-black"
-                  }`}
-                >
+                <Text className="text-xl font-inter-bold text-black dark:text-white">
                   {petScanCount}
                 </Text>
                 <Text
                   className={`text-sm ${
-                    isDark ? "text-gray-400" : "text-gray-500"
+                    isDark ? "text-neutral-400" : "text-neutral-500"
                   }`}
                 >
                   Pet Scanned
@@ -497,14 +501,14 @@ const ProfileScreen = () => {
             </Text>
             <Text
               className={`font-inter ${
-                isDark ? "text-gray-300" : "text-gray-600"
+                isDark ? "text-neutral-300" : "text-neutral-600"
               }`}
             >
               {role} | Pet Health Enthusiast
             </Text>
             <Text
               className={`mt-1 font-inter ${
-                isDark ? "text-gray-400" : "text-gray-500"
+                isDark ? "text-neutral-400" : "text-neutral-500"
               }`}
             >
               Member since {formatDate(user?.created_at)}
@@ -514,25 +518,41 @@ const ProfileScreen = () => {
 
         {/* Posts Grid - Instagram Style */}
         <View className="mt-2">
-          <View className="flex-row border-t border-b border-gray-300 dark:border-gray-700">
-            <TouchableOpacity 
-              className="flex-1 items-center py-3 border-r border-gray-300 dark:border-gray-700"
+          <View className="flex-row border-t border-b border-neutral-300 dark:border-neutral-700">
+            <TouchableOpacity
+              className="flex-1 items-center py-3 border-r border-neutral-300 dark:border-neutral-700"
               onPress={() => setShowingHistory(false)}
             >
               <FontAwesome
                 name="table"
                 size={24}
-                color={!showingHistory && isDark ? "#3B82F6" : !showingHistory ? "#3B82F6" : isDark ? "white" : "black"}
+                color={
+                  !showingHistory && isDark
+                    ? "#3B82F6"
+                    : !showingHistory
+                    ? "#3B82F6"
+                    : isDark
+                    ? "white"
+                    : "black"
+                }
               />
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               className="flex-1 items-center py-3"
               onPress={() => setShowingHistory(true)}
             >
               <FontAwesome
                 name="history"
                 size={24}
-                color={showingHistory && isDark ? "#3B82F6" : showingHistory ? "#3B82F6" : isDark ? "white" : "black"}
+                color={
+                  showingHistory && isDark
+                    ? "#3B82F6"
+                    : showingHistory
+                    ? "#3B82F6"
+                    : isDark
+                    ? "white"
+                    : "black"
+                }
               />
             </TouchableOpacity>
           </View>

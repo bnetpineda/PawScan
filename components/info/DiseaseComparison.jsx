@@ -47,7 +47,7 @@ const DiseaseComparison = ({ diseases, isDarkMode, onClose }) => {
         </TouchableOpacity>
       </View>
 
-      <Text className="text-base font-inter mb-4 dark:text-gray-300 text-gray-700">
+      <Text className="text-base font-inter mb-4 dark:text-neutral-300 text-neutral-700">
         Select two diseases to compare their characteristics
       </Text>
 
@@ -68,8 +68,8 @@ const DiseaseComparison = ({ diseases, isDarkMode, onClose }) => {
                 isSelected
                   ? "dark:bg-blue-600 bg-blue-500"
                   : isDisabled
-                  ? "dark:bg-gray-800 bg-gray-200 opacity-50"
-                  : "dark:bg-gray-700 bg-gray-300"
+                  ? "dark:bg-neutral-800 bg-neutral-200 opacity-50"
+                  : "dark:bg-neutral-700 bg-neutral-300"
               }`}
               onPress={() => toggleDiseaseSelection(disease)}
               disabled={isDisabled}
@@ -79,8 +79,8 @@ const DiseaseComparison = ({ diseases, isDarkMode, onClose }) => {
                   isSelected
                     ? "dark:text-white text-white"
                     : isDisabled
-                    ? "dark:text-gray-500 text-gray-400"
-                    : "dark:text-gray-200 text-gray-700"
+                    ? "dark:text-neutral-500 text-neutral-400"
+                    : "dark:text-neutral-200 text-neutral-700"
                 }`}
                 numberOfLines={1}
                 ellipsizeMode="tail"
@@ -117,7 +117,7 @@ const DiseaseComparison = ({ diseases, isDarkMode, onClose }) => {
               </View>
             ))}
             {selectedDiseases.length < 2 && (
-              <Text className="text-sm font-inter text-gray-500 dark:text-gray-400 self-center">
+              <Text className="text-sm font-inter text-neutral-500 dark:text-neutral-400 self-center">
                 Select {2 - selectedDiseases.length} more disease{2 - selectedDiseases.length > 1 ? 's' : ''}
               </Text>
             )}

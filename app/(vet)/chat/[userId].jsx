@@ -619,8 +619,8 @@ const ChatScreen = () => {
           {item.content ? (
             <View className="p-3">
               <Text className={`text-base font-inter ${isCurrentUser ? 'text-white dark:text-black' : 'text-black dark:text-white'}`}>{item.content}</Text>
-              <View className={`flex-row items-center justify-end mt-1 ${isCurrentUser ? 'text-gray-300 dark:text-gray-600' : 'text-gray-500 dark:text-gray-400'}`}>
-                <Text className={`text-xs ${isCurrentUser ? 'text-gray-300 dark:text-gray-600' : 'text-gray-500 dark:text-gray-400'}`}>
+              <View className={`flex-row items-center justify-end mt-1 ${isCurrentUser ? 'text-neutral-300 dark:text-neutral-600' : 'text-neutral-500 dark:text-neutral-400'}`}>
+                <Text className={`text-xs ${isCurrentUser ? 'text-neutral-300 dark:text-neutral-600' : 'text-neutral-500 dark:text-neutral-400'}`}>
                   {messageTime}
                 </Text>
                 {isCurrentUser && !isTempMessage && (
@@ -632,8 +632,8 @@ const ChatScreen = () => {
             </View>
           ) : (
             <View className="p-3">
-              <View className={`flex-row items-center justify-end mt-1 ${isCurrentUser ? 'text-gray-300 dark:text-gray-600' : 'text-gray-500 dark:text-gray-400'}`}>
-                <Text className={`text-xs ${isCurrentUser ? 'text-gray-300 dark:text-gray-600' : 'text-gray-500 dark:text-gray-400'}`}>
+              <View className={`flex-row items-center justify-end mt-1 ${isCurrentUser ? 'text-neutral-300 dark:text-neutral-600' : 'text-neutral-500 dark:text-neutral-400'}`}>
+                <Text className={`text-xs ${isCurrentUser ? 'text-neutral-300 dark:text-neutral-600' : 'text-neutral-500 dark:text-neutral-400'}`}>
                   {messageTime}
                 </Text>
                 {isCurrentUser && !isTempMessage && (
@@ -688,7 +688,7 @@ const ChatScreen = () => {
           <View className="flex-1">
             <Text className="text-lg font-inter-bold text-black dark:text-white">{userName || 'Pet Owner'}</Text>
             {isOtherUserTyping && (
-              <Text className="text-xs text-gray-500 dark:text-gray-400">typing...</Text>
+              <Text className="text-xs text-neutral-500 dark:text-neutral-400">typing...</Text>
             )}
           </View>
         </View>
@@ -829,7 +829,7 @@ const ChatScreen = () => {
           />
           <TouchableOpacity 
             onPress={() => sendMessage()}
-            className={`rounded-full w-10 h-10 justify-center items-center ml-2 ${!newMessage.trim() && !selectedImage ? 'bg-gray-400' : 'bg-black dark:bg-white'}`}
+            className={`rounded-full w-10 h-10 justify-center items-center ml-2 ${!newMessage.trim() && !selectedImage ? 'bg-neutral-400' : 'bg-black dark:bg-white'}`}
             disabled={!newMessage.trim() && !selectedImage}
             activeOpacity={0.8}
           >
