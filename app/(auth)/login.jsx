@@ -38,7 +38,7 @@ export default function Login() {
       }
       
       // Check if the user is a veterinarian and if they're verified
-      if (data.user?.user_metadata?.role === "Veterinarian") {
+      if (data.user?.user_metadata?.role === "veterinarian") {
         // Check if the user exists in the auth.users table (meaning they're verified)
         const { data: userData, error: userError } = await supabase
           .from('veterinarians')

@@ -22,7 +22,7 @@ export default function AuthLayout() {
     console.log("User Display Name:", displayName); // Log display name for verification
 
     const redirectPath =
-      role === "Veterinarian" ? "/(vet)/home" : "/(user)/home";
+      role === "veterinarian" ? "/(vet)/home" : "/(user)/home";
     return <Redirect href={redirectPath} />;
   }
 

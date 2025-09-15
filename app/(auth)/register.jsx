@@ -96,7 +96,7 @@ export default function Register() {
       return { valid: false, message: "Passwords don't match." };
     }
     // For veterinarians, we also require a license number
-    if (userRole === "Veterinarian") {
+    if (userRole === "veterinarian") {
       if (!licenseNumber.trim()) {
         return { valid: false, message: "Please enter your license number." };
       }
@@ -156,7 +156,7 @@ export default function Register() {
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
-              {userRole === "Veterinarian" && (
+              {userRole === "veterinarian" && (
                 <TextInput
                   className="h-14 border-b border-neutral-200 dark:border-neutral-700 px-4 font-inter-bold text-black dark:text-white bg-transparent"
                   placeholder="License Number"
@@ -261,16 +261,16 @@ export default function Register() {
               <TouchableOpacity
                 style={[
                   styles.buttonBase,
-                  userRole === "Veterinarian"
+                  userRole === "veterinarian"
                     ? [styles.buttonActive, isDark && styles.buttonActiveDark, styles.buttonShadow]
                     : styles.buttonInactive,
                 ]}
-                onPress={() => setUserRole("Veterinarian")}
+                onPress={() => setUserRole("veterinarian")}
               >
                 <Text
                   style={[
                     styles.buttonTextBase,
-                    userRole === "Veterinarian"
+                    userRole === "veterinarian"
                       ? [styles.buttonTextActive, isDark && styles.buttonTextActiveDark]
                       : [styles.buttonTextInactive, isDark && styles.buttonTextInactiveDark],
                   ]}
