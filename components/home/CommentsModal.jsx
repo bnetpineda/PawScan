@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Modal,
   View,
@@ -8,10 +8,12 @@ import {
   TextInput,
   ActivityIndicator,
   Platform,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { KeyboardAvoidingView } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { supabase } from "../../lib/supabase";
 
 const CommentsModal = ({
   visible,
@@ -30,6 +32,60 @@ const CommentsModal = ({
   const isOwner = currentUser?.id === selectedPost?.user_id;
   const isVet =
     currentUser?.user_metadata?.options?.data?.role === "Veterinarian";
+    
+  // Track avatar URLs for comments
+  const [commentAvatars, setCommentAvatars] = useState({});
+  
+  // Fetch avatars for commenters
+  const fetchCommentAvatars = async () => {
+    try {
+      // Get unique user IDs from comments
+      const userIds = [...new Set(comments.map(comment => comment.user_id).filter(Boolean))];
+      
+      // Fetch avatars for each user
+      const avatarPromises = userIds.map(async (userId) => {
+        try {
+          // Check if avatar exists in storage
+          const { data: avatarData } = await supabase.storage
+            .from('avatars')
+            .list(`${userId}/`, {
+              limit: 1,
+              offset: 0,
+              sortBy: { column: 'name', order: 'asc' }
+            });
+
+          if (avatarData && avatarData.length > 0) {
+            // Get public URL for the avatar
+            const { data: { publicUrl } } = supabase.storage
+              .from('avatars')
+              .getPublicUrl(`${userId}/avatar.jpg`);
+              
+            return { userId, avatarUrl: publicUrl };
+          }
+        } catch (error) {
+          console.error('Error fetching avatar for user:', userId, error);
+        }
+        return { userId, avatarUrl: null };
+      });
+      
+      const avatarResults = await Promise.all(avatarPromises);
+      const avatarMap = avatarResults.reduce((acc, { userId, avatarUrl }) => {
+        acc[userId] = avatarUrl;
+        return acc;
+      }, {});
+      
+      setCommentAvatars(avatarMap);
+    } catch (error) {
+      console.error('Error fetching comment avatars:', error);
+    }
+  };
+  
+  // Fetch avatars when comments change
+  useEffect(() => {
+    if (comments && comments.length > 0) {
+      fetchCommentAvatars();
+    }
+  }, [comments]);
 
   return (
     <Modal
@@ -89,13 +145,28 @@ const CommentsModal = ({
                 renderItem={({ item }) => (
                   <View className="py-3 border-b border-neutral-100 dark:border-neutral-800">
                     <View className="flex-row items-start">
-                      <View className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 justify-center items-center mr-3 mt-1">
-                        <FontAwesome
-                          name="user"
-                          size={14}
-                          color={isDark ? "#8E8E93" : "#6C757D"}
+                      {commentAvatars[item.user_id] ? (
+                        <Image
+                          source={{ uri: commentAvatars[item.user_id] }}
+                          className="w-8 h-8 rounded-full mr-3 mt-1"
+                          resizeMode="cover"
+                          onError={() => {
+                            // Fallback to placeholder on error
+                            setCommentAvatars(prev => ({
+                              ...prev,
+                              [item.user_id]: null
+                            }));
+                          }}
                         />
-                      </View>
+                      ) : (
+                        <View className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 justify-center items-center mr-3 mt-1">
+                          <FontAwesome
+                            name="user"
+                            size={14}
+                            color={isDark ? "#8E8E93" : "#6C757D"}
+                          />
+                        </View>
+                      )}
                       <View className="flex-1">
                         <View className="flex-row items-center mb-1">
                           <Text className="font-inter-bold text-black dark:text-white mr-2">

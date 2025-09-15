@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
@@ -14,6 +14,8 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
   const [expanded, setExpanded] = useState(false);
   // Track dropdown visibility
   const [showDropdown, setShowDropdown] = useState(false);
+  // Track user avatar URL
+  const [userAvatarUrl, setUserAvatarUrl] = useState(null);
 
   // Function to determine urgency level from analysis text
   const getUrgencyLevel = (analysisText) => {
@@ -167,7 +169,7 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
       text: reason,
       onPress: () => {
         if (reason === "Other") {
-          // For "Other" reason, show a text input
+          // For "Other" reason, show a text input for description
           Alert.prompt(
             "Report Post",
             "Please provide additional details about why you're reporting this post:",
@@ -200,10 +202,10 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
             "plain-text"
           );
         } else {
-          // For other reasons, submit directly
-          Alert.alert(
-            "Confirm Report",
-            `Are you sure you want to report this post for "${reason}"?`,
+          // For other reasons, show a text input for description as well
+          Alert.prompt(
+            "Report Post",
+            `Please explain why you're reporting this post for "${reason}":`,
             [
               {
                 text: "Cancel",
@@ -211,24 +213,42 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
               },
               {
                 text: "Report",
-                onPress: async () => {
-                  const result = await submitPostReport(
-                    post.id,
-                    currentUser.id,
-                    reason
+                onPress: async (description) => {
+                  // Confirm before submitting
+                  Alert.alert(
+                    "Confirm Report",
+                    `Are you sure you want to report this post for "${reason}"?\n\nDescription: ${description || "No description provided"}`,
+                    [
+                      {
+                        text: "Cancel",
+                        style: "cancel"
+                      },
+                      {
+                        text: "Report",
+                        onPress: async () => {
+                          const result = await submitPostReport(
+                            post.id,
+                            currentUser.id,
+                            reason,
+                            description || ""
+                          );
+                          
+                          if (result.success) {
+                            Alert.alert(
+                              "Post Reported",
+                              "Thank you for reporting this post. Our team will review it."
+                            );
+                          } else {
+                            Alert.alert("Error", result.error || "Failed to submit report");
+                          }
+                        }
+                      }
+                    ]
                   );
-                  
-                  if (result.success) {
-                    Alert.alert(
-                      "Post Reported",
-                      "Thank you for reporting this post. Our team will review it."
-                    );
-                  } else {
-                    Alert.alert("Error", result.error || "Failed to submit report");
-                  }
                 }
               }
-            ]
+            ],
+            "plain-text"
           );
         }
       }
@@ -248,6 +268,37 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
 
   // Get urgency level for this post
   const urgencyInfo = getUrgencyLevel(post.analysis_result);
+
+  // Fetch user avatar when component mounts
+  useEffect(() => {
+    const fetchUserAvatar = async () => {
+      if (isAnonymous || !post.user_id) return;
+
+      try {
+        // Check if avatar exists in storage
+        const { data: avatarData } = await supabase.storage
+          .from('avatars')
+          .list(`${post.user_id}/`, {
+            limit: 1,
+            offset: 0,
+            sortBy: { column: 'name', order: 'asc' }
+          });
+
+        if (avatarData && avatarData.length > 0) {
+          // Get public URL for the avatar
+          const { data: { publicUrl } } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(`${post.user_id}/avatar.jpg`);
+
+          setUserAvatarUrl(publicUrl);
+        }
+      } catch (error) {
+        console.error('Error fetching user avatar:', error);
+      }
+    };
+
+    fetchUserAvatar();
+  }, [post.user_id, isAnonymous]);
 
   return (
     <View
@@ -275,13 +326,22 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
             </View>
           ) : (
             /* Non-Anonymous User Avatar */
-            <View className="w-10 h-10 rounded-full border-2 border-black dark:border-white justify-center items-center mr-3 bg-white dark:bg-black">
-              <FontAwesome
-                name="user-circle"
-                size={32}
-                color={isDark ? "#ffffff" : "#000000"}
+            userAvatarUrl ? (
+              <Image
+                source={{ uri: userAvatarUrl }}
+                className="w-10 h-10 rounded-full mr-3"
+                resizeMode="cover"
+                onError={() => setUserAvatarUrl(null)} // Fallback to icon if image fails to load
               />
-            </View>
+            ) : (
+              <View className="w-10 h-10 rounded-full border-2 border-black dark:border-white justify-center items-center mr-3 bg-white dark:bg-black">
+                <FontAwesome
+                  name="user-circle"
+                  size={32}
+                  color={isDark ? "#ffffff" : "#000000"}
+                />
+              </View>
+            )
           )}
           <View className="flex-1">
             <Text className="text-base font-inter-semibold text-black dark:text-white">
