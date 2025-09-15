@@ -45,14 +45,14 @@ export default function Register() {
     try {
       // For veterinarians, we register them with a "pending_veterinarian" role
       // For regular users, we register them with a "user" role
-      const role = userRole === "Veterinarian" ? "pending_veterinarian" : userRole;
+      const role = userRole === "veterinarian" ? "pending_veterinarian" : userRole;
       
       const { error } = await signUpWithEmail(email, password, {
         options: {
           data: {
             display_name: fullName,
             role: role,
-            license_number: userRole === "Veterinarian" ? licenseNumber : undefined
+            license_number: userRole === "veterinarian" ? licenseNumber : undefined
           },
         },
       });
@@ -60,7 +60,7 @@ export default function Register() {
       if (error) {
         Alert.alert("Registration Failed", error.message);
       } else {
-        const successMessage = userRole === "Veterinarian" 
+        const successMessage = userRole === "veterinarian" 
           ? "Your application has been submitted for review. You will receive an email once verified by an administrator."
           : "Please check your email for verification instructions.";
           

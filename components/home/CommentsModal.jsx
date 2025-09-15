@@ -31,7 +31,7 @@ const CommentsModal = ({
 }) => {
   const isOwner = currentUser?.id === selectedPost?.user_id;
   const isVet =
-    currentUser?.user_metadata?.options?.data?.role === "Veterinarian";
+    currentUser?.user_metadata?.options?.data?.role === "veterinarian";
     
   // Track avatar URLs for comments
   const [commentAvatars, setCommentAvatars] = useState({});
@@ -172,7 +172,7 @@ const CommentsModal = ({
                           <Text className="font-inter-bold text-black dark:text-white mr-2">
                             {item.display_name || "Pet Owner"}
                           </Text>
-                          {item.role === "Veterinarian" && (
+                          {item.role === "veterinarian" && (
                             <MaterialIcons
                               name="verified"
                               size={16}
