@@ -1,7 +1,7 @@
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -26,6 +26,7 @@ import Header from "../../components/home/Header";
 import EmptyState from "../../components/home/EmptyState";
 import ImageModal from "../../components/home/ImageModal";
 import CommentsModal from "../../components/home/CommentsModal";
+import { createLoadingManager, debounce, createCacheWithTTL } from "../../utils/performance";
 
 const NewsFeedScreen = () => {
   const isDark = useColorScheme() === "dark";
@@ -47,6 +48,20 @@ const NewsFeedScreen = () => {
   const [tutorialVisible, setTutorialVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState(""); // Search query state
   const [isSearching, setIsSearching] = useState(false); // Search mode state
+  
+  // Create loading manager for better loading state handling
+  const loadingManager = useMemo(() => createLoadingManager(setLoading), []);
+  const refreshLoadingManager = useMemo(() => createLoadingManager(setRefreshing), []);
+  
+  // Create cache for posts
+  const postsCache = useMemo(() => createCacheWithTTL(300000), []); // 5 minutes cache
+  
+  // Debounced search function
+  const debouncedSearch = useMemo(() => 
+    debounce((query) => {
+      setSearchQuery(query);
+    }, 300),
+  [], []);
 
   useEffect(() => {
     setCurrentUser(user || null);
@@ -94,71 +109,96 @@ const NewsFeedScreen = () => {
   };
 
   const loadPosts = async () => {
+    // Use loading manager instead of direct setLoading
+    loadingManager.start(200); // Shorter delay for better UX
+    
     try {
-      // Get posts first
+      // Check cache first
+      const cachedPosts = postsCache.get('newsfeed_posts');
+      if (cachedPosts && !refreshing) {
+        setAllPosts(cachedPosts);
+        setPosts(cachedPosts);
+        loadingManager.stop();
+        return;
+      }
+
+      // Get current user
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+      setCurrentUser(currentUser);
+
+      // Fetch posts with pagination
       const { data: postsData, error: postsError } = await supabase
         .from("newsfeed_posts")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(20);
+        .limit(30); // Limit to 30 posts for better performance
 
       if (postsError) throw postsError;
 
-      // Get likes count and user's like status for each post
+      // Get likes count and user's like status for each post with optimized queries
       const processedPosts = await Promise.all(
         (postsData || []).map(async (post) => {
-          // Likes count
-          const { count: likesCount, error: likesError } = await supabase
-            .from("newsfeed_likes")
-            .select("*", { count: "exact", head: true })
-            .eq("post_id", post.id);
-          if (likesError) console.error("likesError:", likesError);
-
-          // Comments count
-          const { count: commentsCount, error: commentsError } = await supabase
-            .from("newsfeed_comments")
-            .select("*", { count: "exact", head: true })
-            .eq("post_id", post.id);
-          if (commentsError) console.error("commentsError:", commentsError);
-
-          // User like status
-          let userHasLiked = false;
-          if (currentUser) {
-            const { data: userLike, error: userLikeError } = await supabase
+          // Use batch queries for better performance
+          const [likesResult, commentsResult, userLikeResult] = await Promise.all([
+            // Likes count
+            supabase
               .from("newsfeed_likes")
-              .select("id")
-              .eq("post_id", post.id)
-              .eq("user_id", currentUser.id)
-              .maybeSingle();
+              .select("*", { count: "exact", head: true })
+              .eq("post_id", post.id),
+            
+            // Comments count
+            supabase
+              .from("newsfeed_comments")
+              .select("*", { count: "exact", head: true })
+              .eq("post_id", post.id),
+              
+            // User like status (only if user is logged in)
+            currentUser 
+              ? supabase
+                  .from("newsfeed_likes")
+                  .select("id")
+                  .eq("post_id", post.id)
+                  .eq("user_id", currentUser.id)
+                  .maybeSingle()
+              : Promise.resolve({ data: null, error: null })
+          ]);
 
-            if (userLikeError) console.error("userLikeError:", userLikeError);
-            userHasLiked = !!userLike;
-          }
+          const [likesData, commentsData, userLikeData] = [likesResult, commentsResult, userLikeResult];
+          
+          // Handle errors gracefully
+          if (likesData.error) console.error("likesError:", likesData.error);
+          if (commentsData.error) console.error("commentsError:", commentsData.error);
+          if (userLikeData?.error) console.error("userLikeError:", userLikeData.error);
 
           return {
             ...post,
-            likes_count: likesCount || 0,
-            user_has_liked: userHasLiked,
-            comments_count: commentsCount || 0,
+            likes_count: likesData.count || 0,
+            user_has_liked: !!userLikeData?.data,
+            comments_count: commentsData.count || 0,
           };
         })
       );
 
+      // Cache the results
+      postsCache.set('newsfeed_posts', processedPosts);
+      
       setAllPosts(processedPosts); // Store all posts
       setPosts(processedPosts); // Set initial posts
     } catch (err) {
       console.error("Failed to load posts:", err);
       Alert.alert("Error", "Could not fetch posts.");
     } finally {
-      setLoading(false);
+      loadingManager.stop();
     }
   };
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
+    refreshLoadingManager.start(100);
     await loadPosts();
-    setRefreshing(false);
-  }, []);
+    refreshLoadingManager.stop();
+  }, [loadPosts]);
 
   // Filter posts based on search query
   const filterPosts = useCallback(
@@ -204,12 +244,14 @@ const NewsFeedScreen = () => {
     [allPosts]
   );
 
-  // Handle search input changes
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    const filtered = filterPosts(query);
+  // Handle search input with debouncing
+  const handleSearch = useCallback((text) => {
+    debouncedSearch(text);
+    
+    // Immediately filter posts
+    const filtered = filterPosts(text);
     setPosts(filtered);
-  };
+  }, [filterPosts, debouncedSearch]);
 
   // Clear search and show all posts
   const clearSearch = () => {

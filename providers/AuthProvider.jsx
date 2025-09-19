@@ -83,14 +83,9 @@ export const AuthProvider = ({ children }) => {
       throw new Error(`"${trimmedEmail}" is not a valid email address`);
     }
 
-    // Ensure we have a valid redirect URL
-    let redirectTo;
-    try {
-      redirectTo = `${window.location.origin}/reset-password`;
-    } catch (error) {
-      // Fallback for environments where window.location.origin is not available
-      redirectTo = "https://pawscan.app/reset-password"; // Replace with your actual domain
-    }
+    // Redirect to your deployed Vercel admin dashboard for password reset
+    // TODO: Replace 'https://your-admin-dashboard.vercel.app' with your actual Vercel URL
+    const redirectTo = "https://pawscan-dashboard.vercel.app/reset-password";
     
     return await supabase.auth.resetPasswordForEmail(trimmedEmail, {
       redirectTo,

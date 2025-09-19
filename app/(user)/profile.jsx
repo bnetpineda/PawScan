@@ -127,18 +127,25 @@ const ProfileScreen = () => {
           .remove([`${user.id}/avatar.jpg`]);
       }
 
-      // Upload new avatar - path must match the policy: user ID as folder name
+      // Upload new avatar using base64 approach like in analyzePetImage.js
       const fileName = `${user.id}/avatar.jpg`;
-      const formData = new FormData();
-      formData.append("file", {
-        uri: imageUri,
-        type: "image/jpeg",
-        name: "avatar.jpg",
+      
+      // Read the image as base64
+      const fileData = await FileSystem.readAsStringAsync(imageUri, {
+        encoding: FileSystem.EncodingType.Base64,
       });
+      
+      // Convert base64 to buffer
+      const fileBuffer = Buffer.from(fileData, "base64");
+      
+      // Determine content type
+      const imageExt = imageUri.split(".").pop()?.toLowerCase();
+      const contentType = `image/${imageExt === "jpg" ? "jpeg" : imageExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(fileName, formData, {
+        .upload(fileName, fileBuffer, {
+          contentType: contentType,
           upsert: true,
         });
 

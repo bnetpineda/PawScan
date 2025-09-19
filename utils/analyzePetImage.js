@@ -1,67 +1,48 @@
-import { Buffer } from "buffer"; // Ensure you have buffer polyfill for React Native
+import { Buffer } from "buffer"; 
 import * as FileSystem from "expo-file-system";
 import OpenAI from "openai";
-import { supabase } from "../lib/supabase"; // Adjust the import path as needed
+import { supabase } from "../lib/supabase";
 
-global.Buffer = Buffer; // Set global Buffer for React Native
+global.Buffer = Buffer;
 
-// Helper to upload image to Supabase Storage and return the public URL
+// ✅ Upload image to Supabase Storage
 async function uploadImageToSupabase(imageUri, userId) {
   try {
     const {
       data: { user },
-      error: authError,
     } = await supabase.auth.getUser();
-    console.log("Authenticated user:", user?.id);
 
-    if (!user) {
-      throw new Error("User not authenticated");
-    }
-
-    const actualUserId = user.id;
-
-    if (!imageUri || !actualUserId) {
-      throw new Error("Image URI and authentication required");
-    }
+    if (!user) throw new Error("User not authenticated");
 
     const imageExt = imageUri.split(".").pop()?.toLowerCase();
     const validExtensions = ["jpg", "jpeg", "png", "webp", "gif"];
-
     if (!imageExt || !validExtensions.includes(imageExt)) {
       throw new Error("Invalid image format");
     }
 
-    // ✅ Simpler fileName (requires updated RLS policy)
-    const fileName = `${actualUserId}/${Date.now()}.${imageExt}`;
-    console.log("Upload path:", fileName);
-
+    const fileName = `${user.id}/${Date.now()}.${imageExt}`;
     const fileData = await FileSystem.readAsStringAsync(imageUri, {
       encoding: FileSystem.EncodingType.Base64,
     });
+
     const fileBuffer = Buffer.from(fileData, "base64");
     const contentType = `image/${imageExt === "jpg" ? "jpeg" : imageExt}`;
 
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from("pet-images")
       .upload(fileName, fileBuffer, {
-        contentType: contentType,
+        contentType,
         upsert: false,
       });
 
-    if (error) {
-      console.error("Upload error:", error);
-      throw new Error(`Upload failed: ${error.message}`);
-    }
+    if (error) throw new Error(`Upload failed: ${error.message}`);
 
     const { data: publicUrlData } = supabase.storage
       .from("pet-images")
       .getPublicUrl(fileName);
 
-    if (!publicUrlData?.publicUrl) {
-      throw new Error("Failed to retrieve public URL");
-    }
+    if (!publicUrlData?.publicUrl) throw new Error("Failed to retrieve public URL");
 
-    console.log("Upload successful:", publicUrlData.publicUrl);
     return publicUrlData.publicUrl;
   } catch (error) {
     console.error("Upload error:", error);
@@ -69,197 +50,109 @@ async function uploadImageToSupabase(imageUri, userId) {
   }
 }
 
-// Helper function to share analysis to newsfeed
-export async function shareToNewsfeed(
-  analysisId,
-  petName = null,
-  isAnonymous = false
-) {
-  try {
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (!user || authError) {
-      throw new Error("User not authenticated");
-    }
-
-    // Get the analysis record
-    const { data: analysisData, error: analysisError } = await supabase
-      .from("analysis_history")
-      .select("*")
-      .eq("id", analysisId)
-      .eq("user_id", user.id)
-      .single();
-
-    if (analysisError || !analysisData) {
-      throw new Error("Analysis not found");
-    }
-
-    // Validate that this is a proper pet analysis by checking for the structured format
-    // The analysis should contain these key headers to be considered valid
-    const analysisResult = analysisData.analysis_result;
-    const hasValidStructure = analysisResult.includes("Breed of the pet:") && 
-                             analysisResult.includes("Specific Skin Disease Detected:") &&
-                             analysisResult.includes("Confidence score:") &&
-                             analysisResult.includes("Three suggested treatments:") &&
-                             analysisResult.includes("Urgency level:") &&
-                             analysisResult.includes("Essential first aid care steps:") &&
-                             analysisResult.includes("Recommended medication:") &&
-                             analysisResult.includes("Indicators that a Veterinarian should be contacted:");
-    
-    // Also check that it's not the "unable to analyze" message
-    const isInvalidAnalysis = analysisResult.includes("I'm unable to analyze this image as it does not contain a cat or dog");
-    
-    if (!hasValidStructure || isInvalidAnalysis) {
-      throw new Error("Only valid pet analyses can be shared. This analysis doesn't appear to be of a cat or dog.");
-    }
-
-    // Create newsfeed post
-    const { data: postData, error: postError } = await supabase
-      .from("newsfeed_posts")
-      .insert([
-        {
-          user_id: user.id,
-          analysis_id: analysisId,
-          image_url: analysisData.image_url,
-          analysis_result: analysisData.analysis_result,
-          pet_name: petName,
-          is_anonymous: isAnonymous,
-          display_name: isAnonymous
-            ? "Anonymous"
-            : user.user_metadata?.options?.data?.display_name || "Pet Owner",
-        },
-      ])
-      .select()
-      .single();
-
-    if (postError) {
-      console.error("Failed to share to newsfeed:", postError);
-      throw new Error("Failed to share to newsfeed");
-    }
-
-    console.log("Successfully shared to newsfeed:", postData.id);
-    return postData;
-  } catch (error) {
-    console.error("Share to newsfeed error:", error);
-    throw error;
-  }
-}
-
+// ✅ Main Pet Image Analysis
 export async function analyzePetImage(imageUri, userId) {
   try {
     console.log("Starting pet image analysis...");
 
-    // 1. Upload image to Supabase Storage
+    // 1. Upload to Supabase
     const imageUrl = await uploadImageToSupabase(imageUri, userId);
-    console.log("Image uploaded successfully:", imageUrl);
+    console.log("Image uploaded:", imageUrl);
 
-    // 2. Read the original image as base64 for OpenAI
-    // This bypasses the URL access issue entirely
+    // 2. Convert local file to Base64
     const base64Data = await FileSystem.readAsStringAsync(imageUri, {
       encoding: FileSystem.EncodingType.Base64,
     });
-
-    // Determine image format
     const imageExt = imageUri.split(".").pop()?.toLowerCase();
     const mimeType = `image/${imageExt === "jpg" ? "jpeg" : imageExt}`;
     const base64Url = `data:${mimeType};base64,${base64Data}`;
 
-    console.log("Preparing image for OpenAI analysis...");
-
+    // 3. JSON schema prompt
     const prompt = `
-You are an AI pet health assistant . Analyze carefully the provided image of a cat or dog and answer **only** the following 8 points.
+You are an AI pet health assistant. Analyze the provided image of a cat or dog and return results in strict JSON.
 
-Always provide a direct and clear answer for each. If uncertain, **still give your best guess** based on the image — it's okay to be speculative or even incorrect.
+Rules:
+- Always provide values for all 8 fields.
+- Never say "I don’t know" or "uncertain".
+- Do not add extra text outside of JSON.
+- Follow this exact schema:
 
-**Important: Do NOT say "I don't know", "I'm not sure", or express uncertainty in any form. Just answer confidently.**
+{
+  "Breed": "<string>",
+  "SkinDisease": "<No disease detected OR a disease from the allowed list>",
+  "ConfidenceScore": "<number>%",
+  "SuggestedTreatments": ["<treatment1>", "<treatment2>", "<treatment3>"],
+  "UrgencyLevel": "<none | low | medium | emergency>",
+  "FirstAidSteps": ["<step1>", "<step2>", "<step3>"],
+  "RecommendedMedication": ["<med1>", "<med2>", "<med3>"],
+  "VetIndicators": ["<indicator1>", "<indicator2>", "<indicator3>"]
+}
 
-Respond using this strict format:
+Example:
+{
+  "Breed": "Golden Retriever",
+  "SkinDisease": "No disease detected",
+  "ConfidenceScore": "85%",
+  "SuggestedTreatments": ["Regular grooming", "Balanced diet", "Hydration"],
+  "UrgencyLevel": "none",
+  "FirstAidSteps": ["Brush coat daily", "Check skin weekly", "Provide fresh water"],
+  "RecommendedMedication": [],
+  "VetIndicators": ["Sudden hair loss", "Open wounds", "Persistent itching"]
+}
 
-Breed of the pet:
-Specific Skin Disease Detected: — check carefully if it has disease or none. If it has no disease, say “No disease detected”, if it has disease and you are not sure, guess. If it has disease and you are sure, choose from the list below:
-
-  Cats:
-  Abscesses (skin lesion)
-  Alopecia
-  Atopic Dermatitis
-  Allergic Dermatitis
-  Feline Chin Acne
-  Miliary Dermatitis
-  Eosinophilic Granuloma
-  Skin Tumor
-  Dermatophytosis
-  Stud Tail
-  Allergies (Generalized Pruritic Dermatitis)
-  Compulsive Grooming (Psychogenic Alopecia)
-  Sporotrichosis
-  FeLV Skin Diseases
-  
-  Dogs:
-  Allergic Dermatitis
-  Atopic Dermatitis
-  Canine Chin Acne
-  Demodectic Mange
-  Hot Spots
-  Mast Cell Tumor
-  Pruritic Dermatitis
-  Pyoderma
-  Ringworm (Dog)
-  Seborrhea (Dog)
-
-  Both (Cats & Dogs):
-  Lice
-  Atopic Dermatitis
-  Pruritic Dermatitis
-  Ringworm
-
-
-Confidence score: (e.g., 60%, 80%)
-Three suggested treatments: — even speculative ones  — output it in bullet form
-Urgency level: none / low / medium / emergency — choose one
-Essential first aid care steps:  — output it in bullet form
-Recommended medication: (if applicable)  — output it in bullet form
-Indicators that a Veterinarian should be contacted: — output it in bullet form
-
-Respond strictly with just the answers to these 8 points. No explanations, no disclaimers, and no advice to consult a vet. Be direct.
-
-    `;
+Now return only the JSON.
+`;
 
     const openai = new OpenAI({
-      apiKey:
-        "REMOVED_SECRET",
+      apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
     });
 
     console.log("Sending request to OpenAI...");
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "user",
           content: [
             { type: "text", text: prompt },
-            { type: "image_url", image_url: { url: base64Url } }, // Use base64 instead of URL
+            { type: "image_url", image_url: { url: base64Url } },
           ],
         },
       ],
       max_tokens: 600,
-      temperature: 0.8,
+      temperature: 0.5,
     });
 
-    const analysisResult =
-      response.choices[0]?.message?.content || "No analysis result returned.";
-    console.log("OpenAI analysis completed");
+    let analysisResult;
+    try {
+      analysisResult = JSON.parse(response.choices[0]?.message?.content || "{}");
+    } catch (err) {
+      console.error("JSON parsing failed:", err);
+      throw new Error("Invalid AI response format");
+    }
 
-    // 3. Save to Supabase (with the Supabase imageUrl for storage reference)
+    // ✅ Validate required fields
+    const requiredKeys = [
+      "Breed",
+      "SkinDisease",
+      "ConfidenceScore",
+      "SuggestedTreatments",
+      "UrgencyLevel",
+      "FirstAidSteps",
+      "RecommendedMedication",
+      "VetIndicators",
+    ];
+    const isValid = requiredKeys.every((k) => analysisResult.hasOwnProperty(k));
+    if (!isValid) throw new Error("Analysis missing required fields");
+
+    // 4. Save to Supabase (JSON storage)
     const { data: analysisData, error } = await supabase
       .from("analysis_history")
       .insert([
         {
           user_id: userId,
-          image_url: imageUrl, // Store the Supabase URL for reference
-          analysis_result: analysisResult,
+          image_url: imageUrl,
+          analysis_result: analysisResult, // 👈 JSON, not string
           created_at: new Date().toISOString(),
         },
       ])
@@ -268,37 +161,16 @@ Respond strictly with just the answers to these 8 points. No explanations, no di
 
     if (error) {
       console.error("Supabase insert failed:", error.message);
-      // Don't throw here, still return the analysis
-      return {
-        analysis: analysisResult,
-        analysisId: null,
-      };
-    } else {
-      console.log("Analysis saved to database");
-      return {
-        analysis: analysisResult,
-        analysisId: analysisData.id,
-      };
+      return { analysis: analysisResult, analysisId: null };
     }
+
+    console.log("Analysis saved to DB:", analysisData.id);
+    return { analysis: analysisResult, analysisId: analysisData.id };
   } catch (err) {
     console.error("Image analysis failed:", err);
-
-    // More specific error handling
-    if (err.message?.includes("OpenAI")) {
-      return {
-        analysis: "OpenAI analysis failed. Please try again.",
-        analysisId: null,
-      };
-    } else if (err.message?.includes("upload")) {
-      return {
-        analysis: "Image upload failed. Please check your connection.",
-        analysisId: null,
-      };
-    } else {
-      return {
-        analysis: "Image analysis failed. Please try again.",
-        analysisId: null,
-      };
-    }
+    return {
+      analysis: { error: "Image analysis failed. Please try again." },
+      analysisId: null,
+    };
   }
 }

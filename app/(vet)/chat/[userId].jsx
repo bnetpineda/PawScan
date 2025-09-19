@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Text, FlatList, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, Alert, KeyboardAvoidingView, Platform, useColorScheme, StatusBar, Image, Modal, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../../../providers/AuthProvider';
@@ -6,6 +6,7 @@ import { supabase } from '../../../lib/supabase';
 import * as ImagePicker from 'expo-image-picker';
 import { FontAwesome } from '@expo/vector-icons';
 import notificationService from '../../../services/notificationService';
+import { createLoadingManager } from '../../../utils/performance';
 
 const ChatScreen = () => {
   const { userId, userName } = useLocalSearchParams();
@@ -26,26 +27,67 @@ const ChatScreen = () => {
   const typingChannelRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const isDark = useColorScheme() === 'dark';
+  
+  // Create loading manager for better loading state handling
+  const sendingLoadingManager = useMemo(() => createLoadingManager(setIsSending), []);
+  
+  // Track subscription states to prevent duplicates
+  const isSubscribedRef = useRef({
+    messages: false,
+    typing: false
+  });
+
+  // Cleanup function for all subscriptions
+  const cleanupSubscriptions = useCallback(() => {
+    console.log('Cleaning up subscriptions...');
+    
+    // Unsubscribe from messages channel
+    if (messagesChannelRef.current) {
+      try {
+        const channel = messagesChannelRef.current;
+        messagesChannelRef.current = null;
+        isSubscribedRef.current.messages = false;
+        channel.unsubscribe();
+        console.log('Unsubscribed from messages channel');
+      } catch (error) {
+        console.error('Error unsubscribing from messages channel:', error);
+      }
+    }
+    
+    // Unsubscribe from typing channel
+    if (typingChannelRef.current) {
+      try {
+        const channel = typingChannelRef.current;
+        typingChannelRef.current = null;
+        isSubscribedRef.current.typing = false;
+        channel.unsubscribe();
+        console.log('Unsubscribed from typing channel');
+      } catch (error) {
+        console.error('Error unsubscribing from typing channel:', error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     createOrGetConversation();
     
     // Cleanup function to unsubscribe when component unmounts
     return () => {
-      if (messagesChannelRef.current) {
-        messagesChannelRef.current.unsubscribe();
-        messagesChannelRef.current = null;
-      }
-      if (typingChannelRef.current) {
-        typingChannelRef.current.unsubscribe();
-        typingChannelRef.current = null;
-      }
+      console.log('Component unmounting, cleaning up...');
+      cleanupSubscriptions();
+      
       // Clear typing status when leaving chat
       if (conversationId && user) {
         clearTypingStatus();
       }
+      
+      // Clear typing timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
     };
-  }, [userId]);
+  }, [userId, cleanupSubscriptions]);
 
   useEffect(() => {
     if (conversationId) {
@@ -54,18 +96,12 @@ const ChatScreen = () => {
       subscribeToTyping();
     }
     
-    // Cleanup subscription when conversationId changes or component unmounts
+    // Cleanup subscription when conversationId changes
     return () => {
-      if (messagesChannelRef.current) {
-        messagesChannelRef.current.unsubscribe();
-        messagesChannelRef.current = null;
-      }
-      if (typingChannelRef.current) {
-        typingChannelRef.current.unsubscribe();
-        typingChannelRef.current = null;
-      }
+      console.log('Conversation ID changed, cleaning up...');
+      cleanupSubscriptions();
     };
-  }, [conversationId]);
+  }, [conversationId, cleanupSubscriptions]);
 
   const createOrGetConversation = async () => {
     try {
@@ -137,14 +173,23 @@ const ChatScreen = () => {
     }
   };
 
-  const subscribeToMessages = () => {
+  const subscribeToMessages = useCallback(() => {
+    // Prevent duplicate subscriptions
+    if (isSubscribedRef.current.messages || !conversationId || !user) {
+      console.log('Skipping messages subscription - already subscribed or missing dependencies');
+      return;
+    }
+
     // Unsubscribe from any existing subscription
     if (messagesChannelRef.current) {
+      console.log('Unsubscribing from existing messages channel');
       messagesChannelRef.current.unsubscribe();
-      messagesChannelRef.current = null;
     }
 
     // Create new subscription
+    console.log('Creating new messages subscription');
+    isSubscribedRef.current.messages = true;
+    
     messagesChannelRef.current = supabase
       .channel('messages')
       .on(
@@ -156,6 +201,9 @@ const ChatScreen = () => {
           filter: `conversation_id=eq.${conversationId}`,
         },
         async (payload) => {
+          // Additional check to ensure we're still subscribed
+          if (!isSubscribedRef.current.messages) return;
+          
           const newMessage = payload.new;
           
           // If this is a message from the other user, mark it as delivered
@@ -219,6 +267,9 @@ const ChatScreen = () => {
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
+          // Additional check to ensure we're still subscribed
+          if (!isSubscribedRef.current.messages) return;
+          
           const updatedMessage = payload.new;
           
           // Update message in list
@@ -244,19 +295,39 @@ const ChatScreen = () => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Messages subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('Successfully subscribed to messages channel');
+        } else if (status === 'CLOSED') {
+          console.log('Messages subscription closed');
+          isSubscribedRef.current.messages = false;
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('Messages subscription error');
+          isSubscribedRef.current.messages = false;
+        }
+      });
 
     console.log('Subscribed to messages channel');
-  };
+  }, [conversationId, user, userName, userId]);
 
-  const subscribeToTyping = () => {
+  const subscribeToTyping = useCallback(() => {
+    // Prevent duplicate subscriptions
+    if (isSubscribedRef.current.typing || !conversationId || !user) {
+      console.log('Skipping typing subscription - already subscribed or missing dependencies');
+      return;
+    }
+
     // Unsubscribe from any existing subscription
     if (typingChannelRef.current) {
+      console.log('Unsubscribing from existing typing channel');
       typingChannelRef.current.unsubscribe();
-      typingChannelRef.current = null;
     }
 
     // Create new subscription for typing status
+    console.log('Creating new typing subscription');
+    isSubscribedRef.current.typing = true;
+    
     typingChannelRef.current = supabase
       .channel('typing')
       .on(
@@ -268,6 +339,9 @@ const ChatScreen = () => {
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
+          // Additional check to ensure we're still subscribed
+          if (!isSubscribedRef.current.typing) return;
+          
           const typingData = payload.new;
           if (typingData.user_id !== user.id) {
             setIsOtherUserTyping(typingData.is_typing);
@@ -283,16 +357,30 @@ const ChatScreen = () => {
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
+          // Additional check to ensure we're still subscribed
+          if (!isSubscribedRef.current.typing) return;
+          
           const typingData = payload.new;
           if (typingData.user_id !== user.id) {
             setIsOtherUserTyping(typingData.is_typing);
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Typing subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('Successfully subscribed to typing channel');
+        } else if (status === 'CLOSED') {
+          console.log('Typing subscription closed');
+          isSubscribedRef.current.typing = false;
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('Typing subscription error');
+          isSubscribedRef.current.typing = false;
+        }
+      });
 
     console.log('Subscribed to typing channel');
-  };
+  }, [conversationId, user]);
 
   const updateTypingStatus = async (isTyping) => {
     if (!conversationId || !user) return;
@@ -384,16 +472,25 @@ const ChatScreen = () => {
       let uploadedImageUrl = null;
       if (imageUrl) {
         const fileName = `${user.id}/${Date.now()}.jpg`;
-        const formData = new FormData();
-        formData.append('file', {
-          uri: imageUrl,
-          type: 'image/jpeg',
-          name: fileName,
+        
+        // Read the image as base64 like in analyzePetImage.js
+        const fileData = await FileSystem.readAsStringAsync(imageUrl, {
+          encoding: FileSystem.EncodingType.Base64,
         });
+        
+        // Convert base64 to buffer
+        const fileBuffer = Buffer.from(fileData, "base64");
+        
+        // Determine content type
+        const imageExt = imageUrl.split(".").pop()?.toLowerCase();
+        const contentType = `image/${imageExt === "jpg" ? "jpeg" : imageExt}`;
 
         const { error: uploadError } = await supabase.storage
           .from('chat-images')
-          .upload(fileName, formData);
+          .upload(fileName, fileBuffer, {
+            contentType: contentType,
+            upsert: false,
+          });
 
         if (uploadError) throw uploadError;
 
@@ -508,6 +605,9 @@ const ChatScreen = () => {
     }));
 
     try {
+      // Use loading manager instead of direct setIsSending
+      sendingLoadingManager.start(100);
+      
       await retrySendMessage(tempMessageId, content, imageUrl);
       setNewMessage('');
       setSelectedImage(null);
@@ -515,11 +615,14 @@ const ChatScreen = () => {
       // Clear typing status after sending
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
       }
       updateTypingStatus(false);
     } catch (error) {
       // Error already handled in retrySendMessage
       console.error('Error sending message:', error);
+    } finally {
+      sendingLoadingManager.stop();
     }
   };
 

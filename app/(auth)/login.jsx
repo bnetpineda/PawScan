@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome } from "@expo/vector-icons";
 import { useAuth } from "../../providers/AuthProvider";
 import { useColorScheme } from "react-native";
+import { supabase } from "../../lib/supabase";
 
 export default function Login() {
   const [email, setEmail] = useState("");
