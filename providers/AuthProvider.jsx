@@ -72,25 +72,23 @@ export const AuthProvider = ({ children }) => {
   };
 
   const resetPassword = async (email) => {
-    // Validate email format
+    // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email) {
-      throw new Error("Email is required");
-    }
-    
+    if (!email) throw new Error("Email is required");
+  
     const trimmedEmail = email.trim();
     if (!emailRegex.test(trimmedEmail)) {
       throw new Error(`"${trimmedEmail}" is not a valid email address`);
     }
-
-    // Redirect to your deployed Vercel admin dashboard for password reset
-    // TODO: Replace 'https://your-admin-dashboard.vercel.app' with your actual Vercel URL
+  
+    // ✅ Redirect user to your frontend reset page
     const redirectTo = "https://pawscan-dashboard.vercel.app/reset-password";
-    
+  
     return await supabase.auth.resetPasswordForEmail(trimmedEmail, {
       redirectTo,
     });
   };
+  
 
   const logout = async () => {
     const { error } = await supabase.auth.signOut();
