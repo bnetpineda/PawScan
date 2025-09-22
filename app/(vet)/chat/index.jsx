@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, SafeAreaView, TouchableOpacity, Alert, RefreshControl, useColorScheme, StatusBar, TextInput, Modal } from 'react-native';
+import { View, Text, FlatList, SafeAreaView, TouchableOpacity, Alert, RefreshControl, useColorScheme, StatusBar, TextInput, Modal, ActivityIndicator } from 'react-native';
 import { useAuth } from '../../../providers/AuthProvider';
 import { supabase } from '../../../lib/supabase';
 import { useRouter } from 'expo-router';
@@ -10,6 +10,7 @@ const ChatListScreen = () => {
   const router = useRouter();
   const [conversations, setConversations] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredConversations, setFilteredConversations] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
@@ -35,6 +36,7 @@ const ChatListScreen = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    setLoading(true);
     await loadConversations();
     setRefreshing(false);
   };
@@ -116,6 +118,8 @@ const ChatListScreen = () => {
     } catch (error) {
       console.error('Error loading conversations:', error);
       Alert.alert('Error', 'Could not load conversations');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -227,7 +231,12 @@ const ChatListScreen = () => {
         </SafeAreaView>
       </Modal>
       
-      {filteredConversations.length === 0 ? (
+      {loading ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color={isDark ? "#fff" : "#000"} />
+          <Text className="text-lg mt-4 text-black dark:text-white">Loading conversations...</Text>
+        </View>
+      ) : filteredConversations.length === 0 ? (
         <View className="flex-1 justify-center items-center p-8">
           <FontAwesome name="commenting-o" size={64} color={isDark ? "#fff" : "#000"} />
           <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">

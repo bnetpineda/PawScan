@@ -16,7 +16,7 @@ export const createLoadingManager = (setLoading) => {
      * Start loading with optional delay
      * @param {number} delay - Delay in ms before showing loading indicator (default: 300ms)
      */
-    start: (delay = 300) => {
+    start: (delay = 200) => {
       // Clear any existing timeout
       if (loadingTimeout) {
         clearTimeout(loadingTimeout);

@@ -780,7 +780,7 @@ const ChatScreen = () => {
           backgroundColor={isDark ? "#000" : "#fff"}
         />
         <View className="flex-row items-center px-5 py-4 bg-white border-b border-black dark:bg-neutral-900 dark:border-neutral-700">
-          <TouchableOpacity onPress={() => router.back()} className="mr-6" activeOpacity={0.7}>
+          <TouchableOpacity onPress={() => router.push('/(vet)/chat')} className="mr-6" activeOpacity={0.7}>
             <FontAwesome name="arrow-left" size={20} color={isDark ? "#fff" : "#000"} />
           </TouchableOpacity>
           <View className="mr-3">

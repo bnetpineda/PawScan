@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   TextInput,
@@ -29,10 +29,74 @@ export default function Register() {
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [userRole, setUserRole] = useState("user");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [fullNameError, setFullNameError] = useState("");
+  const [licenseNumberError, setLicenseNumberError] = useState("");
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const { signUpWithEmail } = useAuth();
   const router = useRouter();
+
+  // Real-time validation
+  useEffect(() => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (email && !emailRegex.test(email.trim())) {
+      setEmailError("Please enter a valid email address.");
+    } else {
+      setEmailError("");
+    }
+  }, [email]);
+
+  useEffect(() => {
+    if (password) {
+      if (password.length < 6) {
+        setPasswordError("Password must be at least 6 characters.");
+      } else {
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasLowerCase = /[a-z]/.test(password);
+        const hasNumbers = /\d/.test(password);
+        
+        if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
+          setPasswordError("Password must contain at least one uppercase letter, one lowercase letter, and one number.");
+        } else {
+          setPasswordError("");
+        }
+      }
+    } else {
+      setPasswordError("");
+    }
+  }, [password]);
+
+  useEffect(() => {
+    if (confirmPassword && password !== confirmPassword) {
+      setConfirmPasswordError("Passwords don't match.");
+    } else {
+      setConfirmPasswordError("");
+    }
+  }, [password, confirmPassword]);
+
+  useEffect(() => {
+    if (fullName && fullName.trim().length < 2) {
+      setFullNameError("Full name must be at least 2 characters.");
+    } else {
+      setFullNameError("");
+    }
+  }, [fullName]);
+
+  useEffect(() => {
+    if (userRole === "veterinarian" && licenseNumber) {
+      const licenseRegex = /^\d{7}$/;
+      if (!licenseRegex.test(licenseNumber.trim())) {
+        setLicenseNumberError("License number must be exactly 7 digits.");
+      } else {
+        setLicenseNumberError("");
+      }
+    } else {
+      setLicenseNumberError("");
+    }
+  }, [licenseNumber, userRole]);
 
   const handleRegister = async () => {
     const validation = isFormValid();
@@ -58,7 +122,12 @@ export default function Register() {
       });
 
       if (error) {
-        Alert.alert("Registration Failed", error.message);
+        // Handle specific error cases
+        if (error.message.includes("email")) {
+          Alert.alert("Registration Failed", "This email is already registered. Please use a different email or sign in instead.");
+        } else {
+          Alert.alert("Registration Failed", error.message);
+        }
       } else {
         const successMessage = userRole === "veterinarian" 
           ? "Your application has been submitted for review. You will receive an email once verified by an administrator."
@@ -82,19 +151,57 @@ export default function Register() {
   };
 
   const isFormValid = () => {
+    // Check for any existing errors
+    if (emailError || passwordError || confirmPasswordError || fullNameError || licenseNumberError) {
+      return { valid: false, message: "Please fix the errors in the form." };
+    }
+    
+    // Check required fields
+    if (!fullName.trim()) {
+      return { valid: false, message: "Please enter your full name." };
+    }
+    
+    if (!email.trim()) {
+      return { valid: false, message: "Please enter your email address." };
+    }
+    
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
       return { valid: false, message: "Please enter a valid email address." };
     }
+    
+    if (!password.trim()) {
+      return { valid: false, message: "Please enter a password." };
+    }
+    
+    // Password strength validation
     if (password.trim().length < 6) {
       return {
         valid: false,
         message: "Password must be at least 6 characters.",
       };
     }
+    
+    // Check for password strength (at least one uppercase, one lowercase, one number)
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    
+    if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
+      return {
+        valid: false,
+        message: "Password must contain at least one uppercase letter, one lowercase letter, and one number.",
+      };
+    }
+    
+    if (!confirmPassword.trim()) {
+      return { valid: false, message: "Please confirm your password." };
+    }
+    
     if (password !== confirmPassword) {
       return { valid: false, message: "Passwords don't match." };
     }
+    
     // For veterinarians, we also require a license number
     if (userRole === "veterinarian") {
       if (!licenseNumber.trim()) {
@@ -147,6 +254,9 @@ export default function Register() {
                 onChangeText={setFullName}
                 autoCapitalize="none"
               />
+              {fullNameError ? (
+                <Text className="text-red-500 text-xs px-4 py-1">{fullNameError}</Text>
+              ) : null}
               <TextInput
                 className="h-14 border-b border-neutral-200 dark:border-neutral-700 px-4 font-inter-bold text-black dark:text-white bg-transparent"
                 placeholder="Email address"
@@ -156,15 +266,23 @@ export default function Register() {
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
+              {emailError ? (
+                <Text className="text-red-500 text-xs px-4 py-1">{emailError}</Text>
+              ) : null}
               {userRole === "veterinarian" && (
-                <TextInput
-                  className="h-14 border-b border-neutral-200 dark:border-neutral-700 px-4 font-inter-bold text-black dark:text-white bg-transparent"
-                  placeholder="License Number"
-                  placeholderTextColor="#888"
-                  value={licenseNumber}
-                  onChangeText={setLicenseNumber}
-                  autoCapitalize="none"
-                />
+                <>
+                  <TextInput
+                    className="h-14 border-b border-neutral-200 dark:border-neutral-700 px-4 font-inter-bold text-black dark:text-white bg-transparent"
+                    placeholder="License Number"
+                    placeholderTextColor="#888"
+                    value={licenseNumber}
+                    onChangeText={setLicenseNumber}
+                    autoCapitalize="none"
+                  />
+                  {licenseNumberError ? (
+                    <Text className="text-red-500 text-xs px-4 py-1">{licenseNumberError}</Text>
+                  ) : null}
+                </>
               )}
               <View className="flex-row items-center border-b border-neutral-200 dark:border-neutral-700">
                 <TextInput
@@ -194,6 +312,21 @@ export default function Register() {
                   />
                 </TouchableOpacity>
               </View>
+              {passwordError ? (
+                <Text className="text-red-500 text-xs px-4 py-1">{passwordError}</Text>
+              ) : null}
+              {password && !passwordError && (
+                <View className="px-4 py-2">
+                  <View className="flex-row">
+                    <View className={`h-1 flex-1 rounded-full mr-1 ${/.*[A-Z].*/.test(password) ? 'bg-green-500' : 'bg-neutral-300 dark:bg-neutral-700'}`} />
+                    <View className={`h-1 flex-1 rounded-full mr-1 ${/.*[a-z].*/.test(password) ? 'bg-green-500' : 'bg-neutral-300 dark:bg-neutral-700'}`} />
+                    <View className={`h-1 flex-1 rounded-full ${/.*\d.*/.test(password) ? 'bg-green-500' : 'bg-neutral-300 dark:bg-neutral-700'}`} />
+                  </View>
+                  <Text className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                    Password must contain uppercase, lowercase, and number
+                  </Text>
+                </View>
+              )}
               <View className="flex-row items-center">
                 <TextInput
                   className="h-14 flex-1 px-4 font-inter-bold text-black dark:text-white bg-transparent"
@@ -224,6 +357,9 @@ export default function Register() {
                   />
                 </TouchableOpacity>
               </View>
+              {confirmPasswordError ? (
+                <Text className="text-red-500 text-xs px-4 py-1">{confirmPasswordError}</Text>
+              ) : null}
             </View>
 
             {/* Modern Segmented Role Selection */}

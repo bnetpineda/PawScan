@@ -16,6 +16,15 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(screenHeight));
 
+  // Calculate responsive dimensions
+  const cardWidth = screenWidth * 0.9;
+  const cardHorizontalPadding = screenWidth * 0.03;
+  const defaultCardTop = screenHeight * 0.4;
+  const navBarHeight = screenHeight * 0.05;
+  const postHeight = screenHeight * 0.5;
+  const imageHeight = screenHeight * 0.26;
+  const actionBarHeight = screenHeight * 0.04;
+
   const tutorialSteps = [
     {
       id: 1,
@@ -23,7 +32,7 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
       description:
         "Discover and share pet health analyses with the community. Let's take a quick tour!",
       icon: "heart",
-      position: { top: "40%" },
+      position: { top: defaultCardTop },
       highlight: null,
     },
     {
@@ -32,8 +41,13 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
       description:
         "Use these buttons to search posts, view app info, and check your analysis history.",
       icon: "search",
-      position: { top: "20%" },
-      highlight: { top: 62, width: screenWidth, height: 60 },
+      position: { top: screenHeight * 0.15 },
+      highlight: { 
+        top: screenHeight * 0.065, 
+        left: 0, 
+        width: screenWidth, 
+        height: navBarHeight
+      },
     },
     {
       id: 3,
@@ -41,8 +55,13 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
       description:
         "Each post shows a pet's photo and AI-generated health analysis from our community.",
       icon: "image",
-      position: { top: "35%" },
-      highlight: { top: 120, left: 16, width: screenWidth - 25, height: 500 },
+      position: { top: screenHeight * 0.6 },
+      highlight: { 
+        top: screenHeight * 0.12, 
+        left: cardHorizontalPadding, 
+        width: cardWidth + cardHorizontalPadding, 
+        height: postHeight
+      },
     },
     {
       id: 4,
@@ -50,8 +69,13 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
       description:
         "Like posts with the heart button, view comments, and share interesting analyses with others.",
       icon: "thumbs-up",
-      position: { top: "50%" },
-      highlight: { top: 440, left: 16, width: 160, height: 45 },
+      position: { top: screenHeight * 0.15 },
+      highlight: { 
+        top: screenHeight * 0.46, 
+        left: cardHorizontalPadding, 
+        width: cardWidth * 0.4, 
+        height: actionBarHeight
+      },
     },
     {
       id: 5,
@@ -59,8 +83,13 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
       description:
         "Tap any pet photo to view it in full screen for a closer look at the analysis subject.",
       icon: "expand",
-      position: { top: "30%" },
-      highlight: { top: 185, left: 16, width: screenWidth - 32, height: 260 },
+      position: { top: screenHeight * 0.50 },
+      highlight: { 
+        top: screenHeight * 0.2, 
+        left: cardHorizontalPadding, 
+        width: cardWidth + cardHorizontalPadding, 
+        height: imageHeight
+      },
     },
     {
       id: 6,
@@ -68,8 +97,13 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
       description:
         "Each post includes detailed AI analysis. Tap 'Read More' to see the complete health assessment.",
       icon: "file-text",
-      position: { top: "55%" },
-      highlight: { top: 480, left: 16, width: screenWidth - 32, height: 140 },
+      position: { top: screenHeight * 0.2 },
+      highlight: { 
+        top: screenHeight * 0.5, 
+        left: cardHorizontalPadding, 
+        width: cardWidth + cardHorizontalPadding, 
+        height: screenHeight * 0.13
+      },
     },
     {
       id: 7,
@@ -77,8 +111,13 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
       description:
         "Tap the comment button to share your thoughts, ask questions, or provide advice to fellow pet owners.",
       icon: "comment",
-      position: { top: "15%" },
-      highlight: { top: 440, left: 75, width: 55, height: 40 },
+      position: { top: screenHeight * 0.15 },
+      highlight: { 
+        top: screenHeight * 0.46, 
+        left: cardWidth * 0.18, 
+        width: cardWidth * 0.14, 
+        height: actionBarHeight
+      },
     },
     {
       id: 8,
@@ -86,8 +125,13 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
       description:
         "Swipe down on the feed to refresh and see the latest posts from the community.",
       icon: "refresh",
-      position: { top: "25%" },
-      highlight: { top: 100, left: 0, width: screenWidth, height: 100 },
+      position: { top: screenHeight * 0.2 },
+      highlight: { 
+        top: screenHeight * 0.12, 
+        left: 0, 
+        width: screenWidth, 
+        height: screenHeight * 0.08
+      },
     },
     {
       id: 9,
@@ -95,7 +139,7 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
       description:
         "Start exploring pet health analyses and sharing your own. Happy scanning!",
       icon: "check-circle",
-      position: { top: "40%" },
+      position: { top: defaultCardTop },
       highlight: null,
     },
   ];
@@ -192,8 +236,8 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
               ...currentStepData.highlight,
               borderRadius: 12,
               borderWidth: 2,
-              borderColor: isDark ? "#3B82F6" : "#3B82F6",
-              backgroundColor: isDark ? "rgba(59, 130, 246, 0.1)" : "rgba(59, 130, 246, 0.1)",
+              borderColor: isDark ? "#fff" : "#000",
+              backgroundColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
             }}
           />
         )}
@@ -203,7 +247,7 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
           style={{
             position: "absolute",
             top: currentStepData.position.top,
-            width: "90%",
+            width: cardWidth,
             alignSelf: "center",
             transform: [{ translateY: slideAnim }],
           }}
@@ -212,9 +256,9 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
             style={{
               backgroundColor: isDark ? "#000" : "#fff",
               borderRadius: 16,
-              padding: 20,
+              padding: Math.min(20, screenWidth * 0.05),
               borderWidth: 1,
-              borderColor: isDark ? "#374151" : "#e5e7eb",
+              borderColor: isDark ? "#fff" : "#000",
             }}
           >
             {/* Header */}
@@ -223,7 +267,7 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
-                marginBottom: 16,
+                marginBottom: Math.min(16, screenHeight * 0.03),
               }}
             >
               <View
@@ -231,54 +275,61 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
               >
                 <View
                   style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
-                    backgroundColor: "#3B82F6",
+                    width: Math.min(40, screenWidth * 0.1),
+                    height: Math.min(40, screenWidth * 0.1),
+                    borderRadius: Math.min(20, screenWidth * 0.05),
+                    backgroundColor: isDark ? "#fff" : "#000",
                     justifyContent: "center",
                     alignItems: "center",
-                    marginRight: 12,
+                    marginRight: Math.min(12, screenWidth * 0.03),
                   }}
                 >
                   <FontAwesome
                     name={currentStepData.icon}
-                    size={18}
-                    color="#fff"
+                    size={Math.min(18, screenWidth * 0.05)}
+                    color={isDark ? "#000" : "#fff"}
                   />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text
-                    style={{
-                      fontSize: 18,
-                      fontWeight: "700",
-                      color: isDark ? "#f9fafb" : "#111827",
-                    }}
-                  >
-                    {currentStepData.title}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      color: "#3B82F6",
-                      marginTop: 2,
-                    }}
-                  >
-                    Step {currentStep + 1} of {tutorialSteps.length}
-                  </Text>
+                  style={{
+                    fontSize: Math.min(18, screenWidth * 0.05),
+                    fontWeight: "700",
+                    color: isDark ? "#f9fafb" : "#111827",
+                    fontFamily: "Inter_700Bold",
+                  }}
+                >
+                  {currentStepData.title}
+                </Text>
                 </View>
               </View>
               <TouchableOpacity onPress={skipTutorial} style={{ padding: 8 }}>
-                <FontAwesome name="times" size={18} color={isDark ? "#9CA3AF" : "#6B7280"} />
+                <FontAwesome name="times" size={Math.min(18, screenWidth * 0.05)} color={isDark ? "#fff" : "#000"} />
               </TouchableOpacity>
             </View>
+            
+            {/* Step Counter */}
+            <Text
+              style={{
+                fontSize: Math.min(12, screenWidth * 0.03),
+                color: isDark ? "#fff" : "#000",
+                marginTop: 2,
+                fontFamily: "Inter_400Regular",
+                textAlign: "center",
+                marginBottom: 10,
+              }}
+            >
+              Step {currentStep + 1} of {tutorialSteps.length}
+            </Text>
 
             {/* Description */}
             <Text
               style={{
-                fontSize: 16,
-                lineHeight: 22,
-                color: isDark ? "#d1d5db" : "#374151",
-                marginBottom: 20,
+                fontSize: Math.min(16, screenWidth * 0.04),
+                lineHeight: Math.min(22, screenWidth * 0.06),
+                color: isDark ? "#fff" : "#000",
+                marginBottom: Math.min(20, screenHeight * 0.03),
+                fontFamily: "Inter_400Regular",
               }}
             >
               {currentStepData.description}
@@ -288,16 +339,16 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
             <View
               style={{
                 height: 4,
-                backgroundColor: isDark ? "#374151" : "#e5e7eb",
+                backgroundColor: isDark ? "#333" : "#ccc",
                 borderRadius: 2,
-                marginBottom: 20,
+                marginBottom: Math.min(20, screenHeight * 0.03),
               }}
             >
               <View
                 style={{
                   height: 4,
                   borderRadius: 2,
-                  backgroundColor: "#3B82F6",
+                  backgroundColor: isDark ? "#fff" : "#000",
                   width: `${((currentStep + 1) / tutorialSteps.length) * 100}%`,
                 }}
               />
@@ -317,23 +368,25 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  paddingHorizontal: 16,
-                  paddingVertical: 8,
+                  paddingHorizontal: Math.min(16, screenWidth * 0.04),
+                  paddingVertical: Math.min(8, screenHeight * 0.015),
                   borderRadius: 20,
-                  backgroundColor: isDark ? "#1f2937" : "#f3f4f6",
+                  backgroundColor: isDark ? "#333" : "#eee",
                   opacity: currentStep === 0 ? 0.5 : 1,
                 }}
               >
                 <FontAwesome
                   name="chevron-left"
-                  size={14}
+                  size={Math.min(14, screenWidth * 0.035)}
                   color={isDark ? "#f9fafb" : "#111827"}
                 />
                 <Text
                   style={{
                     marginLeft: 8,
                     fontWeight: "600",
-                    color: isDark ? "#f9fafb" : "#111827",
+                    color: isDark ? "#fff" : "#000",
+                    fontSize: Math.min(14, screenWidth * 0.035),
+                    fontFamily: "Inter_600SemiBold",
                   }}
                 >
                   Previous
@@ -351,8 +404,8 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
                       marginHorizontal: 3,
                       backgroundColor:
                         index === currentStep
-                          ? "#3B82F6"
-                          : isDark ? "#4b5563" : "#d1d5db",
+                          ? isDark ? "#fff" : "#000"
+                          : isDark ? "#444" : "#bbb",
                     }}
                   />
                 ))}
@@ -363,17 +416,19 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  paddingHorizontal: 16,
-                  paddingVertical: 8,
+                  paddingHorizontal: Math.min(16, screenWidth * 0.04),
+                  paddingVertical: Math.min(8, screenHeight * 0.015),
                   borderRadius: 20,
-                  backgroundColor: "#3B82F6",
+                  backgroundColor: isDark ? "#fff" : "#000",
                 }}
               >
                 <Text
                   style={{
                     marginRight: 8,
                     fontWeight: "600",
-                    color: "#fff",
+                    color: isDark ? "#000" : "#fff",
+                    fontSize: Math.min(14, screenWidth * 0.035),
+                    fontFamily: "Inter_600SemiBold",
                   }}
                 >
                   {currentStep === tutorialSteps.length - 1 ? "Finish" : "Next"}
@@ -384,7 +439,7 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
                       ? "check"
                       : "chevron-right"
                   }
-                  size={14}
+                  size={Math.min(14, screenWidth * 0.035)}
                   color="#fff"
                 />
               </TouchableOpacity>
@@ -394,13 +449,14 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
             {currentStep < tutorialSteps.length - 1 && (
               <TouchableOpacity
                 onPress={skipTutorial}
-                style={{ marginTop: 16, alignSelf: "center" }}
+                style={{ marginTop: Math.min(16, screenHeight * 0.03), alignSelf: "center" }}
               >
                 <Text
                   style={{
-                    fontSize: 14,
-                    color: "#3B82F6",
+                    fontSize: Math.min(14, screenWidth * 0.035),
+                    color: isDark ? "#fff" : "#000",
                     textDecorationLine: "underline",
+                    fontFamily: "Inter_400Regular",
                   }}
                 >
                   Skip Tutorial
@@ -415,7 +471,7 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
           <TouchableOpacity
             style={{
               position: "absolute",
-              bottom: 50,
+              bottom: screenHeight * 0.1,
               left: 0,
               right: 0,
               alignItems: "center",
@@ -426,19 +482,24 @@ const TutorialModal = ({ visible, onClose, isDark }) => {
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                paddingHorizontal: 16,
-                paddingVertical: 10,
+                paddingHorizontal: Math.min(16, screenWidth * 0.04),
+                paddingVertical: Math.min(10, screenHeight * 0.02),
                 borderRadius: 20,
-                backgroundColor: isDark ? "rgba(31, 41, 55, 0.8)" : "rgba(0, 0, 0, 0.6)",
+                backgroundColor: isDark ? "rgba(51, 51, 51, 0.8)" : "rgba(0, 0, 0, 0.6)",
               }}
             >
               <FontAwesome
                 name="hand-pointer-o"
-                size={16}
+                size={Math.min(16, screenWidth * 0.04)}
                 color="#fff"
               />
               <Text
-                style={{ marginLeft: 8, fontSize: 14, color: "#fff" }}
+                style={{ 
+                  marginLeft: 8, 
+                  fontSize: Math.min(14, screenWidth * 0.035), 
+                  color: isDark ? "#fff" : "#000",
+                  fontFamily: "Inter_400Regular",
+                }}
               >
                 Tap anywhere to continue
               </Text>

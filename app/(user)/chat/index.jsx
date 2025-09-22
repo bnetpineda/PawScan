@@ -12,6 +12,7 @@ import {
   StatusBar,
   TextInput,
   Modal,
+  ActivityIndicator,
 } from "react-native";
 import { useAuth } from "../../../providers/AuthProvider";
 import { supabase } from "../../../lib/supabase";
@@ -23,6 +24,7 @@ const ChatListScreen = () => {
   const router = useRouter();
   const [conversations, setConversations] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredConversations, setFilteredConversations] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
@@ -60,6 +62,7 @@ const ChatListScreen = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    setLoading(true);
     await loadConversations();
     setRefreshing(false);
   };
@@ -92,9 +95,14 @@ const ChatListScreen = () => {
             .eq("id", conversation.vet_id)
             .single();
 
-          // If we get a permission error, try to get the user's display name from the user_display_names view
-          if (vetError && vetError.code === "42501") {
-            console.warn("Permission denied for veterinarians view, falling back to user_display_names view");
+          // If we get a permission error or no data found, try to get the user's display name from the user_display_names view
+          if (vetError && (vetError.code === "42501" || vetError.code === "PGRST116")) {
+            if (vetError.code === "42501") {
+              console.warn("Permission denied for veterinarians view, falling back to user_display_names view");
+            } else {
+              console.warn("Veterinarian not found in veterinarians view, falling back to user_display_names view");
+            }
+            
             const { data: userData, error: userError } = await supabase
               .from("user_display_names")
               .select("id, display_name, email")
@@ -149,6 +157,8 @@ const ChatListScreen = () => {
     } catch (error) {
       console.error("Error loading conversations:", error);
       Alert.alert("Error", "Could not load conversations");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -393,7 +403,12 @@ const ChatListScreen = () => {
         </SafeAreaView>
       </Modal>
       
-      {filteredConversations.length === 0 && !showSearch ? (
+      {loading ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color={isDark ? "#fff" : "#000"} />
+          <Text className="text-lg mt-4 text-black dark:text-white">Loading conversations...</Text>
+        </View>
+      ) : filteredConversations.length === 0 && !showSearch ? (
         <View className="flex-1 justify-center items-center p-8">
           <FontAwesome
             name="commenting-o"
