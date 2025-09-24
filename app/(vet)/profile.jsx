@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   Image,
+  Platform,
   ScrollView,
   Text,
   TextInput,
@@ -19,6 +20,7 @@ import SettingsModal from "../../components/profile/SettingsModal";
 import ChangeEmailModal from "../../components/profile/ChangeEmailModal";
 import ChangePasswordModal from "../../components/profile/ChangePasswordModal";
 import ImageViewerModal from "../../components/profile/ImageViewerModal";
+import VetProfileEditModal from "../../components/profile/VetProfileEditModal";
 import useProfileData from "../../hooks/useProfileData";
 
 const ProfileScreen = () => {
@@ -39,6 +41,16 @@ const ProfileScreen = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [profileImage, setProfileImage] = useState(null);
+
+  // Vet profile states
+  const [vetProfile, setVetProfile] = useState(null);
+  const [name, setName] = useState("");
+  const [medicalSpecialty, setMedicalSpecialty] = useState("");
+  const [clinicLocation, setClinicLocation] = useState("");
+  const [contactInfo, setContactInfo] = useState("");
+  const [availableSchedule, setAvailableSchedule] = useState([]);
+  const [vetProfileEditable, setVetProfileEditable] = useState(false);
+  const [showFullSchedule, setShowFullSchedule] = useState(false);
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -76,12 +88,64 @@ const ProfileScreen = () => {
       fetchUserPosts();
       fetchPetScanCount();
       fetchHistoryImages();
+      
+      // Fetch veterinarian profile
+      fetchVetProfile();
     }
   }, [user]);
+
+  const fetchVetProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('vet_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') { // No rows returned
+          // Create a default profile for the veterinarian
+          await createDefaultVetProfile();
+        } else {
+          console.error('Error fetching vet profile:', error);
+        }
+        return;
+      }
+      
+      setVetProfile(data);
+      setName(data.name || '');
+      setMedicalSpecialty(data.medical_specialty || '');
+      setClinicLocation(data.clinic_location || '');
+      setContactInfo(data.contact_info || '');
+      setAvailableSchedule(data.available_schedule || []);
+    } catch (error) {
+      console.error('Error in fetchVetProfile:', error);
+    }
+  };
+
+  const createDefaultVetProfile = async () => {
+    try {
+      const { error } = await supabase
+        .from('vet_profiles')
+        .insert([{ 
+          id: user.id,
+          name: user?.user_metadata?.options?.data?.display_name || '',
+          created_at: new Date().toISOString()
+        }]);
+
+      if (error) throw error;
+      
+      // Fetch the newly created profile
+      fetchVetProfile();
+    } catch (error) {
+      console.error('Error creating default vet profile:', error);
+    }
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
     await refreshAllData();
+    await fetchVetProfile();
     setRefreshing(false);
   };
 
@@ -287,6 +351,47 @@ const ProfileScreen = () => {
     setConfirmPassword("");
   }, [user]);
 
+  const updateVetProfile = async () => {
+    try {
+      setUpdating(true);
+      
+      const { error } = await supabase
+        .from('vet_profiles')
+        .update({
+          name,
+          medical_specialty: medicalSpecialty,
+          clinic_location: clinicLocation,
+          contact_info: contactInfo,
+          available_schedule: availableSchedule,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      
+      Alert.alert("Success", "Profile updated successfully!");
+      setVetProfileEditable(false);
+      fetchVetProfile(); // Refresh the profile data
+    } catch (error) {
+      console.error('Error updating vet profile:', error);
+      Alert.alert("Error", "Failed to update profile. Please try again.");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const editSchedule = (scheduleData) => {
+    const newEntry = {
+      day: scheduleData.day,
+      time: scheduleData.time,
+      id: Date.now().toString() // Simple unique ID
+    };
+    
+    setAvailableSchedule([...availableSchedule, newEntry]);
+  };
+
+  
+
   const getInitials = (name) => {
     if (!name) return "V"; // Default to 'V' for Veterinarian
     return name
@@ -411,13 +516,25 @@ const ProfileScreen = () => {
             <Text className="text-2xl font-inter-bold text-black dark:text-white ml-2">
               PawScan
             </Text>
-            <TouchableOpacity onPress={() => setSettingsVisible(true)}>
-              <FontAwesome
-                name="cog"
-                size={24}
-                color={isDark ? "white" : "black"}
-              />
-            </TouchableOpacity>
+            <View className="flex-row">
+              <TouchableOpacity 
+                className="mr-4"
+                onPress={() => setSettingsVisible(true)}
+              >
+                <FontAwesome
+                  name="cog"
+                  size={24}
+                  color={isDark ? "white" : "black"}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setVetProfileEditable(true)}>
+                <FontAwesome
+                  name="edit"
+                  size={24}
+                  color={isDark ? "white" : "black"}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Profile Info - Instagram Style */}
@@ -514,6 +631,157 @@ const ProfileScreen = () => {
               Member since {formatDate(user?.created_at)}
             </Text>
           </View>
+          
+          {/* Vet Profile Details */}
+          {vetProfile && (
+            <View className="mt-4 px-4">
+              <View className="space-y-4">
+                {/* Specialty and Location - Side by side */}
+                <View className="flex-row justify-between">
+                  <View className="w-[48%]">
+                    <View className="flex-row items-start">
+                      <View className="pt-1">
+                        <FontAwesome
+                          name="stethoscope"
+                          size={16}
+                          color={isDark ? "white" : "black"}
+                        />
+                      </View>
+                      <View className="ml-3 flex-1 mb-4">
+                        <Text
+                          className={`font-inter-semibold text-sm ${
+                            isDark ? "text-neutral-300" : "text-neutral-600"
+                          }`}
+                        >
+                          Specialty
+                        </Text>
+                        <Text
+                          className={`font-inter ${
+                            isDark ? "text-white" : "text-black"
+                          }`}
+                          numberOfLines={2}
+                          ellipsizeMode="tail"
+                        >
+                          {medicalSpecialty || "Not specified"}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  
+                  <View className="w-[48%]">
+                    <View className="flex-row items-start">
+                      <View className="pt-1">
+                        <FontAwesome
+                          name="map-marker"
+                          size={16}
+                          color={isDark ? "white" : "black"}
+                        />
+                      </View>
+                      <View className="ml-3 flex-1">
+                        <Text
+                          className={`font-inter-semibold text-sm ${
+                            isDark ? "text-neutral-300" : "text-neutral-600"
+                          }`}
+                        >
+                          Location
+                        </Text>
+                        <Text
+                          className={`font-inter ${
+                            isDark ? "text-white" : "text-black"
+                          }`}
+                          numberOfLines={2}
+                          ellipsizeMode="tail"
+                        >
+                          {clinicLocation || "Not specified"}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+                
+                {/* Contact and Available Hours - Side by side */}
+                <View className="flex-row justify-between">
+                  <View className="w-[48%]">
+                    <View className="flex-row items-start">
+                      <View className="pt-1">
+                        <FontAwesome
+                          name="phone"
+                          size={16}
+                          color={isDark ? "white" : "black"}
+                        />
+                      </View>
+                      <View className="ml-3 flex-1">
+                        <Text
+                          className={`font-inter-semibold text-sm ${
+                            isDark ? "text-neutral-300" : "text-neutral-600"
+                          }`}
+                        >
+                          Contact
+                        </Text>
+                        <Text
+                          className={`font-inter ${
+                            isDark ? "text-white" : "text-black"
+                          }`}
+                          numberOfLines={2}
+                          ellipsizeMode="tail"
+                        >
+                          {contactInfo || "Not specified"}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  
+                  <View className="w-[48%]">
+                    {availableSchedule && availableSchedule.length > 0 && (
+                      <View>
+                        <View className="flex-row items-center mb-1">
+                          <FontAwesome
+                            name="calendar"
+                            size={16}
+                            color={isDark ? "white" : "black"}
+                          />
+                          <Text
+                            className={`font-inter-semibold ml-2 text-sm ${
+                              isDark ? "text-neutral-300" : "text-neutral-600"
+                            }`}
+                          >
+                            Available Hours
+                          </Text>
+                        </View>
+                        <View className="space-y-1">
+                          {(showFullSchedule ? availableSchedule : availableSchedule.slice(0, 2)).map((schedule, index) => (
+                            <View key={schedule.id || index} className="flex-row">
+                              <Text
+                                className={`font-inter text-xs ${
+                                  isDark ? "text-white" : "text-black"
+                                }`}
+                                numberOfLines={1}
+                              >
+                                {schedule.day}: {schedule.time}
+                              </Text>
+                            </View>
+                          ))}
+                          {availableSchedule.length > 2 && (
+                            <TouchableOpacity 
+                              onPress={() => setShowFullSchedule(!showFullSchedule)}
+                            >
+                              <Text
+                                className={`font-inter text-xs ${
+                                  isDark ? "text-blue-400" : "text-blue-600"
+                                }`}
+                              >
+                                {showFullSchedule ? 'Show less' : `+${availableSchedule.length - 2} more`}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Posts Grid - Instagram Style */}
@@ -597,6 +865,26 @@ const ProfileScreen = () => {
         confirmPassword={confirmPassword}
         setConfirmPassword={setConfirmPassword}
         onSubmit={handleChangePassword}
+        updating={updating}
+        isDark={isDark}
+      />
+
+      {/* Vet Profile Edit Modal Component */}
+      <VetProfileEditModal
+        visible={vetProfileEditable}
+        onClose={() => setVetProfileEditable(false)}
+        name={name}
+        setName={setName}
+        medicalSpecialty={medicalSpecialty}
+        setMedicalSpecialty={setMedicalSpecialty}
+        clinicLocation={clinicLocation}
+        setClinicLocation={setClinicLocation}
+        contactInfo={contactInfo}
+        setContactInfo={setContactInfo}
+        availableSchedule={availableSchedule}
+        setAvailableSchedule={setAvailableSchedule}
+        editSchedule={editSchedule}
+        updateVetProfile={updateVetProfile}
         updating={updating}
         isDark={isDark}
       />
