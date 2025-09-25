@@ -41,41 +41,17 @@ const VetsListScreen = () => {
 
   const loadVets = async () => {
     try {
-      // Get all veterinarians from the secure view
+      // Get all veterinarians from the vet_profiles table
       const { data: vetsData, error: vetsError } = await supabase
-        .from('veterinarians')
-        .select('id, display_name, email')
-        .order('display_name', { ascending: true });
-
-      // If we get a permission error, try to get all users with display names
-      if (vetsError && vetsError.code === "42501") {
-        console.warn("Permission denied for veterinarians view, falling back to user_display_names view");
-        const { data: allUsersData, error: allUsersError } = await supabase
-          .from('user_display_names')
-          .select('id, display_name, email')
-          .order('display_name', { ascending: true });
-        
-        if (!allUsersError && allUsersData) {
-          // Format the data for display
-          const formattedVets = allUsersData
-            .map(user => ({
-              id: user.id,
-              name: user.display_name || 'Veterinarian',
-              email: user.email || 'No email provided'
-            }))
-            .filter(user => user.id !== user.id); // Exclude current user
-          
-          setVets(formattedVets);
-          setFilteredVets(formattedVets);
-          setLoading(false);
-          return;
-        }
-      }
+        .from('vet_profiles')
+        .select('id, name, profile_image_url')
+        .order('name', { ascending: true });
 
       if (vetsError) {
-        console.error('Error loading vets:', vetsError);
-        // Fallback: try to get from conversations
-        await loadVetsFromConversations();
+        console.error('Error loading vets from vet_profiles:', vetsError);
+        // If vet_profiles is not accessible, there are no veterinarians to show
+        setVets([]);
+        setFilteredVets([]);
         return;
       }
 
@@ -83,8 +59,9 @@ const VetsListScreen = () => {
       const formattedVets = vetsData
         .map(vet => ({
           id: vet.id,
-          name: vet.display_name || 'Veterinarian',
-          email: vet.email || 'No email provided'
+          name: vet.name || 'Veterinarian',
+          email: '', // Vet profiles may not store email directly
+          profile_image_url: vet.profile_image_url
         }))
         .filter(vet => vet.id !== user.id); // Exclude current user if they're also a vet
 
@@ -120,36 +97,24 @@ const VetsListScreen = () => {
       // Get vet details for each ID
       const vetsWithDetails = [];
       for (const vetId of vetIds) {
-        const { data: vetData, error: vetError } = await supabase
-          .from('veterinarians')
-          .select('id, display_name, email')
+        let { data: vetData, error: vetError } = await supabase
+          .from('vet_profiles')
+          .select('id, name, profile_image_url')
           .eq('id', vetId)
           .single();
 
-        // If we get a permission error, try to get the user's display name from the user_display_names view
-        if (vetError && vetError.code === "42501") {
-          console.warn("Permission denied for veterinarians view, falling back to user_display_names view");
-          const { data: userData, error: userError } = await supabase
-            .from('user_display_names')
-            .select('id, display_name, email')
-            .eq('id', vetId)
-            .single();
-          
-          if (!userError && userData) {
-            vetsWithDetails.push({
-              id: userData.id,
-              name: userData.display_name || 'Veterinarian',
-              email: userData.email || 'No email provided'
-            });
-            continue; // Skip to the next iteration
-          }
+        if (vetError) {
+          console.error("Error fetching from vet_profiles:", vetError);
+          // Skip to the next iteration - no fallback to views
+          continue;
         }
 
         if (!vetError && vetData) {
           vetsWithDetails.push({
             id: vetData.id,
-            name: vetData.display_name || 'Veterinarian',
-            email: vetData.email || 'No email provided'
+            name: vetData.name || 'Veterinarian',
+            email: '', // Vet profiles may not store email directly
+            profile_image_url: vetData.profile_image_url
           });
         }
       }
@@ -169,13 +134,23 @@ const VetsListScreen = () => {
       onPress={() => router.push(`/(user)/chat/${item.id}?vetName=${encodeURIComponent(item.name)}`)}
       activeOpacity={0.7}
     >
-      <View className="mr-4">
+      <TouchableOpacity
+        className="mr-4"
+        onPress={(e) => {
+          e.stopPropagation(); // Prevent the chat navigation
+          router.push(`/(user)/vet-profile?vetId=${item.id}`);
+        }}
+      >
         <View className="w-12 h-12 rounded-full bg-black dark:bg-white justify-center items-center">
           <Text className="text-white dark:text-black text-xl font-inter-bold">{item.name.charAt(0).toUpperCase()}</Text>
         </View>
-      </View>
+      </TouchableOpacity>
       <View className="flex-1 justify-center">
-        <Text className="text-base font-inter-bold mb-1 text-black dark:text-white">{item.name}</Text>
+        <TouchableOpacity
+          onPress={() => router.push(`/(user)/vet-profile?vetId=${item.id}`)}
+        >
+          <Text className="text-base font-inter-bold mb-1 text-black dark:text-white">{item.name}</Text>
+        </TouchableOpacity>
         <Text className="text-sm text-neutral-600 dark:text-neutral-300">{item.email}</Text>
       </View>
       <View className="ml-2 justify-center">

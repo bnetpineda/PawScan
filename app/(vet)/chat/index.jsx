@@ -59,35 +59,29 @@ const ChatListScreen = () => {
       // Get the latest message for each conversation and user details
       const conversationsWithLatestMessage = await Promise.all(
         conversationsData.map(async (conversation) => {
-          // Get user details from the secure user_display_names view
-          const { data: userData, error: userError } = await supabase
-            .from('user_display_names')
-            .select('id, display_name, email')
+          // Get user details from the user_profiles table
+          let { data: userData, error: userError } = await supabase
+            .from('user_profiles')
+            .select('id, name')
             .eq('id', conversation.user_id)
             .single();
 
-          // Handle case where user doesn't exist (might have been deleted)
-          if (userError && userError.code === 'PGRST116') {
-            console.warn('User not found for conversation:', conversation.user_id);
-            // Fallback to a default user name
-            return {
-              ...conversation,
-              latestMessage: null,
-              userName: 'Deleted User'
-            };
-          }
+          let userName = 'Pet Owner';
 
           if (userError) {
-            console.error('Error fetching user data:', userError);
-            // Fallback to a default user name
-            return {
-              ...conversation,
-              latestMessage: null,
-              userName: 'Pet Owner'
-            };
+            console.error('Error fetching user data from user_profiles:', userError);
+            
+            // Handle case where user doesn't exist (might have been deleted)
+            if (userError.code === 'PGRST116') {
+              console.warn('User not found for conversation:', conversation.user_id);
+              userName = 'Deleted User';
+            } else {
+              userName = 'Pet Owner';
+            }
+          } else {
+            // Use the name from user_profiles
+            userName = userData?.name || 'Pet Owner';
           }
-
-          const userName = userData?.display_name || 'Pet Owner';
 
           const { data: latestMessageData, error: messageError } = await supabase
             .from('messages')

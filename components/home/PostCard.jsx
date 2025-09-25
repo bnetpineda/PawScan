@@ -4,7 +4,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
 import { submitPostReport } from "../../services/reportService";
 
-const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onShare, onOpenImageModal }) => {
+const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onShare, onOpenImageModal, onViewProfile }) => {
   const isAnonymous = post.is_anonymous;
   const userDisplayName = isAnonymous
     ? "Anonymous User"
@@ -327,26 +327,59 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
           ) : (
             /* Non-Anonymous User Avatar */
             userAvatarUrl ? (
-              <Image
-                source={{ uri: userAvatarUrl }}
+              <TouchableOpacity
                 className="w-10 h-10 rounded-full mr-3"
-                resizeMode="cover"
-                onError={() => setUserAvatarUrl(null)} // Fallback to icon if image fails to load
-              />
+                onPress={() => {
+                  // Check if this is a vet's post by their role
+                  const isVet = post.role === 'veterinarian';
+                  if (isVet && post.user_id) {
+                    // Navigate to vet profile page
+                    onViewProfile(post.user_id);
+                  }
+                }}
+              >
+                <Image
+                  source={{ uri: userAvatarUrl }}
+                  className="w-10 h-10 rounded-full"
+                  resizeMode="cover"
+                  onError={() => setUserAvatarUrl(null)} // Fallback to icon if image fails to load
+                />
+              </TouchableOpacity>
             ) : (
-              <View className="w-10 h-10 rounded-full border-2 border-black dark:border-white justify-center items-center mr-3 bg-white dark:bg-black">
+              <TouchableOpacity
+                className="w-10 h-10 rounded-full border-2 border-black dark:border-white justify-center items-center mr-3 bg-white dark:bg-black"
+                onPress={() => {
+                  // Check if this is a vet's post by their role
+                  const isVet = post.role === 'veterinarian';
+                  if (isVet && post.user_id) {
+                    // Navigate to vet profile page
+                    onViewProfile(post.user_id);
+                  }
+                }}
+              >
                 <FontAwesome
                   name="user-circle"
                   size={32}
                   color={isDark ? "#ffffff" : "#000000"}
                 />
-              </View>
+              </TouchableOpacity>
             )
           )}
           <View className="flex-1">
-            <Text className="text-base font-inter-semibold text-black dark:text-white">
-              {userDisplayName}
-            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                // Check if this is a vet's post by their role
+                const isVet = post.role === 'veterinarian';
+                if (isVet && post.user_id) {
+                  // Navigate to vet profile page
+                  onViewProfile(post.user_id);
+                }
+              }}
+            >
+              <Text className="text-base font-inter-semibold text-black dark:text-white">
+                {userDisplayName}
+              </Text>
+            </TouchableOpacity>
             {post.pet_name && (
               <Text className="text-sm font-inter text-neutral-500 dark:text-neutral-400">
                 Pet: {post.pet_name}

@@ -40,15 +40,15 @@ export default function Login() {
       
       // Check if the user is a veterinarian and if they're verified
       if (data.user?.user_metadata?.role === "veterinarian") {
-        // Check if the user exists in the auth.users table (meaning they're verified)
+        // Check if the user exists in the vet_profiles table (meaning they're verified)
         const { data: userData, error: userError } = await supabase
-          .from('veterinarians')
+          .from('vet_profiles')
           .select('id')
           .eq('id', data.user.id)
           .single();
           
         if (userError || !userData) {
-          // User is a veterinarian but not found in the verified veterinarians view
+          // User is a veterinarian but not found in the vet_profiles table
           // This means they're not yet verified by an admin
           await supabase.auth.signOut(); // Log them out
           Alert.alert(

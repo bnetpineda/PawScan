@@ -1,6 +1,8 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
+import { Buffer } from 'buffer';
 import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
@@ -75,13 +77,6 @@ const ProfileScreen = () => {
       const displayName =
         user?.user_metadata?.options?.data?.display_name || "";
       setNewEmail(user?.email || "");
-      // Load profile image if exists
-      const avatarUrl =
-        user?.user_metadata?.avatar_url ||
-        user?.user_metadata?.options?.data?.avatar_url;
-      if (avatarUrl) {
-        setProfileImage(avatarUrl);
-      }
 
       // Fetch user posts, pet scan count, and history images
       console.log('Fetching user data...');
@@ -118,6 +113,19 @@ const ProfileScreen = () => {
       setClinicLocation(data.clinic_location || '');
       setContactInfo(data.contact_info || '');
       setAvailableSchedule(data.available_schedule || []);
+      
+      // Set profile image from vet_profiles table
+      if (data.profile_image_url) {
+        setProfileImage(data.profile_image_url);
+      } else {
+        // Fallback to auth metadata if no avatar in vet_profiles
+        const avatarUrl =
+          user?.user_metadata?.avatar_url ||
+          user?.user_metadata?.options?.data?.avatar_url;
+        if (avatarUrl) {
+          setProfileImage(avatarUrl);
+        }
+      }
     } catch (error) {
       console.error('Error in fetchVetProfile:', error);
     }
@@ -130,7 +138,8 @@ const ProfileScreen = () => {
         .insert([{ 
           id: user.id,
           name: user?.user_metadata?.options?.data?.display_name || '',
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          profile_image_url: null // Initialize with null profile_image_url
         }]);
 
       if (error) throw error;
@@ -220,17 +229,11 @@ const ProfileScreen = () => {
         data: { publicUrl },
       } = supabase.storage.from("avatars").getPublicUrl(fileName);
 
-      // Update user metadata with the avatar URL
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: {
-          avatar_url: publicUrl,
-          options: {
-            data: {
-              avatar_url: publicUrl,
-            },
-          },
-        },
-      });
+      // Update the profile_image_url in the vet_profiles table instead of auth metadata
+      const { error: updateError } = await supabase
+        .from('vet_profiles')
+        .update({ profile_image_url: publicUrl })
+        .eq('id', user.id);
 
       if (updateError) throw updateError;
 
@@ -429,8 +432,7 @@ const ProfileScreen = () => {
     );
   }
 
-  const displayName =
-    user?.user_metadata?.options?.data?.display_name || "Veterinarian";
+  const displayName = vetProfile?.name || user?.user_metadata?.options?.data?.display_name || "Veterinarian";
   const role = user?.user_metadata?.options?.data?.role || "Veterinarian";
   const email = user?.email || "";
 

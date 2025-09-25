@@ -74,8 +74,8 @@ CREATE TABLE public.newsfeed_reports (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT newsfeed_reports_pkey PRIMARY KEY (id),
-  CONSTRAINT newsfeed_reports_reporter_user_id_fkey FOREIGN KEY (reporter_user_id) REFERENCES auth.users(id),
-  CONSTRAINT newsfeed_reports_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.newsfeed_posts(id)
+  CONSTRAINT newsfeed_reports_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.newsfeed_posts(id),
+  CONSTRAINT newsfeed_reports_reporter_user_id_fkey FOREIGN KEY (reporter_user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.typing_status (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -86,4 +86,32 @@ CREATE TABLE public.typing_status (
   CONSTRAINT typing_status_pkey PRIMARY KEY (id),
   CONSTRAINT typing_status_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id),
   CONSTRAINT typing_status_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.user_profiles (
+  id uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  name character varying,
+  location text,
+  bio text,
+  profile_image_url text,
+  CONSTRAINT user_profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT user_profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.vet_profiles (
+  id uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  name character varying,
+  medical_specialty text,
+  clinic_location text,
+  contact_info text,
+  available_schedule jsonb,
+  bio text,
+  education text,
+  years_of_experience integer,
+  license_number character varying,
+  profile_image_url text,
+  CONSTRAINT vet_profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT vet_profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );

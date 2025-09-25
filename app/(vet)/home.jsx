@@ -334,18 +334,44 @@ const NewsFeedScreen = () => {
 
     setPostingComment(true);
     try {
-      const { data, error } = await supabase
+      // Check if user is a veterinarian and get their profile info
+        let commentDisplayName = currentUser.user_metadata?.options?.data?.display_name || "Pet Owner";
+        let commentRole = currentUser.user_metadata?.options?.data?.role || "User";
+        
+        if (commentRole === 'veterinarian') {
+          // If the user is a veterinarian, get their name from vet_profiles
+          const { data: vetProfile, error: profileError } = await supabase
+            .from('vet_profiles')
+            .select('name')
+            .eq('id', currentUser.id)
+            .single();
+
+          if (!profileError && vetProfile?.name) {
+            commentDisplayName = vetProfile.name;
+          }
+        } else {
+          // If the user is a regular user, get their name from user_profiles
+          const { data: userProfile, error: profileError } = await supabase
+            .from('user_profiles')
+            .select('name')
+            .eq('id', currentUser.id)
+            .single();
+
+          if (!profileError && userProfile?.name) {
+            commentDisplayName = userProfile.name;
+          }
+        }
+
+        const { data, error } = await supabase
         .from("newsfeed_comments")
         .insert([
           {
             post_id: selectedPostId,
             user_id: currentUser.id,
             comment_text: newComment.trim(),
-            display_name:
-              currentUser.user_metadata?.options?.data?.display_name ||
-              "Pet Owner", // Use email prefix as display name
+            display_name: commentDisplayName,
             created_at: new Date().toISOString(),
-            role: currentUser.user_metadata?.options?.data?.role || "User",
+            role: commentRole,
           },
         ])
         .select()

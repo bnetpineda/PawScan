@@ -145,33 +145,64 @@ export async function shareToNewsfeed(
       throw new Error("Only valid pet analyses can be shared. This analysis doesn't appear to be of a cat or dog.");
     }
     
-    // Check for required sections in a valid analysis
-    const requiredSections = [
-      "Breed of the pet:",
-      "Specific Skin Disease Detected:",
-      "Confidence score:",
-      "Three suggested treatments:",
-      "Urgency level:",
-      "Essential first aid care steps:",
-      "Recommended medication:",
-      "Indicators that a Veterinarian should be contacted:"
+    // Check for required sections in a valid analysis (more flexible approach)
+    const requiredKeywords = [
+      "Breed of the pet",
+      "Specific Skin Disease Detected",
+      "Confidence score",
+      "suggested treatments",
+      "Urgency level",
+      "first aid care steps",
+      "Recommended medication",
+      "Veterinarian should be contacted"
     ];
     
-    const hasValidStructure = requiredSections.every(section => 
-      analysisResult.includes(section)
+    // Check if analysis contains most of the required information
+    const foundKeywords = requiredKeywords.filter(keyword => 
+      analysisResult.toLowerCase().includes(keyword.toLowerCase())
     );
     
-    if (!hasValidStructure) {
+    // Require at least 6 out of 8 keywords to consider it valid
+    if (foundKeywords.length < 6) {
       throw new Error("Only valid pet analyses can be shared. This analysis doesn't have the required format.");
     }
 
     // Create newsfeed post
-    const displayName = isAnonymous 
+    let displayName = isAnonymous 
       ? "Anonymous"
       : user.user_metadata?.full_name || 
         user.user_metadata?.display_name || 
         user.email?.split("@")[0] || 
         "Pet Owner";
+    
+    // Determine role and get proper display name based on which profile table the user exists in
+    let role = "Pet Owner"; // Default role
+    
+    // First check if the user exists in vet_profiles table
+    const { data: vetProfile, error: vetError } = await supabase
+      .from('vet_profiles')
+      .select('name')
+      .eq('id', user.id)
+      .single();
+
+    if (!vetError && vetProfile) {
+      // User is a veterinarian
+      role = "Veterinarian";
+      if (vetProfile.name) {
+        displayName = vetProfile.name;
+      }
+    } else {
+      // User is a regular pet owner, check user_profiles
+      const { data: userProfile, error: userError } = await supabase
+        .from('user_profiles')
+        .select('name')
+        .eq('id', user.id)
+        .single();
+
+      if (!userError && userProfile?.name) {
+        displayName = userProfile.name;
+      }
+    }
 
     const { data: postData, error: postError } = await supabase
       .from("newsfeed_posts")
@@ -184,6 +215,7 @@ export async function shareToNewsfeed(
           pet_name: petName,
           is_anonymous: isAnonymous,
           display_name: displayName,
+          role: role,
         },
       ])
       .select()

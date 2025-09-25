@@ -1,6 +1,8 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
+import { Buffer } from "buffer";
 import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
@@ -40,6 +42,13 @@ const ProfileScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [profileImage, setProfileImage] = useState(null);
 
+  // User profile states
+  const [userProfile, setUserProfile] = useState(null);
+  const [name, setName] = useState("");
+  const [location, setLocation] = useState("");
+  const [bio, setBio] = useState("");
+  const [petNames, setPetNames] = useState([]);
+
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -63,32 +72,87 @@ const ProfileScreen = () => {
       const displayName =
         user?.user_metadata?.options?.data?.display_name || "";
       setNewEmail(user?.email || "");
-      // Load profile image if exists
-      const avatarUrl =
-        user?.user_metadata?.avatar_url ||
-        user?.user_metadata?.options?.data?.avatar_url;
-      if (avatarUrl) {
-        setProfileImage(avatarUrl);
-      }
 
       // Fetch user posts, pet scan count, and history images
       console.log("Fetching user data...");
       fetchUserPosts();
       fetchPetScanCount();
       fetchHistoryImages();
+
+      // Fetch user profile from the user_profiles table
+      fetchUserProfile();
     }
   }, [user]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        if (error.code === "PGRST116") {
+          // No rows returned
+          // Create a default profile for the user
+          await createDefaultUserProfile();
+        } else {
+          console.error("Error fetching user profile:", error);
+        }
+        return;
+      }
+
+      setUserProfile(data);
+      setName(data.name || "");
+      setLocation(data.location || "");
+      setBio(data.bio || "");
+      setPetNames(data.pet_names || []);
+
+      // Set profile image from user_profiles table
+      if (data.profile_image_url) {
+        setProfileImage(data.profile_image_url);
+      } else {
+        // Fallback to auth metadata if no avatar in user_profiles
+        const avatarUrl =
+          user?.user_metadata?.avatar_url ||
+          user?.user_metadata?.options?.data?.avatar_url;
+        if (avatarUrl) {
+          setProfileImage(avatarUrl);
+        }
+      }
+    } catch (error) {
+      console.error("Error in fetchUserProfile:", error);
+    }
+  };
+
+  const createDefaultUserProfile = async () => {
+    try {
+      const { error } = await supabase.from("user_profiles").insert([
+        {
+          id: user.id,
+          name:
+            user?.user_metadata?.options?.data?.display_name ||
+            user?.email?.split("@")[0] ||
+            "Pet Owner",
+          created_at: new Date().toISOString(),
+          profile_image_url: null // Initialize with null profile_image_url
+        },
+      ]);
+
+      if (error) throw error;
+
+      // Fetch the newly created profile
+      fetchUserProfile();
+    } catch (error) {
+      console.error("Error creating default user profile:", error);
+    }
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
     await refreshAllData();
     setRefreshing(false);
-  };
-
-  const navigation = useNavigation();
-
-  const handleGoBack = () => {
-    navigation.goBack();
   };
 
   const handleSignOut = async () => {
@@ -156,17 +220,11 @@ const ProfileScreen = () => {
         data: { publicUrl },
       } = supabase.storage.from("avatars").getPublicUrl(fileName);
 
-      // Update user metadata with the avatar URL
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: {
-          avatar_url: publicUrl,
-          options: {
-            data: {
-              avatar_url: publicUrl,
-            },
-          },
-        },
-      });
+      // Update the profile_image_url in the user_profiles table instead of auth metadata
+      const { error: updateError } = await supabase
+        .from('user_profiles')
+        .update({ profile_image_url: publicUrl })
+        .eq('id', user.id);
 
       if (updateError) throw updateError;
 
@@ -325,7 +383,9 @@ const ProfileScreen = () => {
   }
 
   const displayName =
-    user?.user_metadata?.options?.data?.display_name || "Pet Owner";
+    userProfile?.name ||
+    user?.user_metadata?.options?.data?.display_name ||
+    "Pet Owner";
   const role = user?.user_metadata?.options?.data?.role || "Pet Owner";
   const email = user?.email || "";
 

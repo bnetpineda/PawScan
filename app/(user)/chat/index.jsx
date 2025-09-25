@@ -88,32 +88,12 @@ const ChatListScreen = () => {
       // Get the latest message for each conversation and vet details
       const conversationsWithLatestMessage = await Promise.all(
         conversationsData.map(async (conversation) => {
-          // Get vet details from the secure veterinarians view
-          const { data: vetData, error: vetError } = await supabase
-            .from("veterinarians")
-            .select("id, display_name, email")
+          // Get vet details from the vet_profiles table
+          let { data: vetData, error: vetError } = await supabase
+            .from("vet_profiles")
+            .select("id, name, profile_image_url")
             .eq("id", conversation.vet_id)
             .single();
-
-          // If we get a permission error or no data found, try to get the user's display name from the user_display_names view
-          if (vetError && (vetError.code === "42501" || vetError.code === "PGRST116")) {
-            if (vetError.code === "42501") {
-              console.warn("Permission denied for veterinarians view, falling back to user_display_names view");
-            } else {
-              console.warn("Veterinarian not found in veterinarians view, falling back to user_display_names view");
-            }
-            
-            const { data: userData, error: userError } = await supabase
-              .from("user_display_names")
-              .select("id, display_name, email")
-              .eq("id", conversation.vet_id)
-              .single();
-            
-            if (!userError && userData) {
-              vetData = userData;
-              vetError = null;
-            }
-          }
 
           if (vetError) {
             console.error("Error fetching vet data:", vetError);
@@ -125,7 +105,7 @@ const ChatListScreen = () => {
             };
           }
 
-          const vetName = vetData?.display_name || "Veterinarian";
+          const vetName = vetData?.name || "Veterinarian";
 
           // Get the latest message for this conversation
           const { data: latestMessageData, error: messageError } =
@@ -164,18 +144,28 @@ const ChatListScreen = () => {
 
   const loadVeterinarians = async () => {
     try {
-      // Get all veterinarians
+      // Get all veterinarians from vet_profiles table
       const { data: vetsData, error: vetsError } = await supabase
-        .from("veterinarians")
-        .select("id, display_name, email")
-        .order("display_name", { ascending: true });
+        .from("vet_profiles")
+        .select("id, name, profile_image_url")
+        .order("name", { ascending: true });
 
       if (vetsError) {
-        console.error("Error fetching veterinarians:", vetsError);
+        console.error("Error fetching veterinarians from vet_profiles:", vetsError);
+        // No fallback - if vet_profiles is not accessible, there are no veterinarians to show
+        setVeterinarians([]);
         return;
       }
 
-      setVeterinarians(vetsData);
+      // Format data to match expected vet object structure
+      const formattedVets = vetsData.map(vet => ({
+        id: vet.id,
+        display_name: vet.name,
+        email: "", // Vet profiles don't necessarily store email directly
+        profile_image_url: vet.profile_image_url
+      }));
+
+      setVeterinarians(formattedVets);
     } catch (error) {
       console.error("Error loading veterinarians:", error);
     }
@@ -212,21 +202,28 @@ const ChatListScreen = () => {
         )
       }
     >
-      <View className="mr-3">
+      <TouchableOpacity 
+        className="mr-3"
+        onPress={() => router.push(`/(user)/vet-profile?vetId=${item.vet_id}`)}
+      >
         <View className="w-12 h-12 rounded-full bg-black dark:bg-white justify-center items-center">
           <Text className="text-white dark:text-black text-xl font-inter-bold">
             {item.vetName.charAt(0).toUpperCase()}
           </Text>
         </View>
-      </View>
+      </TouchableOpacity>
       <View className="flex-1 justify-center">
         <View className="flex-row justify-between mb-1">
-          <Text
-            className="text-base font-inter-bold flex-1 text-black dark:text-white"
-            numberOfLines={1}
+          <TouchableOpacity 
+            onPress={() => router.push(`/(user)/vet-profile?vetId=${item.vet_id}`)}
           >
-            {item.vetName}
-          </Text>
+            <Text
+              className="text-base font-inter-bold flex-1 text-black dark:text-white"
+              numberOfLines={1}
+            >
+              {item.vetName}
+            </Text>
+          </TouchableOpacity>
           {item.latestMessage && (
             <Text className="text-xs text-neutral-500 dark:text-neutral-400 ml-2">
               {formatTime(item.latestMessage.created_at)}

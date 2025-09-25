@@ -13,6 +13,80 @@ export const AuthProvider = ({ children }) => {
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
+    // Function to create profile after user authentication
+    const createProfileAfterAuth = async (user) => {
+      try {
+        // Check if user profile already exists to avoid duplicates
+        // Check for veterinarian profile first
+        const { data: vetProfileData, error: vetCheckError } = await supabase
+          .from('vet_profiles')
+          .select('id')
+          .eq('id', user.id)
+          .single();
+
+        if (!vetCheckError && vetProfileData) {
+          // Veterinarian profile already exists, no need to create anything
+          return;
+        }
+
+        // Check for user profile
+        const { data: userProfileData, error: userCheckError } = await supabase
+          .from('user_profiles')
+          .select('id')
+          .eq('id', user.id)
+          .single();
+
+        if (!userCheckError && userProfileData) {
+          // User profile already exists, no need to create anything
+          return;
+        }
+
+        // If no profile exists, create one based on user metadata from registration
+        const userRole = user.user_metadata?.role;
+        
+        if (userRole === 'veterinarian' || userRole === 'pending_veterinarian') {
+          // Create veterinarian profile with data from user metadata
+          const { error: insertError } = await supabase
+            .from('vet_profiles')
+            .upsert([{
+              id: user.id,
+              name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Veterinarian',
+              license_number: user.user_metadata?.license_number,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }], {
+              onConflict: 'id'
+            });
+          
+          if (insertError) {
+            console.error('Error creating/updating veterinarian profile:', insertError);
+          } else {
+            console.log('Veterinarian profile created/updated successfully');
+          }
+        } else {
+          // Create user profile with data from user metadata
+          const { error: insertError } = await supabase
+            .from('user_profiles')
+            .upsert([{
+              id: user.id,
+              name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Pet Owner',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }], {
+              onConflict: 'id'
+            });
+          
+          if (insertError) {
+            console.error('Error creating/updating user profile:', insertError);
+          } else {
+            console.log('User profile created/updated successfully');
+          }
+        }
+      } catch (error) {
+        console.error('Error in createProfileAfterAuth:', error);
+      }
+    };
+
     const init = async () => {
       const {
         data: { session },
@@ -27,13 +101,18 @@ export const AuthProvider = ({ children }) => {
         setInitialized(true);
         notificationService.initialize();
       }
+      
+      // Create profile if user doesn't have one, using data from registration
+      if (session?.user) {
+        await createProfileAfterAuth(session.user);
+      }
     };
 
     init();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -41,6 +120,11 @@ export const AuthProvider = ({ children }) => {
       if (session?.user && !initialized) {
         setInitialized(true);
         notificationService.initialize();
+      }
+      
+      // Create profile if user doesn't have one, using data from registration
+      if (session?.user) {
+        await createProfileAfterAuth(session.user);
       }
       
       // Reset notification service when user logs out

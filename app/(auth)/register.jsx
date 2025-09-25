@@ -57,9 +57,11 @@ export default function Register() {
         const hasUpperCase = /[A-Z]/.test(password);
         const hasLowerCase = /[a-z]/.test(password);
         const hasNumbers = /\d/.test(password);
-        
+
         if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
-          setPasswordError("Password must contain at least one uppercase letter, one lowercase letter, and one number.");
+          setPasswordError(
+            "Password must contain at least one uppercase letter, one lowercase letter, and one number."
+          );
         } else {
           setPasswordError("");
         }
@@ -109,36 +111,45 @@ export default function Register() {
     try {
       // For veterinarians, we register them with a "pending_veterinarian" role
       // For regular users, we register them with a "user" role
-      const role = userRole === "veterinarian" ? "pending_veterinarian" : userRole;
-      
-      const { error } = await signUpWithEmail(email, password, {
+      const role =
+        userRole === "veterinarian" ? "pending_veterinarian" : userRole;
+
+      // Register user with role and profile details in metadata
+      const { error: authError, data } = await signUpWithEmail(email, password, {
         options: {
           data: {
-            display_name: fullName,
             role: role,
-            license_number: userRole === "veterinarian" ? licenseNumber : undefined
+            full_name: fullName,
+            license_number: userRole === "veterinarian" ? licenseNumber : undefined,
           },
         },
       });
 
-      if (error) {
+      if (authError) {
         // Handle specific error cases
-        if (error.message.includes("email")) {
-          Alert.alert("Registration Failed", "This email is already registered. Please use a different email or sign in instead.");
+        if (authError.message.includes("email")) {
+          Alert.alert(
+            "Registration Failed",
+            "This email is already registered. Please use a different email or sign in instead."
+          );
         } else {
-          Alert.alert("Registration Failed", error.message);
+          Alert.alert("Registration Failed", authError.message);
         }
-      } else {
-        const successMessage = userRole === "veterinarian" 
+        return;
+      }
+
+      // Profile will be created when user first signs in after verification
+      // The AuthProvider will handle creating the profiles on first sign-in
+      // with complete user information provided during registration
+
+      const successMessage =
+        userRole === "veterinarian"
           ? "Your application has been submitted for review. You will receive an email once verified by an administrator."
           : "Please check your email for verification instructions.";
-          
-        Alert.alert(
-          "Registration Successful",
-          successMessage,
-          [{ text: "OK", onPress: () => router.replace("/(auth)/login") }]
-        );
-      }
+
+      Alert.alert("Registration Successful", successMessage, [
+        { text: "OK", onPress: () => router.replace("/(auth)/login") },
+      ]);
     } catch (error) {
       Alert.alert("Error", error.message);
     } finally {
@@ -152,28 +163,34 @@ export default function Register() {
 
   const isFormValid = () => {
     // Check for any existing errors
-    if (emailError || passwordError || confirmPasswordError || fullNameError || licenseNumberError) {
+    if (
+      emailError ||
+      passwordError ||
+      confirmPasswordError ||
+      fullNameError ||
+      licenseNumberError
+    ) {
       return { valid: false, message: "Please fix the errors in the form." };
     }
-    
+
     // Check required fields
     if (!fullName.trim()) {
       return { valid: false, message: "Please enter your full name." };
     }
-    
+
     if (!email.trim()) {
       return { valid: false, message: "Please enter your email address." };
     }
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
       return { valid: false, message: "Please enter a valid email address." };
     }
-    
+
     if (!password.trim()) {
       return { valid: false, message: "Please enter a password." };
     }
-    
+
     // Password strength validation
     if (password.trim().length < 6) {
       return {
@@ -181,27 +198,28 @@ export default function Register() {
         message: "Password must be at least 6 characters.",
       };
     }
-    
+
     // Check for password strength (at least one uppercase, one lowercase, one number)
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumbers = /\d/.test(password);
-    
+
     if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
       return {
         valid: false,
-        message: "Password must contain at least one uppercase letter, one lowercase letter, and one number.",
+        message:
+          "Password must contain at least one uppercase letter, one lowercase letter, and one number.",
       };
     }
-    
+
     if (!confirmPassword.trim()) {
       return { valid: false, message: "Please confirm your password." };
     }
-    
+
     if (password !== confirmPassword) {
       return { valid: false, message: "Passwords don't match." };
     }
-    
+
     // For veterinarians, we also require a license number
     if (userRole === "veterinarian") {
       if (!licenseNumber.trim()) {
@@ -210,7 +228,10 @@ export default function Register() {
       // Validate that license number is exactly 7 digits
       const licenseRegex = /^\d{7}$/;
       if (!licenseRegex.test(licenseNumber.trim())) {
-        return { valid: false, message: "License number must be exactly 7 digits." };
+        return {
+          valid: false,
+          message: "License number must be exactly 7 digits.",
+        };
       }
     }
     return { valid: true };
@@ -255,7 +276,9 @@ export default function Register() {
                 autoCapitalize="none"
               />
               {fullNameError ? (
-                <Text className="text-red-500 text-xs px-4 py-1">{fullNameError}</Text>
+                <Text className="text-red-500 text-xs px-4 py-1">
+                  {fullNameError}
+                </Text>
               ) : null}
               <TextInput
                 className="h-14 border-b border-neutral-200 dark:border-neutral-700 px-4 font-inter-bold text-black dark:text-white bg-transparent"
@@ -267,7 +290,9 @@ export default function Register() {
                 autoCapitalize="none"
               />
               {emailError ? (
-                <Text className="text-red-500 text-xs px-4 py-1">{emailError}</Text>
+                <Text className="text-red-500 text-xs px-4 py-1">
+                  {emailError}
+                </Text>
               ) : null}
               {userRole === "veterinarian" && (
                 <>
@@ -280,7 +305,9 @@ export default function Register() {
                     autoCapitalize="none"
                   />
                   {licenseNumberError ? (
-                    <Text className="text-red-500 text-xs px-4 py-1">{licenseNumberError}</Text>
+                    <Text className="text-red-500 text-xs px-4 py-1">
+                      {licenseNumberError}
+                    </Text>
                   ) : null}
                 </>
               )}
@@ -313,14 +340,34 @@ export default function Register() {
                 </TouchableOpacity>
               </View>
               {passwordError ? (
-                <Text className="text-red-500 text-xs px-4 py-1">{passwordError}</Text>
+                <Text className="text-red-500 text-xs px-4 py-1">
+                  {passwordError}
+                </Text>
               ) : null}
               {password && !passwordError && (
                 <View className="px-4 py-2">
                   <View className="flex-row">
-                    <View className={`h-1 flex-1 rounded-full mr-1 ${/.*[A-Z].*/.test(password) ? 'bg-green-500' : 'bg-neutral-300 dark:bg-neutral-700'}`} />
-                    <View className={`h-1 flex-1 rounded-full mr-1 ${/.*[a-z].*/.test(password) ? 'bg-green-500' : 'bg-neutral-300 dark:bg-neutral-700'}`} />
-                    <View className={`h-1 flex-1 rounded-full ${/.*\d.*/.test(password) ? 'bg-green-500' : 'bg-neutral-300 dark:bg-neutral-700'}`} />
+                    <View
+                      className={`h-1 flex-1 rounded-full mr-1 ${
+                        /.*[A-Z].*/.test(password)
+                          ? "bg-green-500"
+                          : "bg-neutral-300 dark:bg-neutral-700"
+                      }`}
+                    />
+                    <View
+                      className={`h-1 flex-1 rounded-full mr-1 ${
+                        /.*[a-z].*/.test(password)
+                          ? "bg-green-500"
+                          : "bg-neutral-300 dark:bg-neutral-700"
+                      }`}
+                    />
+                    <View
+                      className={`h-1 flex-1 rounded-full ${
+                        /.*\d.*/.test(password)
+                          ? "bg-green-500"
+                          : "bg-neutral-300 dark:bg-neutral-700"
+                      }`}
+                    />
                   </View>
                   <Text className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                     Password must contain uppercase, lowercase, and number
@@ -358,7 +405,9 @@ export default function Register() {
                 </TouchableOpacity>
               </View>
               {confirmPasswordError ? (
-                <Text className="text-red-500 text-xs px-4 py-1">{confirmPasswordError}</Text>
+                <Text className="text-red-500 text-xs px-4 py-1">
+                  {confirmPasswordError}
+                </Text>
               ) : null}
             </View>
 
@@ -398,7 +447,11 @@ export default function Register() {
                 style={[
                   styles.buttonBase,
                   userRole === "veterinarian"
-                    ? [styles.buttonActive, isDark && styles.buttonActiveDark, styles.buttonShadow]
+                    ? [
+                        styles.buttonActive,
+                        isDark && styles.buttonActiveDark,
+                        styles.buttonShadow,
+                      ]
                     : styles.buttonInactive,
                 ]}
                 onPress={() => setUserRole("veterinarian")}
@@ -407,8 +460,14 @@ export default function Register() {
                   style={[
                     styles.buttonTextBase,
                     userRole === "veterinarian"
-                      ? [styles.buttonTextActive, isDark && styles.buttonTextActiveDark]
-                      : [styles.buttonTextInactive, isDark && styles.buttonTextInactiveDark],
+                      ? [
+                          styles.buttonTextActive,
+                          isDark && styles.buttonTextActiveDark,
+                        ]
+                      : [
+                          styles.buttonTextInactive,
+                          isDark && styles.buttonTextInactiveDark,
+                        ],
                   ]}
                 >
                   Veterinarian
@@ -442,7 +501,9 @@ export default function Register() {
 
             <View className="flex-row items-center my-6">
               <View className="flex-1 h-0.5 bg-neutral-900 dark:bg-neutral-500" />
-              <Text className="mx-4 text-neutral-700 dark:text-neutral-600">or</Text>
+              <Text className="mx-4 text-neutral-700 dark:text-neutral-600">
+                or
+              </Text>
               <View className="flex-1 h-0.5 bg-neutral-900 dark:bg-neutral-500" />
             </View>
 

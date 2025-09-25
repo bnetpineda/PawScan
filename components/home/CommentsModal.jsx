@@ -28,6 +28,7 @@ const CommentsModal = ({
   currentUser,
   selectedPost,
   formatFullDateTime,
+  onViewProfile,
 }) => {
   const isOwner = currentUser?.id === selectedPost?.user_id;
   const isVet =
@@ -146,32 +147,75 @@ const CommentsModal = ({
                   <View className="py-3 border-b border-neutral-100 dark:border-neutral-800">
                     <View className="flex-row items-start">
                       {commentAvatars[item.user_id] ? (
-                        <Image
-                          source={{ uri: commentAvatars[item.user_id] }}
-                          className="w-8 h-8 rounded-full mr-3 mt-1"
-                          resizeMode="cover"
-                          onError={() => {
-                            // Fallback to placeholder on error
-                            setCommentAvatars(prev => ({
-                              ...prev,
-                              [item.user_id]: null
-                            }));
-                          }}
-                        />
-                      ) : (
-                        <View className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 justify-center items-center mr-3 mt-1">
-                          <FontAwesome
-                            name="user"
-                            size={14}
-                            color={isDark ? "#8E8E93" : "#6C757D"}
+                        item.role === "veterinarian" && onViewProfile ? (
+                          <TouchableOpacity
+                            onPress={() => onViewProfile(item.user_id)}
+                            className="mr-3 mt-1"
+                          >
+                            <Image
+                              source={{ uri: commentAvatars[item.user_id] }}
+                              className="w-8 h-8 rounded-full"
+                              resizeMode="cover"
+                              onError={() => {
+                                // Fallback to placeholder on error
+                                setCommentAvatars(prev => ({
+                                  ...prev,
+                                  [item.user_id]: null
+                                }));
+                              }}
+                            />
+                          </TouchableOpacity>
+                        ) : (
+                          <Image
+                            source={{ uri: commentAvatars[item.user_id] }}
+                            className="w-8 h-8 rounded-full mr-3 mt-1"
+                            resizeMode="cover"
+                            onError={() => {
+                              // Fallback to placeholder on error
+                              setCommentAvatars(prev => ({
+                                ...prev,
+                                [item.user_id]: null
+                              }));
+                            }}
                           />
-                        </View>
+                        )
+                      ) : (
+                        item.role === "veterinarian" && onViewProfile ? (
+                          <TouchableOpacity
+                            onPress={() => onViewProfile(item.user_id)}
+                            className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 justify-center items-center mr-3 mt-1"
+                          >
+                            <FontAwesome
+                              name="user"
+                              size={14}
+                              color={isDark ? "#8E8E93" : "#6C757D"}
+                            />
+                          </TouchableOpacity>
+                        ) : (
+                          <View className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 justify-center items-center mr-3 mt-1">
+                            <FontAwesome
+                              name="user"
+                              size={14}
+                              color={isDark ? "#8E8E93" : "#6C757D"}
+                            />
+                          </View>
+                        )
                       )}
                       <View className="flex-1">
                         <View className="flex-row items-center mb-1">
+                          {item.role === "veterinarian" && onViewProfile ? (
+                        <TouchableOpacity
+                          onPress={() => onViewProfile(item.user_id)}
+                        >
                           <Text className="font-inter-bold text-black dark:text-white mr-2">
-                            {item.display_name || "Pet Owner"}
+                            {item.display_name || "Veterinarian"}
                           </Text>
+                        </TouchableOpacity>
+                      ) : (
+                        <Text className="font-inter-bold text-black dark:text-white mr-2">
+                          {item.display_name || "Pet Owner"}
+                        </Text>
+                      )}
                           {item.role === "veterinarian" && (
                             <MaterialIcons
                               name="verified"

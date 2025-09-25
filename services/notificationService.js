@@ -94,16 +94,26 @@ class NotificationService {
   // Send push notification to a user
   async sendPushNotificationToUser(userId, title, body, data = {}) {
     try {
-      // First, let's get the user's push token from their metadata
+      // First, let's get the user from user_profiles to ensure they exist
       const { data: userData, error: userError } = await supabase
-        .from('user_display_names') // Using the view you have
+        .from('user_profiles')
         .select('id')
         .eq('id', userId)
         .single();
 
       if (userError) {
-        console.error('Error fetching user:', userError);
-        return;
+        console.error('Error fetching user from user_profiles:', userError);
+        // Try to check if it's a veterinarian instead
+        const { data: vetData, error: vetError } = await supabase
+          .from('vet_profiles')
+          .select('id')
+          .eq('id', userId)
+          .single();
+          
+        if (vetError) {
+          console.error('User also not found in vet_profiles:', vetError);
+          return;
+        }
       }
 
       // Get the user's push token from auth metadata
