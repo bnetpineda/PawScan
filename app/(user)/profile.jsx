@@ -458,7 +458,7 @@ const ProfileScreen = () => {
   return (
     <>
       <ScrollView
-        className={`flex-1 ${isDark ? "bg-black" : "bg-white"} pt-4`}
+        className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -468,7 +468,7 @@ const ProfileScreen = () => {
         }
       >
         {/* Profile Header - Instagram Style */}
-        <View className={`pt-12 pb-4 ${isDark ? "bg-black" : "bg-white"}`}>
+        <View className={`pt-2 pb-4 ${isDark ? "bg-black" : "bg-white"}`}>
           <View className="flex-row justify-between items-center px-4 mb-8">
             <Image
               source={require("../../assets/images/home-logo.png")}

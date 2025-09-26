@@ -59,28 +59,40 @@ const ChatListScreen = () => {
       // Get the latest message for each conversation and user details
       const conversationsWithLatestMessage = await Promise.all(
         conversationsData.map(async (conversation) => {
-          // Get user details from the user_profiles table
-          let { data: userData, error: userError } = await supabase
-            .from('user_profiles')
-            .select('id, name')
-            .eq('id', conversation.user_id)
-            .single();
-
           let userName = 'Pet Owner';
+          
+          try {
+            // Get user details from the user_profiles table
+            const { data: userData, error: userError } = await supabase
+              .from('user_profiles')
+              .select('id, name')
+              .eq('id', conversation.user_id)
+              .single();
 
-          if (userError) {
-            console.error('Error fetching user data from user_profiles:', userError);
-            
-            // Handle case where user doesn't exist (might have been deleted)
-            if (userError.code === 'PGRST116') {
-              console.warn('User not found for conversation:', conversation.user_id);
-              userName = 'Deleted User';
+            if (userError) {
+              // Check if error is due to no rows found (PGRST116) or RLS violation
+              if (userError.code === 'PGRST116') {
+                // No user profile found - user might not have created a profile yet
+                console.log(`User profile not found for user ID: ${conversation.user_id}`);
+                userName = 'Pet Owner';
+              } else if (userError.code === '42501') { // Permission denied
+                console.warn(`Permission denied accessing profile for user ID: ${conversation.user_id}. This might be due to RLS policies.`);
+                // For now, use a default name, but we might want to implement a function in the future
+                // that allows limited access to user information necessary for chat functionality
+                userName = 'Pet Owner';
+              } else {
+                // Log other errors
+                console.error('Error fetching user data from user_profiles:', userError);
+                userName = 'Pet Owner';
+              }
             } else {
-              userName = 'Pet Owner';
+              // Use the name from user_profiles if available
+              userName = userData?.name || 'Pet Owner';
             }
-          } else {
-            // Use the name from user_profiles
-            userName = userData?.name || 'Pet Owner';
+          } catch (exception) {
+            // Handle any unexpected exceptions during the fetch
+            console.error('Exception fetching user data:', exception);
+            userName = 'Pet Owner';
           }
 
           const { data: latestMessageData, error: messageError } = await supabase
