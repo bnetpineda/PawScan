@@ -164,7 +164,7 @@ const VetsListScreen = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-black pt-12">
+    <SafeAreaView className="flex-1 bg-white dark:bg-black">
       <StatusBar
         barStyle={isDark ? "light-content" : "dark-content"}
         backgroundColor={isDark ? "#000" : "#fff"}

@@ -22,13 +22,10 @@ const ChatScreen = () => {
   // Use the custom hook to handle all chat logic
   const {
     messages,
-    setMessages,
     newMessage,
     setNewMessage,
     isOtherUserTyping,
-    setIsOtherUserTyping,
     messageStatus,
-    setMessageStatus,
     networkError,
     setNetworkError,
     isSending,
@@ -39,9 +36,7 @@ const ChatScreen = () => {
     cleanupSubscriptions,
     markMessagesAsRead,
     loadMessages,
-    updateTypingStatus,
     clearTypingStatus,
-    sendingLoadingManager
   } = useVetChat(conversationId, user, userName, userId);
 
   // Function to format time
@@ -154,7 +149,7 @@ const ChatScreen = () => {
 
     // Launch image picker
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: [ImagePicker.MediaType.Images],
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,

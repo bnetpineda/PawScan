@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, Dimensions } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 
 const MessageItem = ({ 
@@ -11,6 +11,15 @@ const MessageItem = ({
   const isCurrentUser = item.sender_id === user.id;
   const messageTime = formatTime(item.created_at);
   const isTempMessage = item.id.toString().startsWith('temp_');
+  const [imageAspectRatio, setImageAspectRatio] = useState(1);
+  
+  const screenWidth = Dimensions.get('window').width;
+  const maxImageWidth = screenWidth * 0.8; // 80% of screen width (matching max-w-[80%])
+  
+  const handleImageLoad = (event) => {
+    const { width, height } = event.nativeEvent.source;
+    setImageAspectRatio(width / height);
+  };
 
   return (
     <View className={`mb-3 flex-row ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
@@ -18,8 +27,14 @@ const MessageItem = ({
         {item.image_url && (
           <Image 
             source={{ uri: item.image_url }} 
-            className="w-full h-48 rounded-t-2xl" 
-            resizeMode="cover" 
+            className="w-full rounded-t-2xl" 
+            resizeMode="cover"
+            style={{ 
+              aspectRatio: imageAspectRatio,
+              minHeight: 150,
+              maxHeight: 300
+            }}
+            onLoad={handleImageLoad}
           />
         )}
         {item.content ? (
