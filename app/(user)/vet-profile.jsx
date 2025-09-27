@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import useProfileData from '../../hooks/useProfileData';
 
 export default function VetProfileScreen() {
   const { vetId } = useLocalSearchParams();
@@ -13,12 +14,30 @@ export default function VetProfileScreen() {
   const isDark = colorScheme === 'dark';
   const [vetProfile, setVetProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [vetUser, setVetUser] = useState(null);
+
+  // Create a mock user object for the vet to use with useProfileData
+  const {
+    userPosts,
+    petScanCount,
+    postsLoading,
+    fetchUserPosts,
+    fetchPetScanCount,
+  } = useProfileData(vetUser);
 
   useEffect(() => {
     if (vetId) {
       fetchVetProfile();
     }
   }, [vetId]);
+
+  // Fetch vet posts when vetUser is set
+  useEffect(() => {
+    if (vetUser) {
+      fetchUserPosts();
+      fetchPetScanCount();
+    }
+  }, [vetUser]);
 
   const fetchVetProfile = async () => {
     try {
@@ -37,27 +56,41 @@ export default function VetProfileScreen() {
         return;
       }
 
-      // Fetch user metadata
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('display_name, avatar_url, created_at')
-        .eq('id', vetId)
-        .single();
+      // Try to get display name from a recent newsfeed post
+      let displayName = vetProfileData.name; // fallback to vet profile name
+      
+      try {
+        const { data: postData, error: postError } = await supabase
+          .from('newsfeed_posts')
+          .select('display_name')
+          .eq('user_id', vetId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
 
-      if (userError) {
-        console.error('Error fetching user data:', userError);
-        Alert.alert('Error', 'Could not load user information.');
-        return;
+        if (!postError && postData && postData.display_name) {
+          displayName = postData.display_name;
+        }
+      } catch (error) {
+        console.log('Could not get display name from posts, using vet profile name');
       }
 
       // Combine the data
       const combinedData = {
         ...vetProfileData,
-        ...userData,
+        display_name: displayName,
+        created_at: vetProfileData.created_at,
         id: vetId
       };
       
       setVetProfile(combinedData);
+      
+      // Set the vet user object for useProfileData hook
+      setVetUser({ 
+        id: vetId, 
+        display_name: displayName,
+      });
+      
     } catch (error) {
       console.error('Error in fetchVetProfile:', error);
       Alert.alert('Error', 'An unexpected error occurred.');
@@ -70,18 +103,16 @@ export default function VetProfileScreen() {
     router.back();
   };
 
-  const handleSendMessage = () => {
-    // Navigate to a chat screen with this veterinarian
-    router.push(`/(user)/chat/${vetId}`);
-  };
-
-  if (loading) {
+  if (loading || postsLoading) {
     return (
       <VetProfileViewer
         vetProfileData={null}
+        userPosts={[]}
+        petScanCount={0}
+        postsLoading={true}
         isDark={isDark}
         onGoBack={handleGoBack}
-        onSendMessage={handleSendMessage}
+        isViewingAsUser={true}
       />
     );
   }
@@ -89,9 +120,12 @@ export default function VetProfileScreen() {
   return (
     <VetProfileViewer
       vetProfileData={vetProfile}
+      userPosts={userPosts}
+      petScanCount={petScanCount}
+      postsLoading={postsLoading}
       isDark={isDark}
       onGoBack={handleGoBack}
-      onSendMessage={handleSendMessage}
+      isViewingAsUser={true}
     />
   );
 }

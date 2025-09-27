@@ -61,6 +61,7 @@ CREATE TABLE public.newsfeed_posts (
   is_anonymous boolean DEFAULT false,
   created_at timestamp with time zone DEFAULT now(),
   analysis_id uuid DEFAULT gen_random_uuid(),
+  role text,
   CONSTRAINT newsfeed_posts_pkey PRIMARY KEY (id),
   CONSTRAINT newsfeed_posts_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );

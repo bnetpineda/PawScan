@@ -7,19 +7,32 @@ import {
   Text,
   TouchableOpacity,
   View,
+  RefreshControl,
 } from "react-native";
 
 const VetProfileViewer = ({ 
   vetProfileData,
+  userPosts = [],
+  petScanCount = 0,
+  postsLoading = false,
   isDark,
   onGoBack,
   onSendMessage,
-  userPosts = [],
-  userHistory = [],
-  petScanCount = 0
+  isViewingAsUser = false
 }) => {
   const [showFullSchedule, setShowFullSchedule] = useState(false);
-  const [showingHistory, setShowingHistory] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  if (!vetProfileData && !postsLoading) {
+    return (
+      <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"} items-center justify-center`}>
+        <Text className={`text-lg font-inter ${isDark ? "text-white" : "text-black"}`}>
+          Profile not found
+        </Text>
+      </View>
+    );
+  }
 
   const {
     name,
@@ -27,15 +40,20 @@ const VetProfileViewer = ({
     clinic_location,
     contact_info,
     available_schedule,
-    avatar_url,
+    profile_image_url,
     display_name,
-    created_at
+    created_at,
+    email
   } = vetProfileData || {};
+
+  // Determine profile image
+  const profileImage = profile_image_url;
 
   // Get initials for default avatar
   const getInitials = (name) => {
-    if (!name) return "V"; // Default to 'V' for Veterinarian
-    return name
+    const displayNameToUse = display_name || name;
+    if (!displayNameToUse) return "V";
+    return displayNameToUse
       .split(" ")
       .map((word) => word.charAt(0))
       .join("")
@@ -53,19 +71,29 @@ const VetProfileViewer = ({
     });
   };
 
-  // Simplified grid rendering function
+  // Grid rendering function for posts
   const renderGridContent = () => {
-    const items = showingHistory ? userHistory : userPosts;
-    
-    // Show actual items
-    if (items.length > 0) {
-      return items.map((item, index) => (
-        <TouchableOpacity 
+    if (postsLoading) {
+      // Show loading placeholders
+      return Array(6).fill(0).map((_, index) => (
+        <View 
           key={index} 
+          className={`w-1/3 aspect-square p-1`}
+        >
+          <View className={`w-full h-full rounded ${isDark ? "bg-neutral-800" : "bg-neutral-200"}`} />
+        </View>
+      ));
+    }
+
+    if (userPosts.length > 0) {
+      return userPosts.map((post, index) => (
+        <TouchableOpacity 
+          key={post.id || index} 
           className="w-1/3 aspect-square p-1"
+          onPress={() => setSelectedImage(post.url)}
         >
           <Image
-            source={{ uri: item.url }}
+            source={{ uri: post.url }}
             className="w-full h-full rounded"
             resizeMode="cover"
           />
@@ -76,31 +104,38 @@ const VetProfileViewer = ({
       return (
         <View className="w-full py-10 items-center justify-center">
           <FontAwesome 
-            name={showingHistory ? "history" : "table"} 
+            name="table" 
             size={48} 
             color={isDark ? "#6B7280" : "#9CA3AF"} 
           />
           <Text className={`mt-4 text-lg font-inter ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
-            No {showingHistory ? "scan history" : "posts"} yet
+            No posts yet
           </Text>
           <Text className={`mt-2 text-base font-inter ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
-            {showingHistory 
-              ? "This veterinarian has no scan history" 
-              : "This veterinarian has no posts"}
+            This veterinarian hasn't shared any posts
           </Text>
         </View>
       );
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // You could add refresh logic here if needed
+    setTimeout(() => setRefreshing(false), 1000);
+  };
+
   return (
     <>
       <ScrollView 
-        className={`flex-1 ${isDark ? "bg-black" : "bg-white"} pt-4`}
+        className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
-        {/* Profile Header - Instagram Style */}
+        {/* Header - Instagram Style */}
         <View className={`pb-4 ${isDark ? "bg-black" : "bg-white"}`}>
-          <View className="flex-row justify-between items-center px-4 mb-8">
+          <View className="flex-row justify-between items-center px-4 mb-8 pt-4">
             <Image
               source={require("../assets/images/home-logo.png")}
               className="w-8 h-9"
@@ -122,15 +157,6 @@ const VetProfileViewer = ({
                   />
                 </TouchableOpacity>
               )}
-              {onSendMessage && (
-                <TouchableOpacity onPress={onSendMessage}>
-                  <FontAwesome
-                    name="comment"
-                    size={24}
-                    color={isDark ? "white" : "black"}
-                  />
-                </TouchableOpacity>
-              )}
             </View>
           </View>
 
@@ -138,9 +164,9 @@ const VetProfileViewer = ({
           <View className="flex-row px-4 pb-4 items-center">
             {/* Profile Image */}
             <View className="mr-6">
-              {avatar_url ? (
+              {profileImage ? (
                 <Image
-                  source={{ uri: avatar_url }}
+                  source={{ uri: profileImage }}
                   className="w-24 h-24 rounded-full"
                 />
               ) : (
@@ -154,13 +180,13 @@ const VetProfileViewer = ({
                       isDark ? "text-white" : "text-black"
                     }`}
                   >
-                    {getInitials(display_name)}
+                    {getInitials(display_name || name)}
                   </Text>
                 </View>
               )}
             </View>
 
-            {/* Stats - Updated for Pet Owners */}
+            {/* Stats */}
             <View className="flex-row flex-1 justify-around">
               <View className="items-center">
                 <Text
@@ -168,7 +194,7 @@ const VetProfileViewer = ({
                     isDark ? "text-white" : "text-black"
                   }`}
                 >
-                  {vetProfileData?.post_count || userPosts?.length || 0}
+                  {userPosts?.length || 0}
                 </Text>
                 <Text
                   className={`text-sm ${
@@ -370,51 +396,39 @@ const VetProfileViewer = ({
           )}
         </View>
 
-        {/* Posts Grid - Instagram Style */}
+        {/* Posts Grid - Instagram Style (No History Tab for Users) */}
         <View className="mt-2">
           <View className="flex-row border-t border-b border-neutral-300 dark:border-neutral-700">
-            <TouchableOpacity 
-              className="flex-1 items-center py-3 border-r border-neutral-300 dark:border-neutral-700"
-              onPress={() => setShowingHistory(false)}
-            >
+            <View className="flex-1 items-center py-3">
               <FontAwesome
                 name="table"
                 size={24}
-                color={!showingHistory && isDark ? "#3B82F6" : !showingHistory ? "#3B82F6" : isDark ? "white" : "black"}
+                color={isDark ? "#3B82F6" : "#3B82F6"}
               />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              className="flex-1 items-center py-3"
-              onPress={() => setShowingHistory(true)}
-            >
-              <FontAwesome
-                name="history"
-                size={24}
-                color={showingHistory && isDark ? "#3B82F6" : showingHistory ? "#3B82F6" : isDark ? "white" : "black"}
-              />
-            </TouchableOpacity>
+            </View>
           </View>
 
-          {/* Posts/History Grid */}
+          {/* Posts Grid */}
           <View className="flex-row flex-wrap w-full">
             {renderGridContent()}
           </View>
         </View>
       </ScrollView>
 
-      {/* Message Button */}
-      {onSendMessage && (
-        <View className="px-4 py-6">
-          <TouchableOpacity
-            onPress={onSendMessage}
-            className={`py-4 rounded-xl justify-center items-center ${
-              isDark ? "bg-blue-600" : "bg-blue-500"
-            }`}
+      {/* Simple Image Viewer Modal (inline) */}
+      {selectedImage && (
+        <View className="absolute inset-0 bg-black bg-opacity-90 items-center justify-center z-50">
+          <TouchableOpacity 
+            className="absolute top-12 right-4 z-10"
+            onPress={() => setSelectedImage(null)}
           >
-            <Text className="text-white text-center font-inter-semibold text-lg">
-              Message Veterinarian
-            </Text>
+            <FontAwesome name="times" size={24} color="white" />
           </TouchableOpacity>
+          <Image
+            source={{ uri: selectedImage }}
+            className="w-full h-full"
+            resizeMode="contain"
+          />
         </View>
       )}
     </>
