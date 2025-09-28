@@ -3,7 +3,6 @@ import {
   View,
   Text,
   FlatList,
-  StyleSheet,
   SafeAreaView,
   TouchableOpacity,
   Alert,
@@ -13,6 +12,7 @@ import {
   TextInput,
   Modal,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { useAuth } from "../../../providers/AuthProvider";
 import { supabase } from "../../../lib/supabase";
@@ -102,10 +102,12 @@ const ChatListScreen = () => {
               ...conversation,
               latestMessage: null,
               vetName: "Veterinarian",
+              profile_image_url: null,
             };
           }
 
           const vetName = vetData?.name || "Veterinarian";
+          const profileImageUrl = vetData?.profile_image_url || null;
 
           // Get the latest message for this conversation
           const { data: latestMessageData, error: messageError } =
@@ -121,10 +123,14 @@ const ChatListScreen = () => {
             console.error("Error fetching message:", messageError);
           }
 
+          // Debug log to check the message data structure
+          console.log("Latest message for conversation", conversation.id, ":", latestMessageData);
+
           return {
             ...conversation,
             latestMessage: latestMessageData || null,
             vetName: vetName,
+            profile_image_url: profileImageUrl,
           };
         })
       );
@@ -173,27 +179,47 @@ const ChatListScreen = () => {
 
   const formatTime = (dateString) => {
     if (!dateString) return "";
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+    
+    try {
+      const date = new Date(dateString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) return "";
+      
+      const now = new Date();
+      const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
 
-    if (diffInDays === 0) {
-      return date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } else if (diffInDays === 1) {
-      return "Yesterday";
-    } else if (diffInDays < 7) {
-      return date.toLocaleDateString([], { weekday: "long" });
-    } else {
-      return date.toLocaleDateString([], { month: "short", day: "numeric" });
+      if (diffInDays === 0) {
+        return date.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      } else if (diffInDays === 1) {
+        return "Yesterday";
+      } else if (diffInDays < 7) {
+        return date.toLocaleDateString([], { weekday: "long" });
+      } else {
+        return date.toLocaleDateString([], { month: "short", day: "numeric" });
+      }
+    } catch (error) {
+      console.error("Error formatting time:", error);
+      return "";
     }
+  };
+
+  // Get initials for avatar fallback
+  const getInitials = (name) => {
+    if (!name) return "V";
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
   };
 
   const renderConversation = ({ item }) => (
     <TouchableOpacity
-      className="flex-row p-4 bg-white border-b border-black dark:bg-neutral-900 dark:border-neutral-700"
+      className="flex-row items-center p-4 mx-4 mb-3 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800"
       onPress={() =>
         router.push(
           `/(user)/chat/${item.vet_id}?vetName=${encodeURIComponent(
@@ -201,30 +227,44 @@ const ChatListScreen = () => {
           )}`
         )
       }
+      style={{
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+        elevation: 2,
+      }}
     >
       <TouchableOpacity 
-        className="mr-3"
+        className="mr-4"
         onPress={() => router.push(`/(user)/vet-profile?vetId=${item.vet_id}`)}
       >
-        <View className="w-12 h-12 rounded-full bg-black dark:bg-white justify-center items-center">
-          <Text className="text-white dark:text-black text-xl font-inter-bold">
-            {item.vetName.charAt(0).toUpperCase()}
-          </Text>
-        </View>
+        {item.profile_image_url ? (
+          <Image
+            source={{ uri: item.profile_image_url }}
+            className="w-14 h-14 rounded-full"
+          />
+        ) : (
+          <View className="w-14 h-14 rounded-full bg-neutral-800 dark:bg-neutral-200 justify-center items-center">
+            <Text className="text-white dark:text-black text-lg font-inter-bold">
+              {getInitials(item.vetName)}
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
-      <View className="flex-1 justify-center">
-        <View className="flex-row justify-between mb-1">
+      <View className="flex-1">
+        <View className="flex-row justify-between items-center mb-1">
           <TouchableOpacity 
             onPress={() => router.push(`/(user)/vet-profile?vetId=${item.vet_id}`)}
           >
             <Text
-              className="text-base font-inter-bold flex-1 text-black dark:text-white"
+              className="text-lg font-inter-bold text-black dark:text-white"
               numberOfLines={1}
             >
               {item.vetName}
             </Text>
           </TouchableOpacity>
-          {item.latestMessage && (
+          {item.latestMessage && item.latestMessage.created_at && (
             <Text className="text-xs text-neutral-500 dark:text-neutral-400 ml-2">
               {formatTime(item.latestMessage.created_at)}
             </Text>
@@ -232,7 +272,7 @@ const ChatListScreen = () => {
         </View>
         {item.latestMessage ? (
           <Text
-            className="text-sm text-neutral-600 dark:text-neutral-300"
+            className="text-sm text-neutral-600 dark:text-neutral-400"
             numberOfLines={1}
           >
             {item.latestMessage.content}
@@ -248,7 +288,7 @@ const ChatListScreen = () => {
 
   const renderVeterinarian = ({ item }) => (
     <TouchableOpacity
-      className="flex-row p-4 bg-white border-b border-black dark:bg-neutral-900 dark:border-neutral-700"
+      className="flex-row items-center p-4 mx-4 mb-3 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800"
       onPress={() => {
         router.push(
           `/(user)/chat/${item.id}?vetName=${encodeURIComponent(
@@ -258,48 +298,69 @@ const ChatListScreen = () => {
         setShowSearch(false);
         setSearchQuery("");
       }}
+      style={{
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+        elevation: 2,
+      }}
     >
-      <View className="mr-3">
-        <View className="w-12 h-12 rounded-full bg-black dark:bg-white justify-center items-center">
-          <Text className="text-white dark:text-black text-xl font-inter-bold">
-            {item.display_name.charAt(0).toUpperCase()}
-          </Text>
-        </View>
+      <View className="mr-4">
+        {item.profile_image_url ? (
+          <Image
+            source={{ uri: item.profile_image_url }}
+            className="w-14 h-14 rounded-full"
+          />
+        ) : (
+          <View className="w-14 h-14 rounded-full bg-neutral-800 dark:bg-neutral-200 justify-center items-center">
+            <Text className="text-white dark:text-black text-lg font-inter-bold">
+              {getInitials(item.display_name)}
+            </Text>
+          </View>
+        )}
       </View>
-      <View className="flex-1 justify-center">
+      <View className="flex-1">
         <Text
-          className="text-base font-inter-bold text-black dark:text-white"
+          className="text-lg font-inter-bold text-black dark:text-white mb-1"
           numberOfLines={1}
         >
           {item.display_name}
         </Text>
-        <Text className="text-sm text-neutral-600 dark:text-neutral-300">
-          Veterinarian
+        <Text className="text-sm text-neutral-600 dark:text-neutral-400">
+          Veterinarian • Available for chat
         </Text>
+      </View>
+      <View className="w-10 h-10 rounded-full bg-neutral-800 dark:bg-neutral-200 justify-center items-center">
+        <FontAwesome name="comment" size={16} color={isDark ? "#000" : "#fff"} />
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-black">
+    <SafeAreaView className="flex-1 bg-neutral-50 dark:bg-black">
       <StatusBar
         barStyle={isDark ? "light-content" : "dark-content"}
-        backgroundColor={isDark ? "#000" : "#fff"}
+        backgroundColor={isDark ? "#000" : "#FAFAFA"}
       />
-      <View className="flex-row justify-between items-center px-5 py-4 border-b border-black dark:border-neutral-700 mt-2">
-        <Text className="text-2xl font-inter-bold text-black dark:text-white">
-          Your Chats
-        </Text>
-        <TouchableOpacity 
-          onPress={() => setShowSearch(true)}
-          className="p-2"
-        >
-          <FontAwesome 
-            name="search" 
-            size={20} 
-            color={isDark ? "#fff" : "#000"} 
-          />
-        </TouchableOpacity>
+      
+      {/* Header */}
+      <View className="px-4 py-4 bg-white dark:bg-black">
+        <View className="flex-row justify-between items-center">
+          <Text className="text-xl font-inter-bold text-black dark:text-white">
+            Messages
+          </Text>
+          <TouchableOpacity 
+            onPress={() => setShowSearch(true)}
+            className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 justify-center items-center"
+          >
+            <FontAwesome 
+              name="search" 
+              size={18} 
+              color={isDark ? "#fff" : "#000"} 
+            />
+          </TouchableOpacity>
+        </View>
       </View>
       
       {/* Search Modal */}

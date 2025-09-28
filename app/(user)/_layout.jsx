@@ -25,7 +25,7 @@ export default function UserLayout() {
           backgroundColor: isDarkMode ? "#0A0A0A" : "#FFFFFF",
           borderTopColor: isDarkMode ? "#FFFFFF" : "#0A0A0A",
           borderTopWidth: 1,
-          height: 75,
+          height: 50,
         },
       }}
     >

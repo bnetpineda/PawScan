@@ -17,6 +17,7 @@ const ChatScreen = () => {
   const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [userProfileImage, setUserProfileImage] = useState(null);
   const isDark = useColorScheme() === 'dark';
 
   // Use the custom hook to handle all chat logic
@@ -39,6 +40,34 @@ const ChatScreen = () => {
     clearTypingStatus,
   } = useVetChat(conversationId, user, userName, userId);
 
+  // Function to fetch user profile image
+  const fetchUserProfileImage = async () => {
+    try {
+      const { data: userProfile, error } = await supabase
+        .from('user_profiles')
+        .select('profile_image_url')
+        .eq('id', userId)
+        .single();
+
+      if (!error && userProfile && userProfile.profile_image_url) {
+        setUserProfileImage(userProfile.profile_image_url);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile image:', error);
+    }
+  };
+
+  // Get initials for avatar fallback
+  const getInitials = (name) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
   // Function to format time
   const formatTime = useCallback((dateString) => {
     return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -50,7 +79,7 @@ const ChatScreen = () => {
     if (!status) return null;
     
     if (status.read) {
-      return <FontAwesome name="check-circle" size={12} color="#007AFF" />;
+      return <FontAwesome name="check-circle" size={12} color="#525252" />;
     } else if (status.delivered) {
       return <FontAwesome name="check-circle" size={12} color="#8E8E93" />;
     } else if (status.sent) {
@@ -103,6 +132,7 @@ const ChatScreen = () => {
   // Effect to load conversation
   useEffect(() => {
     createOrGetConversation();
+    fetchUserProfileImage();
     
     // Cleanup function to unsubscribe when component unmounts
     return () => {
@@ -239,9 +269,18 @@ const ChatScreen = () => {
             <FontAwesome name="arrow-left" size={20} color={isDark ? "#fff" : "#000"} />
           </TouchableOpacity>
           <View className="mr-3">
-            <View className="w-10 h-10 rounded-full bg-black dark:bg-white justify-center items-center">
-              <Text className="text-white dark:text-black text-base font-inter-bold">{userName?.charAt(0)?.toUpperCase() || 'U'}</Text>
-            </View>
+            {userProfileImage ? (
+              <Image
+                source={{ uri: userProfileImage }}
+                className="w-10 h-10 rounded-full"
+              />
+            ) : (
+              <View className="w-10 h-10 rounded-full bg-neutral-800 dark:bg-neutral-200 justify-center items-center">
+                <Text className="text-white dark:text-black text-sm font-inter-bold">
+                  {getInitials(userName)}
+                </Text>
+              </View>
+            )}
           </View>
           <View className="flex-1">
             <Text className="text-lg font-inter-bold text-black dark:text-white">{userName || 'Pet Owner'}</Text>
@@ -295,8 +334,8 @@ const ChatScreen = () => {
                     pickImage();
                   }}
                 >
-                  <View className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900 items-center justify-center mb-2">
-                    <FontAwesome name="image" size={24} color="#3B82F6" />
+                  <View className="w-16 h-16 rounded-full bg-neutral-200 dark:bg-neutral-700 items-center justify-center mb-2">
+                    <FontAwesome name="image" size={24} color={isDark ? "#8E8E93" : "#6C757D"} />
                   </View>
                   <Text className="text-black dark:text-white font-inter">Photo</Text>
                 </TouchableOpacity>
@@ -307,8 +346,8 @@ const ChatScreen = () => {
                     takePhoto();
                   }}
                 >
-                  <View className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900 items-center justify-center mb-2">
-                    <FontAwesome name="camera" size={24} color="#10B981" />
+                  <View className="w-16 h-16 rounded-full bg-neutral-200 dark:bg-neutral-700 items-center justify-center mb-2">
+                    <FontAwesome name="camera" size={24} color={isDark ? "#8E8E93" : "#6C757D"} />
                   </View>
                   <Text className="text-black dark:text-white font-inter">Camera</Text>
                 </TouchableOpacity>
@@ -339,25 +378,25 @@ const ChatScreen = () => {
             </View>
             <View className="flex-row mt-6">
               <TouchableOpacity 
-                className="bg-red-500 rounded-full px-6 py-3 mx-2"
+                className="bg-neutral-600 dark:bg-neutral-400 rounded-full px-6 py-3 mx-2"
                 onPress={() => {
                   setImageModalVisible(false);
                   setSelectedImage(null);
                 }}
               >
-                <Text className="text-white font-inter-bold">Cancel</Text>
+                <Text className="text-white dark:text-black font-inter-bold">Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                className="bg-blue-500 rounded-full px-6 py-3 mx-2 flex-row items-center"
+                className="bg-neutral-800 dark:bg-neutral-200 rounded-full px-6 py-3 mx-2 flex-row items-center"
                 onPress={sendImage}
                 disabled={isSending}
               >
                 {isSending ? (
-                  <ActivityIndicator size="small" color="white" />
+                  <ActivityIndicator size="small" color={isDark ? "#000" : "#fff"} />
                 ) : (
                   <>
-                    <FontAwesome name="send" size={16} color="white" />
-                    <Text className="text-white font-inter-bold ml-2">Send</Text>
+                    <FontAwesome name="send" size={16} color={isDark ? "#000" : "#fff"} />
+                    <Text className="text-white dark:text-black font-inter-bold ml-2">Send</Text>
                   </>
                 )}
               </TouchableOpacity>

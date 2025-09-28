@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, Alert, KeyboardAvoidingView, Platform, useColorScheme, StatusBar, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView, Alert, KeyboardAvoidingView, Platform, useColorScheme, StatusBar, Modal, ActivityIndicator, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../../../providers/AuthProvider';
 import { supabase } from '../../../lib/supabase';
@@ -10,13 +10,15 @@ import MessageList from '../../../components/chat/MessageList';
 import MessageInput from '../../../components/chat/MessageInput';
 
 const ChatScreen = () => {
-  const { vetId, vetName } = useLocalSearchParams();
+  const { vetId, originalVetName } = useLocalSearchParams();
+  const [resolvedVetName, setResolvedVetName] = useState(originalVetName || 'Veterinarian');
   const router = useRouter();
   const { user } = useAuth();
   const [conversationId, setConversationId] = useState(null);
   const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [vetProfileImage, setVetProfileImage] = useState(null);
   const isDark = useColorScheme() === 'dark';
 
   // Use the custom hook to handle all chat logic
@@ -42,7 +44,59 @@ const ChatScreen = () => {
     updateTypingStatus,
     clearTypingStatus,
     sendingLoadingManager
-  } = useChat(conversationId, user, vetName, vetId);
+  } = useChat(conversationId, user, resolvedVetName, vetId);
+
+  // Function to fetch vet profile information
+  const fetchVetProfileInfo = async () => {
+    try {
+      const { data: vetProfile, error } = await supabase
+        .from('vet_profiles')
+        .select('profile_image_url, name')
+        .eq('id', vetId)
+        .single();
+
+      if (!error && vetProfile) {
+        if (vetProfile.profile_image_url) {
+          setVetProfileImage(vetProfile.profile_image_url);
+        }
+        
+        // Update vetName if it wasn't provided in the route params
+        if (!originalVetName) {
+          const { data: postData, error: postError } = await supabase
+            .from('newsfeed_posts')
+            .select('display_name')
+            .eq('user_id', vetId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+            
+          if (!postError && postData && postData.display_name) {
+            // If there's a display name from posts, use it
+            return postData.display_name;
+          } else {
+            // Otherwise use the name from the vet profile
+            return vetProfile.name;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching vet profile info:', error);
+    }
+    
+    // If everything fails, return the original vetName or default
+    return originalVetName || 'Veterinarian';
+  };
+
+  // Get initials for avatar fallback
+  const getInitials = (name) => {
+    if (!name) return "V";
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
 
   // Function to format time
   const formatTime = useCallback((dateString) => {
@@ -55,7 +109,7 @@ const ChatScreen = () => {
     if (!status) return null;
     
     if (status.read) {
-      return <FontAwesome name="check-circle" size={12} color="#007AFF" />;
+      return <FontAwesome name="check-circle" size={12} color="#525252" />;
     } else if (status.delivered) {
       return <FontAwesome name="check-circle" size={12} color="#8E8E93" />;
     } else if (status.sent) {
@@ -108,6 +162,16 @@ const ChatScreen = () => {
   // Effect to load conversation
   useEffect(() => {
     createOrGetConversation();
+    
+    // Fetch vet profile info and update the vet name if needed
+    const loadVetInfo = async () => {
+      const name = await fetchVetProfileInfo();
+      if (name) {
+        setResolvedVetName(name);
+      }
+    };
+    
+    loadVetInfo();
     
     // Cleanup function to unsubscribe when component unmounts
     return () => {
@@ -243,13 +307,27 @@ const ChatScreen = () => {
           <TouchableOpacity onPress={handleBack} className="mr-6" activeOpacity={0.7}>
             <FontAwesome name="arrow-left" size={20} color={isDark ? "#fff" : "#000"} />
           </TouchableOpacity>
-          <View className="mr-3">
-            <View className="w-10 h-10 rounded-full bg-black dark:bg-white justify-center items-center">
-              <Text className="text-white dark:text-black text-base font-inter-bold">{vetName?.charAt(0)?.toUpperCase() || 'V'}</Text>
-            </View>
-          </View>
+          <TouchableOpacity 
+            className="mr-3"
+            onPress={() => router.push(`/(user)/vet-profile?vetId=${vetId}`)}
+          >
+            {vetProfileImage ? (
+              <Image
+                source={{ uri: vetProfileImage }}
+                className="w-10 h-10 rounded-full"
+              />
+            ) : (
+              <View className="w-10 h-10 rounded-full bg-neutral-800 dark:bg-neutral-200 justify-center items-center">
+                <Text className="text-white dark:text-black text-sm font-inter-bold">
+                  {getInitials(resolvedVetName)}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
           <View className="flex-1">
-            <Text className="text-lg font-inter-bold text-black dark:text-white">{vetName || 'Veterinarian'}</Text>
+            <TouchableOpacity onPress={() => router.push(`/(user)/vet-profile?vetId=${vetId}`)}>
+              <Text className="text-lg font-inter-bold text-black dark:text-white">{resolvedVetName}</Text>
+            </TouchableOpacity>
             {isOtherUserTyping && (
               <Text className="text-xs text-neutral-500 dark:text-neutral-400">typing...</Text>
             )}
@@ -300,8 +378,8 @@ const ChatScreen = () => {
                     pickImage();
                   }}
                 >
-                  <View className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900 items-center justify-center mb-2">
-                    <FontAwesome name="image" size={24} color="#3B82F6" />
+                  <View className="w-16 h-16 rounded-full bg-neutral-200 dark:bg-neutral-700 items-center justify-center mb-2">
+                    <FontAwesome name="image" size={24} color={isDark ? "#8E8E93" : "#6C757D"} />
                   </View>
                   <Text className="text-black dark:text-white font-inter">Photo</Text>
                 </TouchableOpacity>
@@ -312,8 +390,8 @@ const ChatScreen = () => {
                     takePhoto();
                   }}
                 >
-                  <View className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900 items-center justify-center mb-2">
-                    <FontAwesome name="camera" size={24} color="#10B981" />
+                  <View className="w-16 h-16 rounded-full bg-neutral-200 dark:bg-neutral-700 items-center justify-center mb-2">
+                    <FontAwesome name="camera" size={24} color={isDark ? "#8E8E93" : "#6C757D"} />
                   </View>
                   <Text className="text-black dark:text-white font-inter">Camera</Text>
                 </TouchableOpacity>
@@ -344,16 +422,16 @@ const ChatScreen = () => {
             </View>
             <View className="flex-row mt-6">
               <TouchableOpacity 
-                className="bg-red-500 rounded-full px-6 py-3 mx-2"
+                className="bg-neutral-600 dark:bg-neutral-400 rounded-full px-6 py-3 mx-2"
                 onPress={() => {
                   setImageModalVisible(false);
                   setSelectedImage(null);
                 }}
               >
-                <Text className="text-white font-inter-bold">Cancel</Text>
+                <Text className="text-white dark:text-black font-inter-bold">Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                className="bg-blue-500 rounded-full px-6 py-3 mx-2 flex-row items-center"
+                className="bg-neutral-800 dark:bg-neutral-200 rounded-full px-6 py-3 mx-2 flex-row items-center"
                 onPress={sendImage}
                 disabled={isSending}
               >
@@ -361,8 +439,8 @@ const ChatScreen = () => {
                   <ActivityIndicator size="small" color="white" />
                 ) : (
                   <>
-                    <FontAwesome name="send" size={16} color="white" />
-                    <Text className="text-white font-inter-bold ml-2">Send</Text>
+                    <FontAwesome name="send" size={16} color={isDark ? "#000" : "#fff"} />
+                    <Text className="text-white dark:text-black font-inter-bold ml-2">Send</Text>
                   </>
                 )}
               </TouchableOpacity>

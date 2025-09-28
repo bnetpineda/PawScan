@@ -145,6 +145,7 @@ const VetProfileViewer = ({
               PawScan
             </Text>
             <View className="flex-row">
+              <View className="flex-row">
               {onGoBack && (
                 <TouchableOpacity 
                   className="mr-4"
@@ -157,6 +158,19 @@ const VetProfileViewer = ({
                   />
                 </TouchableOpacity>
               )}
+              {isViewingAsUser && onSendMessage && (
+                <TouchableOpacity 
+                  className="mr-4"
+                  onPress={onSendMessage}
+                >
+                  <FontAwesome
+                    name="comment"
+                    size={24}
+                    color={isDark ? "white" : "black"}
+                  />
+                </TouchableOpacity>
+              )}
+              </View>
             </View>
           </View>
 

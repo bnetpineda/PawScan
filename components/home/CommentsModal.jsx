@@ -46,23 +46,28 @@ const CommentsModal = ({
       // Fetch avatars for each user
       const avatarPromises = userIds.map(async (userId) => {
         try {
-          // Check if avatar exists in storage
-          const { data: avatarData } = await supabase.storage
-            .from('avatars')
-            .list(`${userId}/`, {
-              limit: 1,
-              offset: 0,
-              sortBy: { column: 'name', order: 'asc' }
-            });
+          // First try to get avatar from vet_profiles
+          const { data: vetProfile, error: vetError } = await supabase
+            .from('vet_profiles')
+            .select('profile_image_url')
+            .eq('id', userId)
+            .single();
 
-          if (avatarData && avatarData.length > 0) {
-            // Get public URL for the avatar
-            const { data: { publicUrl } } = supabase.storage
-              .from('avatars')
-              .getPublicUrl(`${userId}/avatar.jpg`);
-              
-            return { userId, avatarUrl: publicUrl };
+          if (!vetError && vetProfile && vetProfile.profile_image_url) {
+            return { userId, avatarUrl: vetProfile.profile_image_url };
           }
+
+          // If not found in vet_profiles, try user_profiles
+          const { data: userProfile, error: userError } = await supabase
+            .from('user_profiles')
+            .select('profile_image_url')
+            .eq('id', userId)
+            .single();
+
+          if (!userError && userProfile && userProfile.profile_image_url) {
+            return { userId, avatarUrl: userProfile.profile_image_url };
+          }
+
         } catch (error) {
           console.error('Error fetching avatar for user:', userId, error);
         }

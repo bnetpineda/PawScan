@@ -117,6 +117,11 @@ export default function VetProfileScreen() {
     );
   }
 
+  // Handler for sending a message to the vet
+  const handleMessagePress = () => {
+    router.push(`/chat/${vetId}?vetName=${encodeURIComponent(vetProfile?.display_name || vetProfile?.name || 'Veterinarian')}`);
+  };
+
   return (
     <VetProfileViewer
       vetProfileData={vetProfile}
@@ -125,6 +130,7 @@ export default function VetProfileScreen() {
       postsLoading={postsLoading}
       isDark={isDark}
       onGoBack={handleGoBack}
+      onSendMessage={handleMessagePress}
       isViewingAsUser={true}
     />
   );

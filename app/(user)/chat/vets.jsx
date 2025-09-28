@@ -1,5 +1,18 @@
 import { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, useColorScheme, StatusBar, TextInput } from 'react-native';
+import { 
+  View, 
+  Text, 
+  FlatList, 
+  SafeAreaView, 
+  TouchableOpacity, 
+  Alert, 
+  ActivityIndicator, 
+  RefreshControl, 
+  useColorScheme, 
+  StatusBar, 
+  TextInput,
+  Image
+} from 'react-native';
 import { useAuth } from '../../../providers/AuthProvider';
 import { supabase } from '../../../lib/supabase';
 import { useRouter } from 'expo-router';
@@ -128,33 +141,72 @@ const VetsListScreen = () => {
     }
   };
 
+  // Get initials for avatar fallback
+  const getInitials = (name) => {
+    if (!name) return "V";
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
   const renderVet = ({ item }) => (
     <TouchableOpacity
-      className="flex-row p-4 bg-white border-b border-black dark:bg-neutral-900 dark:border-neutral-700"
+      className="flex-row items-center p-4 mx-4 mb-3 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800"
       onPress={() => router.push(`/(user)/chat/${item.id}?vetName=${encodeURIComponent(item.name)}`)}
       activeOpacity={0.7}
+      style={{
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+        elevation: 2,
+      }}
     >
+      {/* Profile Image */}
       <TouchableOpacity
         className="mr-4"
         onPress={(e) => {
-          e.stopPropagation(); // Prevent the chat navigation
+          e.stopPropagation();
           router.push(`/(user)/vet-profile?vetId=${item.id}`);
         }}
       >
-        <View className="w-12 h-12 rounded-full bg-black dark:bg-white justify-center items-center">
-          <Text className="text-white dark:text-black text-xl font-inter-bold">{item.name.charAt(0).toUpperCase()}</Text>
-        </View>
+        {item.profile_image_url ? (
+          <Image
+            source={{ uri: item.profile_image_url }}
+            className="w-14 h-14 rounded-full"
+          />
+        ) : (
+          <View className="w-14 h-14 rounded-full bg-neutral-800 dark:bg-neutral-200 justify-center items-center">
+            <Text className="text-white dark:text-black text-lg font-inter-bold">
+              {getInitials(item.name)}
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
-      <View className="flex-1 justify-center">
+
+      {/* Vet Info */}
+      <View className="flex-1">
         <TouchableOpacity
-          onPress={() => router.push(`/(user)/vet-profile?vetId=${item.id}`)}
+          onPress={(e) => {
+            e.stopPropagation();
+            router.push(`/(user)/vet-profile?vetId=${item.id}`);
+          }}
         >
-          <Text className="text-base font-inter-bold mb-1 text-black dark:text-white">{item.name}</Text>
+          <Text className="text-lg font-inter-bold text-black dark:text-white mb-1">
+            {item.name}
+          </Text>
         </TouchableOpacity>
-        <Text className="text-sm text-neutral-600 dark:text-neutral-300">{item.email}</Text>
+        <Text className="text-sm text-neutral-600 dark:text-neutral-400 font-inter-medium">
+          Veterinarian • Available for chat
+        </Text>
       </View>
-      <View className="ml-2 justify-center">
-        <FontAwesome name="chevron-right" size={20} color={isDark ? "#fff" : "#000"} />
+
+      {/* Chat Icon */}
+      <View className="w-10 h-10 rounded-full bg-neutral-800 dark:bg-neutral-200 justify-center items-center">
+        <FontAwesome name="comment" size={16} color={isDark ? "#000" : "#fff"} />
       </View>
     </TouchableOpacity>
   );
@@ -164,55 +216,106 @@ const VetsListScreen = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-black">
+    <SafeAreaView className="flex-1 bg-neutral-50 dark:bg-black">
       <StatusBar
         barStyle={isDark ? "light-content" : "dark-content"}
-        backgroundColor={isDark ? "#000" : "#fff"}
+        backgroundColor={isDark ? "#000" : "#FAFAFA"}
       />
-      <View className="px-5 py-4 border-b border-black dark:border-neutral-700">
-        <Text className="text-2xl font-inter-bold text-black dark:text-white mb-3">Select a Veterinarian</Text>
-        {/* Search Input */}
-        <View className="flex-row items-center bg-neutral-100 dark:bg-neutral-800 rounded-full mt-2 px-6 py-1">
-          <FontAwesome name="search" size={20} color={isDark ? "#8E8E93" : "#6C757D"} />
+      
+      {/* Header */}
+      <View className="px-4 py-4 bg-white dark:bg-black">
+        <View className="flex-row items-center justify-between mb-4">
+          <TouchableOpacity 
+            onPress={() => router.back()}
+            className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 justify-center items-center"
+          >
+            <FontAwesome name="arrow-left" size={18} color={isDark ? "#fff" : "#000"} />
+          </TouchableOpacity>
+          
+          <Text className="text-xl font-inter-bold text-black dark:text-white">
+            Choose Veterinarian
+          </Text>
+          
+          <View className="w-10" />
+        </View>
+        
+        {/* Search Bar */}
+        <View className="flex-row items-center bg-neutral-100 dark:bg-neutral-900 rounded-full px-4 py-3">
+          <FontAwesome name="search" size={16} color={isDark ? "#8E8E93" : "#6C757D"} />
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder="Search veterinarians..."
             placeholderTextColor={isDark ? "#8E8E93" : "#6C757D"}
-            className="flex-1 ml-2 text-base font-inter bg-transparent text-black dark:text-white"
+            className="flex-1 ml-3 text-base font-inter text-black dark:text-white"
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={clearSearch}>
-              <FontAwesome name="times-circle" size={20} color={isDark ? "#8E8E93" : "#6C757D"} />
+            <TouchableOpacity onPress={clearSearch} className="p-1">
+              <FontAwesome name="times-circle" size={16} color={isDark ? "#8E8E93" : "#6C757D"} />
             </TouchableOpacity>
           )}
         </View>
       </View>
+
+      {/* Content */}
       {loading ? (
-        <View className="flex-1 justify-center items-center p-8">
-          <ActivityIndicator size="large" color={isDark ? "#fff" : "#000"} />
-          <Text className="mt-4 text-base text-neutral-600 dark:text-neutral-300">Loading veterinarians...</Text>
+        <View className="flex-1 justify-center items-center">
+          <View className="w-16 h-16 rounded-full bg-neutral-800 dark:bg-neutral-200 justify-center items-center mb-4">
+            <ActivityIndicator size="small" color={isDark ? "#000" : "#fff"} />
+          </View>
+          <Text className="text-lg font-inter-semibold text-black dark:text-white mb-1">
+            Finding veterinarians
+          </Text>
+          <Text className="text-sm text-neutral-500 dark:text-neutral-400">
+            Please wait a moment...
+          </Text>
         </View>
       ) : filteredVets.length === 0 ? (
-        <View className="flex-1 justify-center items-center p-8">
-          <FontAwesome name="user-md" size={64} color={isDark ? "#fff" : "#000"} />
-          <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">
-            {searchQuery ? "No veterinarians found" : "No veterinarians available"}
+        <View className="flex-1 justify-center items-center px-8">
+          <View className="w-20 h-20 rounded-full bg-neutral-200 dark:bg-neutral-800 justify-center items-center mb-6">
+            <FontAwesome name="user-md" size={32} color={isDark ? "#8E8E93" : "#6C757D"} />
+          </View>
+          <Text className="text-xl font-inter-bold text-black dark:text-white mb-2 text-center">
+            {searchQuery ? "No results found" : "No veterinarians available"}
           </Text>
-          <Text className="text-base text-neutral-600 dark:text-neutral-300">
-            {searchQuery ? "Try a different search term" : "Please check back later"}
+          <Text className="text-base text-neutral-500 dark:text-neutral-400 text-center leading-6">
+            {searchQuery 
+              ? "Try searching with a different term or check the spelling"
+              : "We're working to connect more veterinarians to our platform"
+            }
           </Text>
+          {searchQuery && (
+            <TouchableOpacity 
+              onPress={clearSearch}
+              className="mt-6 bg-neutral-800 dark:bg-neutral-200 px-6 py-3 rounded-full"
+            >
+              <Text className="text-white dark:text-black font-inter-semibold">Clear Search</Text>
+            </TouchableOpacity>
+          )}
         </View>
       ) : (
-        <FlatList
-          data={filteredVets}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderVet}
-          className="flex-1"
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? "#fff" : "#000"} />
-          }
-        />
+        <View className="flex-1 pt-4">
+          <Text className="px-4 pb-2 text-sm font-inter-medium text-neutral-500 dark:text-neutral-400">
+            {filteredVets.length} veterinarian{filteredVets.length !== 1 ? 's' : ''} available
+          </Text>
+          <FlatList
+            data={filteredVets}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderVet}
+            className="flex-1"
+            contentContainerStyle={{ paddingBottom: 20 }}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl 
+                refreshing={refreshing} 
+                onRefresh={onRefresh} 
+                tintColor={isDark ? "#fff" : "#000"}
+                colors={["#525252"]}
+                progressBackgroundColor={isDark ? "#1F2937" : "#FFFFFF"}
+              />
+            }
+          />
+        </View>
       )}
     </SafeAreaView>
   );
