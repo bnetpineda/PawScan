@@ -2,7 +2,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase"; // make sure this points to your client
 import { Session, User } from "@supabase/supabase-js";
-import notificationService from "../services/notificationService";
 
 const AuthContext = createContext(null);
 
@@ -96,10 +95,9 @@ export const AuthProvider = ({ children }) => {
       setUser(session?.user ?? null);
       setLoading(false);
       
-      // Initialize notifications when user is authenticated
+      // Initialize notifications when user is authenticated - notification service removed
       if (session?.user && !initialized) {
         setInitialized(true);
-        notificationService.initialize();
       }
       
       // Create profile if user doesn't have one, using data from registration
@@ -116,10 +114,9 @@ export const AuthProvider = ({ children }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
-      // Initialize notifications when user signs in
+      // Initialize notifications when user signs in - notification service removed
       if (session?.user && !initialized) {
         setInitialized(true);
-        notificationService.initialize();
       }
       
       // Create profile if user doesn't have one, using data from registration
@@ -127,17 +124,15 @@ export const AuthProvider = ({ children }) => {
         await createProfileAfterAuth(session.user);
       }
       
-      // Reset notification service when user logs out
+      // Reset notification service when user logs out - notification service removed
       if (!session?.user) {
-        notificationService.reset();
         setInitialized(false);
       }
     });
 
     return () => {
       subscription.unsubscribe();
-      // Clean up notification listeners
-      notificationService.removeNotificationListeners();
+      // Clean up notification listeners - notification service removed
     };
   }, [initialized]);
 
@@ -180,8 +175,7 @@ export const AuthProvider = ({ children }) => {
       console.error("Logout error:", error.message);
     } else {
       console.log("User logged out successfully");
-      // Reset notification service
-      notificationService.reset();
+      // Reset notification service - notification service removed
       setInitialized(false);
     }
   };

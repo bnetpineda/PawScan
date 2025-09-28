@@ -3,7 +3,6 @@ import { Alert } from 'react-native';
 import { supabase } from '../lib/supabase';
 import * as FileSystem from 'expo-file-system';
 import { Buffer } from 'buffer';
-import notificationService from '../services/notificationService';
 import { createLoadingManager } from '../utils/performance';
 
 const useChat = (conversationId, user, vetName, vetId) => {
@@ -356,18 +355,7 @@ const useChat = (conversationId, user, vetName, vetId) => {
               }
             }));
             
-            // Send push notification
-            const senderName = vetName || 'Veterinarian';
-            await notificationService.sendPushNotificationToUser(
-              vetId, // Send to vet, not user
-              `New message from ${senderName}`,
-              newMessage.content.substring(0, 50) + (newMessage.content.length > 50 ? '...' : ''),
-              {
-                conversationId: conversationId,
-                senderId: newMessage.sender_id,
-                type: 'new_message'
-              }
-            );
+            // Send push notification - notification service removed
           } else {
             // This is our own message, update its status
             setMessages((prevMessages) => {
