@@ -25,7 +25,7 @@ export default function VetLayout() {
           backgroundColor: isDarkMode ? "#0A0A0A" : "#FFFFFF", 
           borderTopColor: isDarkMode ? "#FFFFFF" : "#0A0A0A" ,
           borderTopWidth: 1,
-          height: 50,
+          height: 65,
         },
       }}
     >

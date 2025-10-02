@@ -1,6 +1,7 @@
 import { Image, Text, TouchableOpacity, View, TextInput } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
+import NotificationBell from "../notifications/NotificationBell";
 
 const Header = ({ 
   isDark, 
@@ -9,12 +10,13 @@ const Header = ({
   isSearching, 
   searchQuery, 
   onClearSearch,
-  setIsSearching 
+  setIsSearching,
+  onNotificationPress 
 }) => {
   return (
     <>
       {/* Top Header */}
-      <View className="flex-row items-center px-5 py-4 border-b border-neutral-200 dark:border-neutral-800">
+      <View className="flex-row items-center px-4 py-4 border-b border-neutral-200 dark:border-neutral-800">
         <Image
           source={require("../../assets/images/home-logo.png")}
           className="w-8 h-9"
@@ -24,6 +26,10 @@ const Header = ({
           PawScan
         </Text>
         <View className="flex-1" />
+        <NotificationBell 
+          onPress={onNotificationPress} 
+          isDark={isDark} 
+        />
         <TouchableOpacity
           className="px-3 py-1"
           onPress={onShowTutorial}

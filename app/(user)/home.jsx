@@ -26,6 +26,7 @@ import Header from "../../components/home/Header";
 import EmptyState from "../../components/home/EmptyState";
 import ImageModal from "../../components/home/ImageModal";
 import CommentsModal from "../../components/home/CommentsModal";
+import NotificationsModal from "../../components/notifications/NotificationsModal";
 import { createLoadingManager, debounce, createCacheWithTTL } from "../../utils/performance";
 
 const NewsFeedScreen = () => {
@@ -48,6 +49,7 @@ const NewsFeedScreen = () => {
   const [tutorialVisible, setTutorialVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState(""); // Search query state
   const [isSearching, setIsSearching] = useState(false); // Search mode state
+  const [notificationsVisible, setNotificationsVisible] = useState(false); // Notifications modal state
   
   // Create loading manager for better loading state handling
   const loadingManager = useMemo(() => createLoadingManager(setLoading), []);
@@ -540,6 +542,7 @@ const NewsFeedScreen = () => {
           searchQuery={searchQuery}
           onClearSearch={clearSearch}
           setIsSearching={setIsSearching}
+          onNotificationPress={() => setNotificationsVisible(true)}
         />
 
         <EmptyState isDark={isDark} isEmpty={posts.length === 0} />
@@ -585,6 +588,11 @@ const NewsFeedScreen = () => {
         visible={tutorialVisible}
         onClose={handleTutorialClose}
         isDark={isDark}
+      />
+
+      <NotificationsModal
+        visible={notificationsVisible}
+        onClose={() => setNotificationsVisible(false)}
       />
     </SafeAreaView>
   );

@@ -26,6 +26,7 @@ import Header from "../../components/home/Header";
 import EmptyState from "../../components/home/EmptyState";
 import ImageModal from "../../components/home/ImageModal";
 import CommentsModal from "../../components/home/CommentsModal";
+import NotificationsModal from "../../components/notifications/NotificationsModal";
 
 const NewsFeedScreen = () => {
   const isDark = useColorScheme() === "dark";
@@ -47,6 +48,7 @@ const NewsFeedScreen = () => {
   const [tutorialVisible, setTutorialVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState(""); // Search query state
   const [isSearching, setIsSearching] = useState(false); // Search mode state
+  const [notificationsVisible, setNotificationsVisible] = useState(false); // Notifications modal state
 
   useEffect(() => {
     setCurrentUser(user || null);
@@ -464,7 +466,7 @@ const NewsFeedScreen = () => {
       />
 
       <ScrollView
-        className="flex-1 mt-2"
+        className="flex-1"
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -482,6 +484,7 @@ const NewsFeedScreen = () => {
           searchQuery={searchQuery}
           onClearSearch={clearSearch}
           setIsSearching={setIsSearching}
+          onNotificationPress={() => setNotificationsVisible(true)}
         />
         
         <EmptyState isDark={isDark} isEmpty={posts.length === 0} />
@@ -525,6 +528,11 @@ const NewsFeedScreen = () => {
         visible={tutorialVisible}
         onClose={handleTutorialClose}
         isDark={isDark}
+      />
+
+      <NotificationsModal
+        visible={notificationsVisible}
+        onClose={() => setNotificationsVisible(false)}
       />
     </SafeAreaView>
   );

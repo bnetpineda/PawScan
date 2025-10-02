@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { AuthProvider } from "../providers/AuthProvider";
+import { NotificationProvider } from "../providers/NotificationProvider";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,14 +40,14 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(user)" options={{ headerShown: false }} />
-        <Stack.Screen name="info" options={{ headerShown: false }} />
-        <Stack.Screen name="viewprofile" options={{ headerShown: false }} />
-        
-      </Stack>
+      <NotificationProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(user)" options={{ headerShown: false }} />
+          <Stack.Screen name="info" options={{ headerShown: false }} />
+        </Stack>
+      </NotificationProvider>
     </AuthProvider>
   );
 }

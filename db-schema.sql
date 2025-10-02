@@ -78,6 +78,22 @@ CREATE TABLE public.newsfeed_reports (
   CONSTRAINT newsfeed_reports_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.newsfeed_posts(id),
   CONSTRAINT newsfeed_reports_reporter_user_id_fkey FOREIGN KEY (reporter_user_id) REFERENCES auth.users(id)
 );
+CREATE TABLE public.notifications (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  sender_id uuid,
+  type text NOT NULL,
+  title text NOT NULL,
+  content text NOT NULL,
+  related_id uuid,
+  related_type text,
+  is_read boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  read_at timestamp with time zone,
+  CONSTRAINT notifications_pkey PRIMARY KEY (id),
+  CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT notifications_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES auth.users(id)
+);
 CREATE TABLE public.typing_status (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   conversation_id uuid NOT NULL,

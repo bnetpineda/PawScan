@@ -3,7 +3,6 @@ import {
   View,
   Text,
   FlatList,
-  SafeAreaView,
   TouchableOpacity,
   Alert,
   RefreshControl,
@@ -14,10 +13,13 @@ import {
   ActivityIndicator,
   Image,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../../providers/AuthProvider";
 import { supabase } from "../../../lib/supabase";
 import { useRouter } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
+import NotificationBell from "../../../components/notifications/NotificationBell";
+import NotificationsModal from "../../../components/notifications/NotificationsModal";
 
 const ChatListScreen = () => {
   const { user } = useAuth();
@@ -31,6 +33,7 @@ const ChatListScreen = () => {
   const [veterinarians, setVeterinarians] = useState([]);
   const [filteredVeterinarians, setFilteredVeterinarians] = useState([]);
   const isDark = useColorScheme() === "dark";
+  const [notificationsVisible, setNotificationsVisible] = useState(false);
 
   useEffect(() => {
     loadConversations();
@@ -338,7 +341,7 @@ const ChatListScreen = () => {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-neutral-50 dark:bg-black">
+    <SafeAreaView className="flex-1 bg-neutral-50 dark:bg-black" edges={['top', 'bottom']}>
       <StatusBar
         barStyle={isDark ? "light-content" : "dark-content"}
         backgroundColor={isDark ? "#000" : "#FAFAFA"}
@@ -350,16 +353,22 @@ const ChatListScreen = () => {
           <Text className="text-xl font-inter-bold text-black dark:text-white">
             Messages
           </Text>
-          <TouchableOpacity 
-            onPress={() => setShowSearch(true)}
-            className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 justify-center items-center"
-          >
-            <FontAwesome 
-              name="search" 
-              size={18} 
-              color={isDark ? "#fff" : "#000"} 
+          <View className="flex-row items-center gap-2">
+            <NotificationBell 
+              onPress={() => setNotificationsVisible(true)} 
+              isDark={isDark} 
             />
-          </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => setShowSearch(true)}
+              className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 justify-center items-center"
+            >
+              <FontAwesome 
+                name="search" 
+                size={18} 
+                color={isDark ? "#fff" : "#000"} 
+              />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
       
@@ -505,6 +514,11 @@ const ChatListScreen = () => {
           </Text>
         </TouchableOpacity>
       </View>
+
+      <NotificationsModal
+        visible={notificationsVisible}
+        onClose={() => setNotificationsVisible(false)}
+      />
     </SafeAreaView>
   );
 };

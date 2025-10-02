@@ -15,6 +15,7 @@ import {
   View,
   RefreshControl,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../providers/AuthProvider";
 import SettingsModal from "../../components/profile/SettingsModal";
@@ -456,7 +457,7 @@ const ProfileScreen = () => {
   };
 
   return (
-    <>
+    <SafeAreaView className="flex-1 bg-white dark:bg-black" edges={['top']}>
       <ScrollView
         className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}
         refreshControl={
@@ -683,7 +684,7 @@ const ProfileScreen = () => {
         updating={updating}
         isDark={isDark}
       />
-    </>
+    </SafeAreaView>
   );
 };
 

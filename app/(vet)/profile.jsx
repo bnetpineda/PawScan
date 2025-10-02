@@ -16,6 +16,7 @@ import {
   View,
   RefreshControl,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../providers/AuthProvider";
 import SettingsModal from "../../components/profile/SettingsModal";
@@ -495,9 +496,9 @@ const ProfileScreen = () => {
   };
 
   return (
-    <>
+    <SafeAreaView className="flex-1 bg-white dark:bg-black" edges={['top']}>
       <ScrollView 
-        className={`flex-1 ${isDark ? "bg-black" : "bg-white"} pt-4`}
+        className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}
         refreshControl={
           <RefreshControl 
             refreshing={refreshing} 
@@ -508,7 +509,7 @@ const ProfileScreen = () => {
       >
         {/* Profile Header - Instagram Style */
         }
-        <View className={` pb-4 ${isDark ? "bg-black" : "bg-white"}`}>
+        <View className={`pt-4 pb-4 ${isDark ? "bg-black" : "bg-white"}`}>
           <View className="flex-row justify-between items-center px-4 mb-8">
             <Image
               source={require("../../assets/images/home-logo.png")}
@@ -890,7 +891,7 @@ const ProfileScreen = () => {
         updating={updating}
         isDark={isDark}
       />
-    </>
+    </SafeAreaView>
   );
 };
 
