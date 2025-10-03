@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
-import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const NotificationItem = ({
   notification,
@@ -13,25 +13,25 @@ const NotificationItem = ({
     const notificationTime = new Date(timestamp);
     const secondsAgo = Math.floor((now - notificationTime) / 1000);
 
-    if (secondsAgo < 60) return 'Just now';
-    if (secondsAgo < 3600) return `${Math.floor(secondsAgo / 60)}m ago`;
-    if (secondsAgo < 86400) return `${Math.floor(secondsAgo / 3600)}h ago`;
-    if (secondsAgo < 604800) return `${Math.floor(secondsAgo / 86400)}d ago`;
-    return notificationTime.toLocaleDateString();
+    if (secondsAgo < 60) return 'now';
+    if (secondsAgo < 3600) return `${Math.floor(secondsAgo / 60)}m`;
+    if (secondsAgo < 86400) return `${Math.floor(secondsAgo / 3600)}h`;
+    if (secondsAgo < 604800) return `${Math.floor(secondsAgo / 86400)}d`;
+    return `${Math.floor(secondsAgo / 604800)}w`;
   };
 
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'message':
-        return { name: 'comment', color: '#3B82F6' };
+        return 'chat-bubble-outline';
       case 'comment':
-        return { name: 'commenting', color: '#10B981' };
+        return 'comment';
       case 'like':
-        return { name: 'heart', color: '#EF4444' };
+        return 'favorite-border';
       case 'reply':
-        return { name: 'reply', color: '#8B5CF6' };
+        return 'reply';
       default:
-        return { name: 'bell', color: '#6B7280' };
+        return 'notifications-none';
     }
   };
 
@@ -39,156 +39,83 @@ const NotificationItem = ({
 
   return (
     <TouchableOpacity
-      style={[
-        styles.container,
-        {
-          backgroundColor: notification.is_read
-            ? (isDark ? '#1F2937' : '#FFFFFF')
-            : (isDark ? '#374151' : '#EFF6FF'),
-        },
-      ]}
+      className={`flex-row items-start px-4 py-3 ${
+        !notification.is_read ? (isDark ? 'bg-neutral-900' : 'bg-neutral-50') : ''
+      }`}
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <View style={styles.content}>
-        {/* Avatar or Icon */}
-        <View style={styles.avatarContainer}>
-          {notification.sender_avatar ? (
-            <Image
-              source={{ uri: notification.sender_avatar }}
-              style={styles.avatar}
+      {/* Avatar or Icon */}
+      <View className="mr-3 relative">
+        {notification.sender_avatar ? (
+          <Image
+            source={{ uri: notification.sender_avatar }}
+            className="w-12 h-12 rounded-full"
+          />
+        ) : (
+          <View className={`w-12 h-12 rounded-full items-center justify-center ${
+            isDark ? 'bg-neutral-800' : 'bg-neutral-100'
+          }`}>
+            <MaterialIcons
+              name={icon}
+              size={24}
+              color={isDark ? '#a3a3a3' : '#737373'}
             />
-          ) : (
-            <View
-              style={[
-                styles.iconCircle,
-                { backgroundColor: icon.color + '20' },
-              ]}
-            >
-              <FontAwesome name={icon.name} size={20} color={icon.color} />
-            </View>
-          )}
-          {!notification.is_read && <View style={styles.unreadDot} />}
-        </View>
+          </View>
+        )}
+        {!notification.is_read && (
+          <View className={`absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full border-2 ${
+            isDark ? 'bg-neutral-50 border-black' : 'bg-neutral-950 border-white'
+          }`} />
+        )}
+      </View>
 
-        {/* Notification Content */}
-        <View style={styles.textContent}>
+      {/* Content */}
+      <View className="flex-1 mr-2">
+        <View className="flex-row items-start justify-between mb-1">
           <Text
-            style={[
-              styles.title,
-              {
-                color: isDark ? '#FFFFFF' : '#1F2937',
-                fontWeight: notification.is_read ? '400' : '600',
-              },
-            ]}
-            numberOfLines={1}
+            className={`flex-1 text-sm leading-5 ${
+              !notification.is_read
+                ? `font-inter-semibold ${isDark ? 'text-neutral-50' : 'text-neutral-950'}`
+                : `font-inter ${isDark ? 'text-neutral-300' : 'text-neutral-700'}`
+            }`}
+            numberOfLines={2}
           >
             {notification.title}
           </Text>
-          <Text
-            style={[
-              styles.message,
-              {
-                color: isDark ? '#D1D5DB' : '#6B7280',
-              },
-            ]}
-            numberOfLines={2}
-          >
-            {notification.content}
-          </Text>
-          <Text
-            style={[
-              styles.time,
-              {
-                color: isDark ? '#9CA3AF' : '#9CA3AF',
-              },
-            ]}
-          >
-            {formatTimeAgo(notification.created_at)}
-          </Text>
         </View>
-
-        {/* Delete Button */}
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
+        
+        <Text
+          className={`text-sm mb-1 ${
+            isDark ? 'text-neutral-400' : 'text-neutral-600'
+          }`}
+          numberOfLines={2}
         >
-          <MaterialIcons
-            name="close"
-            size={20}
-            color={isDark ? '#9CA3AF' : '#6B7280'}
-          />
-        </TouchableOpacity>
+          {notification.content}
+        </Text>
+        
+        <Text className={`text-xs ${isDark ? 'text-neutral-500' : 'text-neutral-400'}`}>
+          {formatTimeAgo(notification.created_at)}
+        </Text>
       </View>
+
+      {/* Delete Button */}
+      <TouchableOpacity
+        className="p-2 -mr-2"
+        onPress={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
+        activeOpacity={0.6}
+      >
+        <MaterialIcons
+          name="close"
+          size={18}
+          color={isDark ? '#737373' : '#a3a3a3'}
+        />
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    marginHorizontal: 16,
-    marginVertical: 4,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  content: {
-    flexDirection: 'row',
-    padding: 12,
-    alignItems: 'flex-start',
-  },
-  avatarContainer: {
-    position: 'relative',
-    marginRight: 12,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  unreadDot: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#3B82F6',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  textContent: {
-    flex: 1,
-    marginRight: 8,
-  },
-  title: {
-    fontSize: 15,
-    marginBottom: 4,
-  },
-  message: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 4,
-  },
-  time: {
-    fontSize: 12,
-  },
-  deleteButton: {
-    padding: 4,
-  },
-});
 
 export default NotificationItem;

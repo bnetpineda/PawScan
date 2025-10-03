@@ -15,7 +15,7 @@ const NotificationBell = ({ onPress, isDark = false }) => {
       <View style={styles.iconContainer}>
         <FontAwesome
           name="bell"
-          size={24}
+          size={20}
           color={isDark ? '#FFFFFF' : '#1F2937'}
         />
         {unreadCount > 0 && (

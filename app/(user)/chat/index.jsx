@@ -15,14 +15,18 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../../providers/AuthProvider";
+import { useTutorial } from "../../../providers/TutorialProvider";
 import { supabase } from "../../../lib/supabase";
 import { useRouter } from "expo-router";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import NotificationBell from "../../../components/notifications/NotificationBell";
 import NotificationsModal from "../../../components/notifications/NotificationsModal";
+import TutorialOverlay from "../../../components/tutorial/TutorialOverlay";
+import { chatTutorialSteps } from "../../../components/tutorial/tutorialSteps";
 
 const ChatListScreen = () => {
   const { user } = useAuth();
+  const { startTutorial, isTutorialCompleted } = useTutorial();
   const router = useRouter();
   const [conversations, setConversations] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -37,6 +41,13 @@ const ChatListScreen = () => {
 
   useEffect(() => {
     loadConversations();
+    // Show tutorial on first visit
+    if (!isTutorialCompleted('chat')) {
+      const timer = setTimeout(() => {
+        startTutorial('chat');
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   useEffect(() => {
@@ -354,6 +365,16 @@ const ChatListScreen = () => {
             Messages
           </Text>
           <View className="flex-row items-center gap-2">
+            <TouchableOpacity 
+              onPress={() => startTutorial('chat')}
+              className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 justify-center items-center"
+            >
+              <MaterialIcons 
+                name="help-outline" 
+                size={20} 
+                color={isDark ? "#d4d4d4" : "#525252"} 
+              />
+            </TouchableOpacity>
             <NotificationBell 
               onPress={() => setNotificationsVisible(true)} 
               isDark={isDark} 
@@ -519,6 +540,8 @@ const ChatListScreen = () => {
         visible={notificationsVisible}
         onClose={() => setNotificationsVisible(false)}
       />
+      
+      <TutorialOverlay steps={chatTutorialSteps} tutorialId="chat" />
     </SafeAreaView>
   );
 };

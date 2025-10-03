@@ -17,6 +17,7 @@ const SettingsModal = ({
   onEmailPress,
   onPasswordPress,
   onSignOut,
+  onTutorialPress,
   isDark,
 }) => (
   <Modal
@@ -116,6 +117,42 @@ const SettingsModal = ({
                   }`}
                 >
                   Update your account password
+                </Text>
+              </View>
+              <FontAwesome
+                name="angle-right"
+                size={20}
+                color={isDark ? "#9CA3AF" : "#6B7280"}
+              />
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className={`p-4 rounded-lg border mt-4 ${
+              isDark ? "bg-neutral border-neutral-700" : "bg-white border-neutral-400"
+            }`}
+            onPress={onTutorialPress}
+          >
+            <View className="flex-row items-center">
+              <FontAwesome
+                name="question-circle"
+                size={20}
+                color={isDark ? "white" : "black"}
+              />
+              <View className="ml-3 flex-1">
+                <Text
+                  className={`text-base font-inter-semibold ${
+                    isDark ? "text-white" : "text-black"
+                  }`}
+                >
+                  Tutorial
+                </Text>
+                <Text
+                  className={`text-sm font-inter mt-1 ${
+                    isDark ? "text-neutral-400" : "text-neutral-600"
+                  }`}
+                >
+                  Learn how to use PawScan
                 </Text>
               </View>
               <FontAwesome

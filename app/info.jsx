@@ -1,5 +1,5 @@
-import { FontAwesome } from "@expo/vector-icons";
-import { useMemo, useState } from "react";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { useMemo, useState, useEffect } from "react";
 import {
   Modal,
   ScrollView,
@@ -21,6 +21,9 @@ import DiseaseCategoryFilter from "../components/info/DiseaseCategoryFilter";
 import DiseaseList from "../components/info/DiseaseList";
 import DiseaseComparison from "../components/info/DiseaseComparison";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTutorial } from "../providers/TutorialProvider";
+import TutorialOverlay from "../components/tutorial/TutorialOverlay";
+import { diseaseInfoTutorialSteps } from "../components/tutorial/tutorialSteps";
 
 const ICONS = {
   search: "search",
@@ -41,6 +44,7 @@ const ICONS = {
 
 const DiseasesInformationScreen = () => {
   const isDark = useColorScheme() === "dark";
+  const { startTutorial, isTutorialCompleted } = useTutorial();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDisease, setSelectedDisease] = useState(null);
@@ -50,7 +54,7 @@ const DiseasesInformationScreen = () => {
   const [showComparison, setShowComparison] = useState(false);
 
   // Load bookmarked diseases from AsyncStorage
-  useState(() => {
+  useEffect(() => {
     const loadBookmarks = async () => {
       try {
         const bookmarks = await AsyncStorage.getItem("bookmarkedDiseases");
@@ -62,6 +66,14 @@ const DiseasesInformationScreen = () => {
       }
     };
     loadBookmarks();
+    
+    // Show tutorial on first visit
+    if (!isTutorialCompleted('diseaseInfo')) {
+      const timer = setTimeout(() => {
+        startTutorial('diseaseInfo');
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   // Save bookmarked diseases to AsyncStorage
@@ -206,10 +218,20 @@ const DiseasesInformationScreen = () => {
           >
             Disease Information
           </Text>
-          <View className="flex-row">
+          <View className="flex-row items-center">
+            <TouchableOpacity 
+              className="p-2 mr-1"
+              onPress={() => startTutorial('diseaseInfo')}
+            >
+              <MaterialIcons
+                name="help-outline"
+                size={24}
+                color={isDark ? "#d4d4d4" : "#525252"}
+              />
+            </TouchableOpacity>
             {bookmarkedDiseases.length > 0 && (
               <TouchableOpacity 
-                className="flex-row items-center p-2 mr-2"
+                className="flex-row items-center p-2"
                 onPress={() => setSelectedCategory("Bookmarks")}
               >
                 <FontAwesome
@@ -314,6 +336,8 @@ const DiseasesInformationScreen = () => {
           onClose={() => setShowComparison(false)}
         />
       </Modal>
+      
+      <TutorialOverlay steps={diseaseInfoTutorialSteps} tutorialId="diseaseInfo" />
     </SafeAreaView>
   );
 };

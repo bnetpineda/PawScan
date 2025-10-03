@@ -1,5 +1,4 @@
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -16,17 +15,18 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import TutorialModal, {
-  useTutorial,
-} from "../../assets/components/TutorialHomeModal"; // Adjust path as needed
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../providers/AuthProvider";
+import { useTutorial } from "../../providers/TutorialProvider";
 import PostCard from "../../components/home/PostCard";
 import Header from "../../components/home/Header";
 import EmptyState from "../../components/home/EmptyState";
 import ImageModal from "../../components/home/ImageModal";
 import CommentsModal from "../../components/home/CommentsModal";
 import NotificationsModal from "../../components/notifications/NotificationsModal";
+import WelcomeTutorialPrompt from "../../components/tutorial/WelcomeTutorialPrompt";
+import TutorialOverlay from "../../components/tutorial/TutorialOverlay";
+import { vetTutorialSteps, homeFeedTutorialSteps } from "../../components/tutorial/tutorialSteps";
 
 const NewsFeedScreen = () => {
   const isDark = useColorScheme() === "dark";
@@ -45,15 +45,20 @@ const NewsFeedScreen = () => {
   const [loadingComments, setLoadingComments] = useState(false);
   const [postingComment, setPostingComment] = useState(false);
   const { user } = useAuth();
-  const [tutorialVisible, setTutorialVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState(""); // Search query state
   const [isSearching, setIsSearching] = useState(false); // Search mode state
   const [notificationsVisible, setNotificationsVisible] = useState(false); // Notifications modal state
+  const [showWelcomePrompt, setShowWelcomePrompt] = useState(false); // Tutorial prompt state
+  const { startTutorial } = useTutorial();
 
   useEffect(() => {
     setCurrentUser(user || null);
     loadPosts();
-    checkFirstTimeUser();
+    // Show welcome prompt after a short delay
+    const timer = setTimeout(() => {
+      setShowWelcomePrompt(true);
+    }, 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   // Update filtered posts when allPosts or searchQuery changes
@@ -63,37 +68,6 @@ const NewsFeedScreen = () => {
       setPosts(filtered);
     }
   }, [allPosts, searchQuery]);
-
-  const checkFirstTimeUser = async () => {
-    try {
-      const hasSeenTutorial = await AsyncStorage.getItem(
-        "hasSeenNewsfeedTutorial"
-      );
-      if (!hasSeenTutorial) {
-        // Show tutorial after a brief delay to let the screen load
-        setTimeout(() => {
-          setTutorialVisible(true);
-        }, 1000);
-      }
-    } catch (error) {
-      console.error("Error checking tutorial status:", error);
-    }
-  };
-
-  // Function to handle tutorial completion
-  const handleTutorialClose = async () => {
-    try {
-      await AsyncStorage.setItem("hasSeenNewsfeedTutorial", "true");
-      setTutorialVisible(false);
-    } catch (error) {
-      console.error("Error saving tutorial status:", error);
-    }
-  };
-
-  // Function to manually start tutorial (for help button)
-  const handleShowTutorial = () => {
-    setTutorialVisible(true);
-  };
 
   const loadPosts = async () => {
     try {
@@ -478,14 +452,21 @@ const NewsFeedScreen = () => {
       >
         <Header 
           isDark={isDark}
-          onShowTutorial={handleShowTutorial}
           onSearch={handleSearch}
           isSearching={isSearching}
           searchQuery={searchQuery}
           onClearSearch={clearSearch}
           setIsSearching={setIsSearching}
           onNotificationPress={() => setNotificationsVisible(true)}
+          onShowTutorial={() => startTutorial('homeFeed')}
         />
+        
+        {showWelcomePrompt && (
+          <WelcomeTutorialPrompt
+            tutorialType="vet"
+            onDismiss={() => setShowWelcomePrompt(false)}
+          />
+        )}
         
         <EmptyState isDark={isDark} isEmpty={posts.length === 0} />
         
@@ -524,16 +505,12 @@ const NewsFeedScreen = () => {
         formatFullDateTime={formatFullDateTime}
       />
       
-      <TutorialModal
-        visible={tutorialVisible}
-        onClose={handleTutorialClose}
-        isDark={isDark}
-      />
-
       <NotificationsModal
         visible={notificationsVisible}
         onClose={() => setNotificationsVisible(false)}
       />
+
+      <TutorialOverlay steps={homeFeedTutorialSteps} tutorialId="homeFeed" />
     </SafeAreaView>
   );
 };

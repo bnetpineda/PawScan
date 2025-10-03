@@ -1,5 +1,5 @@
 import { Image, Text, TouchableOpacity, View, TextInput } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import NotificationBell from "../notifications/NotificationBell";
 
@@ -31,13 +31,15 @@ const Header = ({
           isDark={isDark} 
         />
         <TouchableOpacity
-          className="px-3 py-1"
+          className="px-2 py-1 ml-1"
           onPress={onShowTutorial}
           activeOpacity={0.7}
         >
-          <Text className="text-base font-inter-bold dark:text-white text-black">
-            Help
-          </Text>
+          <MaterialIcons 
+            name="help-outline" 
+            size={24} 
+            color={isDark ? "#d4d4d4" : "#525252"} 
+          />
         </TouchableOpacity>
       </View>
       

@@ -19,6 +19,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../providers/AuthProvider";
+import { useTutorial } from "../../providers/TutorialProvider";
 import SettingsModal from "../../components/profile/SettingsModal";
 import ChangeEmailModal from "../../components/profile/ChangeEmailModal";
 import ChangePasswordModal from "../../components/profile/ChangePasswordModal";
@@ -59,6 +60,7 @@ const ProfileScreen = () => {
   const isDark = colorScheme === "dark";
 
   const { user } = useAuth();
+  const { startTutorial } = useTutorial();
   const {
     userPosts,
     petScanCount,
@@ -837,6 +839,10 @@ const ProfileScreen = () => {
         onPasswordPress={() => {
           setSettingsVisible(false);
           setChangePasswordVisible(true);
+        }}
+        onTutorialPress={() => {
+          setSettingsVisible(false);
+          startTutorial('profile');
         }}
         onSignOut={handleSignOut}
         isDark={isDark}

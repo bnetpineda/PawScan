@@ -9,17 +9,20 @@ import {
   Image,
   TextInput,
   Modal,
-  useColorScheme, // Import useColorScheme
+  useColorScheme,
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
-import { useState, useRef } from "react";
-import { FontAwesome } from "@expo/vector-icons";
+import { useState, useRef, useEffect } from "react";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import * as MediaLibrary from "expo-media-library";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { analyzePetImage, shareToNewsfeed } from "../../utils/analyzePetImage";
 import { supabase } from "../../lib/supabase";
 import ShareModal from "../../assets/components/ShareModal";
+import { useTutorial } from "../../providers/TutorialProvider";
+import TutorialOverlay from "../../components/tutorial/TutorialOverlay";
+import { cameraTutorialSteps } from "../../components/tutorial/tutorialSteps";
 
 const COLORS = {
   primary: "#007AFF",
@@ -41,8 +44,9 @@ export default function CameraScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState("");
   const [currentAnalysisId, setCurrentAnalysisId] = useState(null);
-  const colorScheme = useColorScheme(); // Get the current color scheme
-  const isDark = colorScheme === "dark"; // Check if dark mode is active
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const { startTutorial, isTutorialCompleted } = useTutorial();
 
   // Share modal states
   const [showShareModal, setShowShareModal] = useState(false);
@@ -55,6 +59,16 @@ export default function CameraScreen() {
     ImagePicker.useMediaLibraryPermissions();
 
   const cameraRef = useRef(null);
+
+  // Show tutorial on first visit
+  useEffect(() => {
+    if (!isTutorialCompleted('camera') && cameraPermission?.granted) {
+      const timer = setTimeout(() => {
+        startTutorial('camera');
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cameraPermission]);
 
   if (!cameraPermission || !mediaLibraryPermission) {
     return (
@@ -319,6 +333,22 @@ export default function CameraScreen() {
         barStyle={isDark ? "light-content" : "dark-content"}
         backgroundColor={isDark ? COLORS.black : COLORS.background}
       />
+      
+      {/* Help Button */}
+      <View className="absolute top-12 right-4 z-10">
+        <TouchableOpacity
+          onPress={() => startTutorial('camera')}
+          className="bg-neutral-100 dark:bg-neutral-800 rounded-full p-2"
+          style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 }}
+        >
+          <MaterialIcons 
+            name="help-outline" 
+            size={24} 
+            color={isDark ? "#d4d4d4" : "#525252"} 
+          />
+        </TouchableOpacity>
+      </View>
+
       <View style={{ flex: 1 }}>
         {!imageUri && (
           <CameraView style={{ flex: 1 }} facing={facing} ref={cameraRef} />
@@ -352,6 +382,7 @@ export default function CameraScreen() {
         isDark={isDark}
         COLORS={COLORS}
       />
+      <TutorialOverlay steps={cameraTutorialSteps} tutorialId="camera" />
     </View>
   );
 }

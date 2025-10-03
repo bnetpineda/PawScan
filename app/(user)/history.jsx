@@ -8,17 +8,23 @@ import {
   StatusBar,
   useColorScheme,
   Share,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MaterialIcons } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
 import AnalysisCard from "../../components/history/AnalysisCard";
 import AnalysisModal from "../../components/history/AnalysisModal";
 import EmptyState from "../../components/history/EmptyState";
 import LoadingState from "../../components/history/LoadingState";
+import { useTutorial } from "../../providers/TutorialProvider";
+import TutorialOverlay from "../../components/tutorial/TutorialOverlay";
+import { historyTutorialSteps } from "../../components/tutorial/tutorialSteps";
 
 const AnalysisHistoryScreen = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { startTutorial, isTutorialCompleted } = useTutorial();
 
   const [analyses, setAnalyses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +41,13 @@ const AnalysisHistoryScreen = () => {
 
   useEffect(() => {
     fetchAnalyses();
+    // Show tutorial on first visit
+    if (!isTutorialCompleted('history')) {
+      const timer = setTimeout(() => {
+        startTutorial('history');
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   const fetchAnalyses = async () => {
@@ -162,14 +175,24 @@ ${analysis.analysis_result.substring(
 
       {/* Header */}
       <View className="flex-row justify-between items-center px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
-        <Text className="text-2xl font-inter-bold text-black dark:text-white">
-          Analysis History
-        </Text>
         <View>
+          <Text className="text-2xl font-inter-bold text-black dark:text-white">
+            Analysis History
+          </Text>
           <Text className="text-sm font-inter text-neutral-500 dark:text-neutral-400">
             {analyses.length} analyses
           </Text>
         </View>
+        <TouchableOpacity
+          onPress={() => startTutorial('history')}
+          className="p-2"
+        >
+          <MaterialIcons 
+            name="help-outline" 
+            size={24} 
+            color={isDark ? "#d4d4d4" : "#525252"} 
+          />
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -215,6 +238,7 @@ ${analysis.analysis_result.substring(
         getUrgencyColor={getUrgencyColor}
         getUrgencyLevel={getUrgencyLevel}
       />
+      <TutorialOverlay steps={historyTutorialSteps} tutorialId="history" />
     </SafeAreaView>
   );
 };
