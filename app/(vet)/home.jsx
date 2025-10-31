@@ -50,6 +50,15 @@ const NewsFeedScreen = () => {
   const [notificationsVisible, setNotificationsVisible] = useState(false); // Notifications modal state
   const [showWelcomePrompt, setShowWelcomePrompt] = useState(false); // Tutorial prompt state
   const { startTutorial } = useTutorial();
+  const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     setCurrentUser(user || null);
@@ -61,13 +70,15 @@ const NewsFeedScreen = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Update filtered posts when allPosts or searchQuery changes
+  // Update filtered posts when debounced query changes
   useEffect(() => {
-    if (searchQuery) {
-      const filtered = filterPosts(searchQuery);
+    if (debouncedQuery) {
+      const filtered = filterPosts(debouncedQuery);
       setPosts(filtered);
+    } else {
+      setPosts(allPosts);
     }
-  }, [allPosts, searchQuery]);
+  }, [allPosts, debouncedQuery, filterPosts]);
 
   const loadPosts = async () => {
     try {
@@ -166,11 +177,8 @@ const NewsFeedScreen = () => {
     });
   }, [allPosts]);
 
-  // Handle search input changes
   const handleSearch = (query) => {
     setSearchQuery(query);
-    const filtered = filterPosts(query);
-    setPosts(filtered);
   };
 
   // Clear search and show all posts

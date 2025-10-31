@@ -47,45 +47,45 @@ const ChatScreen = () => {
     sendingLoadingManager
   } = useChat(conversationId, user, resolvedVetName, vetId);
 
-  // Function to fetch vet profile information
   const fetchVetProfileInfo = async () => {
     try {
-      const { data: vetProfile, error } = await supabase
+      // 1. Try to get name from vet_profiles
+      const { data: vetProfile, error: vetProfileError } = await supabase
         .from('vet_profiles')
         .select('profile_image_url, name')
         .eq('id', vetId)
         .single();
 
-      if (!error && vetProfile) {
+      if (!vetProfileError && vetProfile) {
         if (vetProfile.profile_image_url) {
           setVetProfileImage(vetProfile.profile_image_url);
         }
-        
-        // Update vetName if it wasn't provided in the route params
-        if (!originalVetName) {
-          const { data: postData, error: postError } = await supabase
-            .from('newsfeed_posts')
-            .select('display_name')
-            .eq('user_id', vetId)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
-            
-          if (!postError && postData && postData.display_name) {
-            // If there's a display name from posts, use it
-            return postData.display_name;
-          } else {
-            // Otherwise use the name from the vet profile
-            return vetProfile.name;
-          }
-        }
+        setResolvedVetName(vetProfile.name);
+        return; // Exit if name found
       }
+
+      // 2. If not found in vet_profiles, try to get from newsfeed_posts
+      const { data: postData, error: postError } = await supabase
+        .from('newsfeed_posts')
+        .select('display_name')
+        .eq('user_id', vetId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+          
+      if (!postError && postData && postData.display_name) {
+        setResolvedVetName(postData.display_name);
+        return; // Exit if name found
+      }
+
+      // 3. Fallback if name not found anywhere
+      setResolvedVetName(originalVetName || 'Veterinarian');
+
     } catch (error) {
       console.error('Error fetching vet profile info:', error);
+      // Fallback in case of any error during fetching
+      setResolvedVetName(originalVetName || 'Veterinarian');
     }
-    
-    // If everything fails, return the original vetName or default
-    return originalVetName || 'Veterinarian';
   };
 
   // Get initials for avatar fallback
@@ -164,15 +164,8 @@ const ChatScreen = () => {
   useEffect(() => {
     createOrGetConversation();
     
-    // Fetch vet profile info and update the vet name if needed
-    const loadVetInfo = async () => {
-      const name = await fetchVetProfileInfo();
-      if (name) {
-        setResolvedVetName(name);
-      }
-    };
-    
-    loadVetInfo();
+    // Fetch vet profile info and update the vet name
+    fetchVetProfileInfo();
     
     // Cleanup function to unsubscribe when component unmounts
     return () => {
@@ -184,7 +177,7 @@ const ChatScreen = () => {
         clearTypingStatus();
       }
     };
-  }, [vetId, conversationId, cleanupSubscriptions, clearTypingStatus]);
+  }, [vetId, conversationId, cleanupSubscriptions, clearTypingStatus, originalVetName]);
 
   // Effect to handle subscription when conversation is established
   useEffect(() => {

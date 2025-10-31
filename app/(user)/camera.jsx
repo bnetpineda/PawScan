@@ -13,7 +13,8 @@ import {
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import * as MediaLibrary from "expo-media-library";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -53,6 +54,16 @@ export default function CameraScreen() {
   const [petName, setPetName] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      setIsCameraActive(true);
+      return () => {
+        setIsCameraActive(false);
+      };
+    }, [])
+  );
 
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [mediaLibraryPermission, requestMediaLibraryPermission] =
@@ -359,7 +370,7 @@ export default function CameraScreen() {
       </View>
 
       <View style={{ flex: 1 }}>
-        {!imageUri && (
+        {!imageUri && isCameraActive && (
           <CameraView style={{ flex: 1 }} facing={facing} ref={cameraRef} />
         )}
         {/* Controls overlay */}

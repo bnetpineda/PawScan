@@ -59,13 +59,16 @@ const NewsFeedScreen = () => {
   // Create cache for posts
   const postsCache = useMemo(() => createCacheWithTTL(300000), []); // 5 minutes cache
   
-  // Debounced search function
-  const debouncedSearch = useMemo(() => 
-    debounce((query) => {
-      setSearchQuery(query);
-    }, 300),
-  [], []);
+  const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
 
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+  
   useEffect(() => {
     setCurrentUser(user || null);
     loadPosts();
@@ -76,13 +79,15 @@ const NewsFeedScreen = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Update filtered posts when allPosts or searchQuery changes
+  // Update filtered posts when debounced query changes
   useEffect(() => {
-    if (searchQuery) {
-      const filtered = filterPosts(searchQuery);
+    if (debouncedQuery) {
+      const filtered = filterPosts(debouncedQuery);
       setPosts(filtered);
+    } else {
+      setPosts(allPosts);
     }
-  }, [allPosts, searchQuery]);
+  }, [allPosts, debouncedQuery, filterPosts]);
 
   const loadPosts = async () => {
     // Use loading manager instead of direct setLoading
@@ -220,14 +225,9 @@ const NewsFeedScreen = () => {
     [allPosts]
   );
 
-  // Handle search input with debouncing
-  const handleSearch = useCallback((text) => {
-    debouncedSearch(text);
-    
-    // Immediately filter posts
-    const filtered = filterPosts(text);
-    setPosts(filtered);
-  }, [filterPosts, debouncedSearch]);
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+  };
 
   // Clear search and show all posts
   const clearSearch = () => {
