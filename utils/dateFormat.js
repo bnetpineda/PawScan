@@ -35,6 +35,39 @@ export const getRelativeTime = (date) => {
   });
 };
 
+export const formatTimeAgo = (timestamp) => {
+  const now = new Date();
+  const postTime = new Date(timestamp);
+  const secondsAgo = Math.floor((now - postTime) / 1000);
+
+  if (secondsAgo < 60) return "Just now";
+  if (secondsAgo < 3600) return `${Math.floor(secondsAgo / 60)}m ago`;
+  if (secondsAgo < 86400) return `${Math.floor(secondsAgo / 3600)}h ago`;
+  if (secondsAgo < 604800) return `${Math.floor(secondsAgo / 86400)}d ago`;
+  
+  return postTime.toLocaleDateString();
+};
+
+export const formatFullDateTime = (timestamp) => {
+  const postTime = new Date(timestamp);
+  const dateOptions = {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  };
+  const timeOptions = {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  };
+
+  const date = postTime.toLocaleDateString("en-US", dateOptions);
+  const time = postTime.toLocaleTimeString("en-US", timeOptions);
+  const timeAgo = formatTimeAgo(timestamp);
+
+  return `${date}   ${time}  ${timeAgo}`;
+};
+
 export const formatUnreadCount = (count) => {
   if (count > 99) return '99+';
   return count.toString();

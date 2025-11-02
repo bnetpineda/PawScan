@@ -1,13 +1,10 @@
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Dimensions,
-  Platform,
+  FlatList,
   RefreshControl,
-  ScrollView,
   Share,
   StatusBar,
   Text,
@@ -15,7 +12,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../providers/AuthProvider";
 import { useTutorial } from "../../providers/TutorialProvider";
 import PostCard from "../../components/home/PostCard";
@@ -26,410 +22,203 @@ import CommentsModal from "../../components/home/CommentsModal";
 import NotificationsModal from "../../components/notifications/NotificationsModal";
 import WelcomeTutorialPrompt from "../../components/tutorial/WelcomeTutorialPrompt";
 import TutorialOverlay from "../../components/tutorial/TutorialOverlay";
-import { vetTutorialSteps, homeFeedTutorialSteps } from "../../components/tutorial/tutorialSteps";
+import { homeFeedTutorialSteps } from "../../components/tutorial/tutorialSteps";
+import { useNewsfeed } from "../../hooks/useNewsfeed";
+import { useComments } from "../../hooks/useComments";
+import { formatFullDateTime } from "../../utils/dateFormat";
 
-const NewsFeedScreen = () => {
+const VetNewsFeedScreen = () => {
   const isDark = useColorScheme() === "dark";
+  const { user } = useAuth();
+  const { startTutorial } = useTutorial();
 
-  const [posts, setPosts] = useState([]);
-  const [allPosts, setAllPosts] = useState([]); // Store all posts for filtering
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  // Use custom hooks for newsfeed and comments
+  const {
+    posts,
+    loading,
+    refreshing,
+    loadingMore,
+    hasMore,
+    searchQuery,
+    setSearchQuery,
+    refresh,
+    loadMore,
+    toggleLike,
+    updateCommentCount,
+  } = useNewsfeed();
+
+  // Modal states
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [commentsModalVisible, setCommentsModalVisible] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState("");
-  const [loadingComments, setLoadingComments] = useState(false);
-  const [postingComment, setPostingComment] = useState(false);
-  const { user } = useAuth();
-  const [searchQuery, setSearchQuery] = useState(""); // Search query state
-  const [isSearching, setIsSearching] = useState(false); // Search mode state
-  const [notificationsVisible, setNotificationsVisible] = useState(false); // Notifications modal state
-  const [showWelcomePrompt, setShowWelcomePrompt] = useState(false); // Tutorial prompt state
-  const { startTutorial } = useTutorial();
-  const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
+  const [isSearching, setIsSearching] = useState(false);
+  const [notificationsVisible, setNotificationsVisible] = useState(false);
+  const [showWelcomePrompt, setShowWelcomePrompt] = useState(false);
 
-  // Debounce search query
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(searchQuery);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+  // Comments hook
+  const {
+    comments,
+    loading: loadingComments,
+    posting: postingComment,
+    newComment,
+    setNewComment,
+    loadComments,
+    postComment,
+  } = useComments(selectedPostId, updateCommentCount);
 
+  // Show welcome prompt on mount
   useEffect(() => {
-    setCurrentUser(user || null);
-    loadPosts();
-    // Show welcome prompt after a short delay
     const timer = setTimeout(() => {
       setShowWelcomePrompt(true);
     }, 1000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Update filtered posts when debounced query changes
-  useEffect(() => {
-    if (debouncedQuery) {
-      const filtered = filterPosts(debouncedQuery);
-      setPosts(filtered);
-    } else {
-      setPosts(allPosts);
-    }
-  }, [allPosts, debouncedQuery, filterPosts]);
+  // Search handlers
+  const handleSearch = useCallback(
+    (query) => {
+      setSearchQuery(query);
+      setIsSearching(query.length > 0);
+    },
+    [setSearchQuery]
+  );
 
-  const loadPosts = async () => {
-    try {
-      // Get posts first
-      const { data: postsData, error: postsError } = await supabase
-        .from("newsfeed_posts")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(20);
-
-      if (postsError) throw postsError;
-
-      // Get likes count and user's like status for each post
-      const processedPosts = await Promise.all(
-        (postsData || []).map(async (post) => {
-          // Get total likes count for this post
-          const { count: likesCount } = await supabase
-            .from("newsfeed_likes")
-            .select("*", { count: "exact", head: true })
-            .eq("post_id", post.id);
-
-          // Get total comments count for this post
-          const { count: commentsCount } = await supabase
-            .from("newsfeed_comments")
-            .select("*", { count: "exact", head: true })
-            .eq("post_id", post.id);
-
-          // Check if current user has liked this post
-          let userHasLiked = false;
-          if (currentUser) {
-            const { data: userLike, error: userLikeError } = await supabase
-              .from("newsfeed_likes")
-              .select("id")
-              .eq("post_id", post.id)
-              .eq("user_id", currentUser.id)
-              .maybeSingle();
-
-            if (userLikeError) console.error("userLikeError:", userLikeError);
-            userHasLiked = !!userLike;
-          }
-
-          return {
-            ...post,
-            likes_count: likesCount || 0,
-            user_has_liked: userHasLiked,
-            comments_count: commentsCount || 0, // You can implement this similarly if needed
-          };
-        })
-      );
-
-      setAllPosts(processedPosts); // Store all posts
-      setPosts(processedPosts); // Set initial posts
-    } catch (err) {
-      console.error("Failed to load posts:", err);
-      Alert.alert("Error", "Could not fetch posts.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await loadPosts();
-    setRefreshing(false);
-  }, []);
-
-  // Filter posts based on search query
-  const filterPosts = useCallback((query) => {
-    if (!query.trim()) {
-      return allPosts;
-    }
-    
-    const normalizedQuery = query.toLowerCase().trim();
-    return allPosts.filter(post => {
-      // Check pet name
-      if (post.pet_name && post.pet_name.toLowerCase().includes(normalizedQuery)) {
-        return true;
-      }
-      
-      // Check display name
-      if (post.display_name && post.display_name.toLowerCase().includes(normalizedQuery)) {
-        return true;
-      }
-      
-      // Check analysis result
-      if (post.analysis_result && post.analysis_result.toLowerCase().includes(normalizedQuery)) {
-        return true;
-      }
-      
-      // Check if anonymous and query matches "anonymous"
-      if (post.is_anonymous && normalizedQuery === "anonymous") {
-        return true;
-      }
-      
-      return false;
-    });
-  }, [allPosts]);
-
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-  };
-
-  // Clear search and show all posts
-  const clearSearch = () => {
+  const clearSearch = useCallback(() => {
     setSearchQuery("");
-    setPosts(allPosts);
     setIsSearching(false);
-  };
+  }, [setSearchQuery]);
 
-  const toggleLike = async (postId, isLiked) => {
-    if (!currentUser) {
-      Alert.alert("Sign In Required", "Please sign in to like posts.");
-      return;
-    }
-
-    // Optimistic update
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === postId
-          ? {
-            ...post,
-            likes_count: post.likes_count + (isLiked ? -1 : 1),
-            user_has_liked: !isLiked,
-          }
-          : post
-      )
-    );
-
-    try {
-      if (isLiked) {
-        const { error } = await supabase
-          .from("newsfeed_likes")
-          .delete()
-          .eq("post_id", postId)
-          .eq("user_id", currentUser.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("newsfeed_likes").insert([
-          {
-            post_id: postId,
-            user_id: currentUser.id,
-            created_at: new Date().toISOString(),
-          },
-        ]);
-
-        if (error) throw error;
-      }
-    } catch (err) {
-      console.error("Error updating like:", err);
-
-      // Revert optimistic update on error
-      setPosts((prev) =>
-        prev.map((post) =>
-          post.id === postId
-            ? {
-              ...post,
-              likes_count: post.likes_count + (isLiked ? 1 : -1),
-              user_has_liked: isLiked,
-            }
-            : post
-        )
-      );
-
-      Alert.alert("Error", "Could not update like. Please try again.");
-    }
-  };
-
-  const handleShare = async (post) => {
-    try {
-      const shareContent = {
-        message: `Check out this pet health analysis: ${post.analysis_result}`,
-        url: post.image_url, // You might want to create a proper sharing URL
-        title: "Pet Health Analysis from Pet Community",
-      };
-
-      if (Platform.OS === "ios") {
-        await Share.share({
-          message: shareContent.message,
-          url: shareContent.url,
-          title: shareContent.title,
-        });
-      } else {
-        await Share.share({
-          message: `${shareContent.message}\n${shareContent.url}`,
-          title: shareContent.title,
-        });
-      }
-    } catch (error) {
-      console.error("Error sharing:", error);
-      Alert.alert("Error", "Could not share post.");
-    }
-  };
-
-  const loadComments = async (postId) => {
-    setLoadingComments(true);
-    try {
-      const { data, error } = await supabase
-        .from("newsfeed_comments")
-        .select("*")
-        .eq("post_id", postId)
-        .order("created_at", { ascending: true });
-
-      if (error) throw error;
-      setComments(data || []);
-    } catch (err) {
-      console.error("Failed to load comments:", err);
-      Alert.alert("Error", "Could not fetch comments.");
-    } finally {
-      setLoadingComments(false);
-    }
-  };
-
-  const openCommentsModal = (postId) => {
-    setSelectedPostId(postId);
-    setCommentsModalVisible(true);
-    loadComments(postId);
-  };
-
-  const closeCommentsModal = () => {
-    setCommentsModalVisible(false);
-    setSelectedPostId(null);
-    setComments([]);
-    setNewComment("");
-  };
-
-  const postComment = async () => {
-    if (!currentUser) {
-      Alert.alert("Sign In Required", "Please sign in to comment.");
-      return;
-    }
-
-    if (!newComment.trim()) {
-      Alert.alert("Empty Comment", "Please write a comment before posting.");
-      return;
-    }
-
-    setPostingComment(true);
-    try {
-      // Check if user is a veterinarian and get their profile info
-        let commentDisplayName = currentUser.user_metadata?.options?.data?.display_name || "Pet Owner";
-        let commentRole = currentUser.user_metadata?.options?.data?.role || "User";
-        
-        if (commentRole === 'veterinarian') {
-          // If the user is a veterinarian, get their name from vet_profiles
-          const { data: vetProfile, error: profileError } = await supabase
-            .from('vet_profiles')
-            .select('name')
-            .eq('id', currentUser.id)
-            .single();
-
-          if (!profileError && vetProfile?.name) {
-            commentDisplayName = vetProfile.name;
-          }
-        } else {
-          // If the user is a regular user, get their name from user_profiles
-          const { data: userProfile, error: profileError } = await supabase
-            .from('user_profiles')
-            .select('name')
-            .eq('id', currentUser.id)
-            .single();
-
-          if (!profileError && userProfile?.name) {
-            commentDisplayName = userProfile.name;
-          }
-        }
-
-        const { data, error } = await supabase
-        .from("newsfeed_comments")
-        .insert([
-          {
-            post_id: selectedPostId,
-            user_id: currentUser.id,
-            comment_text: newComment.trim(),
-            display_name: commentDisplayName,
-            created_at: new Date().toISOString(),
-            role: commentRole,
-          },
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Add the new comment to the list
-      setComments((prev) => [...prev, data]);
-
-      // Update the comments count in posts
-      setPosts((prev) =>
-        prev.map((post) =>
-          post.id === selectedPostId
-            ? { ...post, comments_count: post.comments_count + 1 }
-            : post
-        )
-      );
-
-      setNewComment("");
-    } catch (err) {
-      console.error("Error posting comment:", err);
-      Alert.alert("Error", "Could not post comment. Please try again.");
-    } finally {
-      setPostingComment(false);
-    }
-  };
-
-  const openImageModal = (imageUrl) => {
+  // Image modal handlers
+  const openImageModal = useCallback((imageUrl) => {
     setSelectedImage(imageUrl);
     setImageModalVisible(true);
-  };
+  }, []);
 
-  const closeImageModal = () => {
+  const closeImageModal = useCallback(() => {
     setImageModalVisible(false);
     setSelectedImage(null);
-  };
+  }, []);
 
-  const formatTimeAgo = (timestamp) => {
-    const now = new Date();
-    const postTime = new Date(timestamp);
-    const secondsAgo = Math.floor((now - postTime) / 1000);
+  // Comments modal handlers
+  const openCommentsModal = useCallback((postId) => {
+    setSelectedPostId(postId);
+    setCommentsModalVisible(true);
+  }, []);
 
-    let timeAgo;
-    if (secondsAgo < 60) timeAgo = "Just now";
-    else if (secondsAgo < 3600) timeAgo = `${Math.floor(secondsAgo / 60)}m ago`;
-    else if (secondsAgo < 86400) timeAgo = `${Math.floor(secondsAgo / 3600)}h ago`;
-    else if (secondsAgo < 604800) timeAgo = `${Math.floor(secondsAgo / 86400)}d ago`;
-    else timeAgo = postTime.toLocaleDateString();
+  const closeCommentsModal = useCallback(() => {
+    setCommentsModalVisible(false);
+    setSelectedPostId(null);
+    setNewComment("");
+  }, [setNewComment]);
 
-    return timeAgo;
-  };
+  // Load comments when modal opens
+  useEffect(() => {
+    if (commentsModalVisible && selectedPostId) {
+      loadComments();
+    }
+  }, [commentsModalVisible, selectedPostId, loadComments]);
 
-  const formatFullDateTime = (timestamp) => {
-    const postTime = new Date(timestamp);
-    const dateOptions = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    };
-    const timeOptions = {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    };
+  // Share handler
+  const handleShare = useCallback(async (post) => {
+    try {
+      const message = post.caption
+        ? `Check out this post: ${post.caption}`
+        : "Check out this post!";
 
-    const date = postTime.toLocaleDateString('en-US', dateOptions);
-    const time = postTime.toLocaleTimeString('en-US', timeOptions);
-    const timeAgo = formatTimeAgo(timestamp);
+      await Share.share({
+        message,
+        url: post.image_url || "",
+      });
+    } catch (error) {
+      if (error.message !== "User did not share") {
+        Alert.alert("Error", "Failed to share post");
+      }
+    }
+  }, []);
 
-    return `${date}   ${time}  ${timeAgo}`;
-  };
+  // Render post item for FlatList
+  const renderPost = useCallback(
+    ({ item: post }) => (
+      <PostCard
+        key={post.id}
+        post={post}
+        isDark={isDark}
+        currentUser={user}
+        onToggleLike={toggleLike}
+        onOpenComments={openCommentsModal}
+        onShare={handleShare}
+        onOpenImageModal={openImageModal}
+        onViewProfile={(userId) =>
+          router.push(`/(user)/vet-profile?vetId=${userId}`)
+        }
+      />
+    ),
+    [isDark, user, toggleLike, openCommentsModal, handleShare, openImageModal]
+  );
 
-  if (loading) {
+  // List header component
+  const ListHeaderComponent = useCallback(
+    () => (
+      <>
+        <Header
+          isDark={isDark}
+          onSearch={handleSearch}
+          isSearching={isSearching}
+          searchQuery={searchQuery}
+          onClearSearch={clearSearch}
+          setIsSearching={setIsSearching}
+          onNotificationPress={() => setNotificationsVisible(true)}
+          onShowTutorial={() => startTutorial("homeFeed")}
+        />
+
+        {showWelcomePrompt && (
+          <WelcomeTutorialPrompt
+            tutorialType="vet"
+            onDismiss={() => setShowWelcomePrompt(false)}
+          />
+        )}
+      </>
+    ),
+    [
+      isDark,
+      handleSearch,
+      isSearching,
+      searchQuery,
+      clearSearch,
+      showWelcomePrompt,
+      startTutorial,
+    ]
+  );
+
+  // List empty component
+  const ListEmptyComponent = useCallback(
+    () => !loading && <EmptyState isDark={isDark} isEmpty={true} />,
+    [loading, isDark]
+  );
+
+  // List footer component (loading more indicator)
+  const ListFooterComponent = useCallback(() => {
+    if (!loadingMore) return null;
+    return (
+      <View className="py-4">
+        <ActivityIndicator size="small" color="#007AFF" />
+      </View>
+    );
+  }, [loadingMore]);
+
+  // Key extractor for FlatList
+  const keyExtractor = useCallback((item) => item.id.toString(), []);
+
+  // Handle load more (infinite scroll)
+  const handleEndReached = useCallback(() => {
+    if (hasMore && !loadingMore && !loading) {
+      loadMore();
+    }
+  }, [hasMore, loadingMore, loading, loadMore]);
+
+  // Loading state
+  if (loading && posts.length === 0) {
     return (
       <View className="flex-1 justify-center items-center bg-white dark:bg-black">
         <ActivityIndicator size="large" color="#007AFF" />
@@ -447,52 +236,34 @@ const NewsFeedScreen = () => {
         backgroundColor={isDark ? "#000" : "#fff"}
       />
 
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
+      <FlatList
+        data={posts}
+        renderItem={renderPost}
+        keyExtractor={keyExtractor}
+        ListHeaderComponent={ListHeaderComponent}
+        ListEmptyComponent={ListEmptyComponent}
+        ListFooterComponent={ListFooterComponent}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={onRefresh}
+            onRefresh={refresh}
             tintColor="#007AFF"
           />
         }
-      >
-        <Header 
-          isDark={isDark}
-          onSearch={handleSearch}
-          isSearching={isSearching}
-          searchQuery={searchQuery}
-          onClearSearch={clearSearch}
-          setIsSearching={setIsSearching}
-          onNotificationPress={() => setNotificationsVisible(true)}
-          onShowTutorial={() => startTutorial('homeFeed')}
-        />
-        
-        {showWelcomePrompt && (
-          <WelcomeTutorialPrompt
-            tutorialType="vet"
-            onDismiss={() => setShowWelcomePrompt(false)}
-          />
-        )}
-        
-        <EmptyState isDark={isDark} isEmpty={posts.length === 0} />
-        
-        {posts.map((post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            isDark={isDark}
-            currentUser={currentUser}
-            onToggleLike={toggleLike}
-            onOpenComments={openCommentsModal}
-            onShare={handleShare}
-            onOpenImageModal={openImageModal}
-          />
-        ))}
-      </ScrollView>
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: 8 }}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={10}
+        windowSize={10}
+      />
 
-      <ImageModal 
+      <TutorialOverlay steps={homeFeedTutorialSteps} tutorialId="homeFeed" />
+
+      <ImageModal
         visible={imageModalVisible}
         onClose={closeImageModal}
         imageUrl={selectedImage}
@@ -508,19 +279,20 @@ const NewsFeedScreen = () => {
         setNewComment={setNewComment}
         postingComment={postingComment}
         postComment={postComment}
-        currentUser={currentUser}
+        currentUser={user}
         selectedPost={posts.find((p) => p.id === selectedPostId)}
         formatFullDateTime={formatFullDateTime}
+        onViewProfile={(userId) =>
+          router.push(`/(user)/vet-profile?vetId=${userId}`)
+        }
       />
-      
+
       <NotificationsModal
         visible={notificationsVisible}
         onClose={() => setNotificationsVisible(false)}
       />
-
-      <TutorialOverlay steps={homeFeedTutorialSteps} tutorialId="homeFeed" />
     </SafeAreaView>
   );
 };
 
-export default NewsFeedScreen;
+export default VetNewsFeedScreen;
