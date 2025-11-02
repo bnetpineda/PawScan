@@ -22,7 +22,7 @@ import CommentsModal from "../../components/home/CommentsModal";
 import NotificationsModal from "../../components/notifications/NotificationsModal";
 import WelcomeTutorialPrompt from "../../components/tutorial/WelcomeTutorialPrompt";
 import TutorialOverlay from "../../components/tutorial/TutorialOverlay";
-import { homeFeedTutorialSteps } from "../../components/tutorial/tutorialSteps";
+import { homeFeedTutorialSteps, userTutorialSteps } from "../../components/tutorial/tutorialSteps";
 import { useNewsfeed } from "../../hooks/useNewsfeed";
 import { useComments } from "../../hooks/useComments";
 import { formatFullDateTime } from "../../utils/dateFormat";
@@ -261,6 +261,7 @@ const NewsFeedScreen = () => {
         windowSize={10}
       />
 
+      <TutorialOverlay steps={userTutorialSteps} tutorialId="user" />
       <TutorialOverlay steps={homeFeedTutorialSteps} tutorialId="homeFeed" />
 
       <ImageModal
