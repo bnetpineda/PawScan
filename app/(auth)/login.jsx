@@ -32,34 +32,38 @@ export default function Login() {
   const handleLogin = async () => {
     setIsLoading(true);
     try {
-      const { error, data } = await signInWithEmail(email, password);
-      if (error) {
-        Alert.alert("Login Failed", error.message);
-        return;
-      }
-      
+      const { data } = await signInWithEmail(email, password);
+
       // Check if the user is a veterinarian and if they're verified
       if (data.user?.user_metadata?.role === "veterinarian") {
         // Check if the user exists in the vet_profiles table (meaning they're verified)
         const { data: userData, error: userError } = await supabase
-          .from('vet_profiles')
-          .select('id')
-          .eq('id', data.user.id)
+          .from("vet_profiles")
+          .select("id")
+          .eq("id", data.user.id)
           .single();
-          
+
         if (userError || !userData) {
           // User is a veterinarian but not found in the vet_profiles table
           // This means they're not yet verified by an admin
           await supabase.auth.signOut(); // Log them out
           Alert.alert(
-            "Account Not Verified", 
+            "Account Not Verified",
             "Your veterinarian account is pending verification by an administrator. You will receive an email once verified."
           );
           return;
         }
       }
     } catch (error) {
-      Alert.alert("Error", error.message || "An unexpected error occurred");
+      if (
+        error.message.includes(
+          "Email not confirmed"
+        )
+      ) {
+        Alert.alert("Email Not Verified", error.message);
+      } else {
+        Alert.alert("Login Failed", error.message || "An unexpected error occurred");
+      }
     } finally {
       setIsLoading(false);
     }

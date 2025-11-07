@@ -5,139 +5,105 @@ import { Session, User } from "@supabase/supabase-js";
 
 const AuthContext = createContext(null);
 
+// Define constants for roles and table names to avoid magic strings
+const ROLES = {
+  VETERINARIAN: 'veterinarian',
+  PENDING_VETERINARIAN: 'pending_veterinarian',
+};
+
+const TABLE_NAMES = {
+  VET_PROFILES: 'vet_profiles',
+  USER_PROFILES: 'user_profiles',
+};
+
+/**
+ * Creates or updates a user or vet profile in the database after authentication.
+ * This function is designed to be idempotent, using Supabase's `upsert` functionality.
+ * It determines the user's role from their metadata and populates the correct table.
+ * @param {User} user - The Supabase user object.
+ */
+const createProfileAfterAuth = async (user) => {
+  try {
+    const userRole = user.user_metadata?.role;
+    const isVet = userRole === ROLES.VETERINARIAN || userRole === ROLES.PENDING_VETERINARIAN;
+
+    const tableName = isVet ? TABLE_NAMES.VET_PROFILES : TABLE_NAMES.USER_PROFILES;
+    
+    const profileData = {
+      id: user.id,
+      name: user.user_metadata?.full_name || user.email?.split('@')[0] || (isVet ? 'Veterinarian' : 'Pet Owner'),
+      updated_at: new Date().toISOString(),
+    };
+
+    if (isVet) {
+      profileData.license_number = user.user_metadata?.license_number;
+    }
+
+    const { error } = await supabase
+      .from(tableName)
+      .upsert(profileData, { onConflict: 'id' });
+
+    if (error) {
+      console.error(`Error upserting ${isVet ? 'veterinarian' : 'user'} profile:`, error);
+    } else {
+      console.log(`${isVet ? 'Veterinarian' : 'User'} profile handled successfully.`);
+    }
+  } catch (error) {
+    console.error('Error in createProfileAfterAuth:', error);
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    // Function to create profile after user authentication
-    const createProfileAfterAuth = async (user) => {
-      try {
-        // Check if user profile already exists to avoid duplicates
-        // Check for veterinarian profile first
-        const { data: vetProfileData, error: vetCheckError } = await supabase
-          .from('vet_profiles')
-          .select('id')
-          .eq('id', user.id)
-          .single();
+    let isMounted = true;
 
-        if (!vetCheckError && vetProfileData) {
-          // Veterinarian profile already exists, no need to create anything
-          return;
-        }
-
-        // Check for user profile
-        const { data: userProfileData, error: userCheckError } = await supabase
-          .from('user_profiles')
-          .select('id')
-          .eq('id', user.id)
-          .single();
-
-        if (!userCheckError && userProfileData) {
-          // User profile already exists, no need to create anything
-          return;
-        }
-
-        // If no profile exists, create one based on user metadata from registration
-        const userRole = user.user_metadata?.role;
-        
-        if (userRole === 'veterinarian' || userRole === 'pending_veterinarian') {
-          // Create veterinarian profile with data from user metadata
-          const { error: insertError } = await supabase
-            .from('vet_profiles')
-            .upsert([{
-              id: user.id,
-              name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Veterinarian',
-              license_number: user.user_metadata?.license_number,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }], {
-              onConflict: 'id'
-            });
-          
-          if (insertError) {
-            console.error('Error creating/updating veterinarian profile:', insertError);
-          } else {
-            console.log('Veterinarian profile created/updated successfully');
-          }
-        } else {
-          // Create user profile with data from user metadata
-          const { error: insertError } = await supabase
-            .from('user_profiles')
-            .upsert([{
-              id: user.id,
-              name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Pet Owner',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }], {
-              onConflict: 'id'
-            });
-          
-          if (insertError) {
-            console.error('Error creating/updating user profile:', insertError);
-          } else {
-            console.log('User profile created/updated successfully');
-          }
-        }
-      } catch (error) {
-        console.error('Error in createProfileAfterAuth:', error);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      // The first event fired is the initial session state.
+      // Set loading to false only on this initial check.
+      if (isMounted) {
+        setLoading(false);
+        isMounted = false;
       }
-    };
-
-    const init = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
 
       setSession(session);
       setUser(session?.user ?? null);
-      setLoading(false);
-      
-      // Initialize notifications when user is authenticated - notification service removed
-      if (session?.user && !initialized) {
-        setInitialized(true);
-      }
-      
-      // Create profile if user doesn't have one, using data from registration
       if (session?.user) {
         await createProfileAfterAuth(session.user);
-      }
-    };
-
-    init();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      // Initialize notifications when user signs in - notification service removed
-      if (session?.user && !initialized) {
-        setInitialized(true);
-      }
-      
-      // Create profile if user doesn't have one, using data from registration
-      if (session?.user) {
-        await createProfileAfterAuth(session.user);
-      }
-      
-      // Reset notification service when user logs out - notification service removed
-      if (!session?.user) {
-        setInitialized(false);
       }
     });
 
     return () => {
       subscription.unsubscribe();
-      // Clean up notification listeners - notification service removed
     };
-  }, [initialized]);
+  }, []);
 
   const signInWithEmail = async (email, password) => {
-    return await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      if (error.message === "Email not confirmed") {
+        await supabase.auth.resend({
+          type: "signup",
+          email: email,
+          options: {
+            emailRedirectTo: 'https://pawscan-dashboard.vercel.app/confirm-email',
+          }
+        });
+        throw new Error(
+          "Email not confirmed. A new confirmation email has been sent."
+        );
+      }
+      throw error;
+    }
+
+    return { data, error };
   };
 
   const signUpWithEmail = async (email, password, userData = {}) => {
@@ -145,6 +111,7 @@ export const AuthProvider = ({ children }) => {
       email,
       password,
       options: {
+        emailRedirectTo: 'https://pawscan-dashboard.vercel.app/confirm-email',
         data: userData, // Pass username, role, etc.
       },
     });
@@ -160,7 +127,7 @@ export const AuthProvider = ({ children }) => {
       throw new Error(`"${trimmedEmail}" is not a valid email address`);
     }
   
-    // ✅ Redirect user to your frontend reset page
+    // TODO: Move this URL to an environment variable for better configuration.
     const redirectTo = "https://pawscan-dashboard.vercel.app/reset-password";
   
     return await supabase.auth.resetPasswordForEmail(trimmedEmail, {
@@ -175,8 +142,6 @@ export const AuthProvider = ({ children }) => {
       console.error("Logout error:", error.message);
     } else {
       console.log("User logged out successfully");
-      // Reset notification service - notification service removed
-      setInitialized(false);
     }
   };
 
@@ -199,6 +164,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within AuthProvider");
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };
