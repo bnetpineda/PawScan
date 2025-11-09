@@ -32,29 +32,17 @@ const AnalysisHistoryScreen = () => {
   const [selectedAnalysis, setSelectedAnalysis] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Color themes for urgency badges
-  const colors = {
-    badgeHigh: "bg-red-600",
-    badgeMedium: "bg-orange-400",
-    badgeLow: "bg-green-600",
-  };
-
   useEffect(() => {
     fetchAnalyses();
-    // Show tutorial on first visit
-    if (!isTutorialCompleted('history')) {
-      const timer = setTimeout(() => {
-        startTutorial('history');
-      }, 1000);
+    if (!isTutorialCompleted("history")) {
+      const timer = setTimeout(() => startTutorial("history"), 1000);
       return () => clearTimeout(timer);
     }
   }, []);
 
   const fetchAnalyses = async () => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
@@ -94,11 +82,9 @@ const AnalysisHistoryScreen = () => {
                 .from("analysis_history")
                 .delete()
                 .eq("id", analysisId);
-
               if (error) throw error;
-
               setAnalyses((prev) =>
-                prev.filter((analysis) => analysis.id !== analysisId)
+                prev.filter((a) => a.id !== analysisId)
               );
               Alert.alert("Success", "Analysis deleted successfully");
             } catch (error) {
@@ -114,12 +100,7 @@ const AnalysisHistoryScreen = () => {
   const handleShare = async (analysis) => {
     try {
       await Share.share({
-        message: `Check out my pet's health analysis!
-
-${analysis.analysis_result.substring(
-          0,
-          200
-        )}...`,
+        message: `Check out my pet's health analysis!\n\n${String(analysis.analysis_result ?? "").substring(0, 200)}...`,
         title: "Pet Health Analysis",
       });
     } catch (error) {
@@ -132,39 +113,30 @@ ${analysis.analysis_result.substring(
     setModalVisible(true);
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
+
+  const getUrgencyColor = (text) => {
+    const lower = String(text ?? "").toLowerCase();
+    if (lower.includes("emergency") || lower.includes("urgent")) return "bg-red-500";
+    if (lower.includes("medium") || lower.includes("moderate")) return "bg-yellow-500";
+    return "bg-green-500";
   };
 
-  const getUrgencyColor = (analysisText) => {
-    const lowerText = analysisText.toLowerCase();
-    if (lowerText.includes("emergency") || lowerText.includes("urgent")) {
-      return colors.badgeHigh;
-    } else if (lowerText.includes("medium") || lowerText.includes("moderate")) {
-      return colors.badgeMedium;
-    }
-    return colors.badgeLow;
-  };
-
-  const getUrgencyLevel = (analysisText) => {
-    const lowerText = analysisText.toLowerCase();
-    if (lowerText.includes("emergency") || lowerText.includes("urgent")) {
-      return "High Priority";
-    } else if (lowerText.includes("medium") || lowerText.includes("moderate")) {
-      return "Medium Priority";
-    }
+  const getUrgencyLevel = (text) => {
+    const lower = String(text ?? "").toLowerCase();
+    if (lower.includes("emergency") || lower.includes("urgent")) return "High Priority";
+    if (lower.includes("medium") || lower.includes("moderate")) return "Medium Priority";
     return "Low Priority";
   };
 
-  if (loading) {
-    return <LoadingState isDark={isDark} />;
-  }
+  if (loading) return <LoadingState isDark={isDark} />;
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-black">
@@ -180,17 +152,14 @@ ${analysis.analysis_result.substring(
             Analysis History
           </Text>
           <Text className="text-sm font-inter text-neutral-500 dark:text-neutral-400">
-            {analyses.length} analyses
+            {String(analyses.length)} analyses
           </Text>
         </View>
-        <TouchableOpacity
-          onPress={() => startTutorial('history')}
-          className="p-2"
-        >
-          <MaterialIcons 
-            name="help-outline" 
-            size={24} 
-            color={isDark ? "#d4d4d4" : "#525252"} 
+        <TouchableOpacity onPress={() => startTutorial("history")} className="p-2">
+          <MaterialIcons
+            name="help-outline"
+            size={24}
+            color={isDark ? "#d4d4d4" : "#525252"}
           />
         </TouchableOpacity>
       </View>
@@ -238,6 +207,7 @@ ${analysis.analysis_result.substring(
         getUrgencyColor={getUrgencyColor}
         getUrgencyLevel={getUrgencyLevel}
       />
+
       <TutorialOverlay steps={historyTutorialSteps} tutorialId="history" />
     </SafeAreaView>
   );

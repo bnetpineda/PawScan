@@ -32,13 +32,6 @@ const AnalysisHistoryScreen = () => {
   const [selectedAnalysis, setSelectedAnalysis] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Color themes for urgency badges
-  const colors = {
-    badgeHigh: "bg-red-600",
-    badgeMedium: "bg-orange-400",
-    badgeLow: "bg-green-600",
-  };
-
   useEffect(() => {
     fetchAnalyses();
     // Show tutorial on first visit
@@ -141,17 +134,16 @@ ${analysis.analysis_result.substring(
       minute: "2-digit",
     });
   };
-
   const getUrgencyColor = (analysisText) => {
     const lowerText = analysisText.toLowerCase();
     if (lowerText.includes("emergency") || lowerText.includes("urgent")) {
-      return colors.badgeHigh;
+      return "bg-red-500";
     } else if (lowerText.includes("medium") || lowerText.includes("moderate")) {
-      return colors.badgeMedium;
+      return "bg-yellow-500";
     }
-    return colors.badgeLow;
+    return "bg-green-500";
   };
-
+  
   const getUrgencyLevel = (analysisText) => {
     const lowerText = analysisText.toLowerCase();
     if (lowerText.includes("emergency") || lowerText.includes("urgent")) {
@@ -161,6 +153,7 @@ ${analysis.analysis_result.substring(
     }
     return "Low Priority";
   };
+  
 
   if (loading) {
     return <LoadingState isDark={isDark} />;
