@@ -216,9 +216,9 @@ const ProfileScreen = () => {
       // Convert base64 to buffer
       const fileBuffer = Buffer.from(fileData, "base64");
       
-      // Determine content type
+      // Determine content type with safe default
       const imageExt = imageUri.split(".").pop()?.toLowerCase();
-      const contentType = `image/${imageExt === "jpg" ? "jpeg" : imageExt}`;
+      const contentType = imageExt ? `image/${imageExt === "jpg" ? "jpeg" : imageExt}` : "image/jpeg";
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
@@ -229,21 +229,20 @@ const ProfileScreen = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get the public URL
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("avatars").getPublicUrl(fileName);
+      // Get the public URL and add cache-busting param
+      const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(fileName);
+      const cacheBustedUrl = `${publicUrl}?t=${Date.now()}`;
 
       // Update the profile_image_url in the vet_profiles table instead of auth metadata
       const { error: updateError } = await supabase
         .from('vet_profiles')
-        .update({ profile_image_url: publicUrl })
+        .update({ profile_image_url: cacheBustedUrl })
         .eq('id', user.id);
 
       if (updateError) throw updateError;
 
       // Update local state with the new avatar URL
-      setProfileImage(publicUrl);
+      setProfileImage(cacheBustedUrl);
 
       Alert.alert("Success", "Profile picture updated successfully!");
     } catch (error) {

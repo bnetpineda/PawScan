@@ -92,10 +92,12 @@ export const useProfileUpdate = (userId) => {
       setUpdating(true);
       setError(null);
 
+      const cacheBustedUrl = `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
+
       const { error: updateError } = await supabase
         .from("user_profiles")
         .update({
-          profile_image_url: imageUrl,
+          profile_image_url: cacheBustedUrl,
           updated_at: new Date().toISOString(),
         })
         .eq("id", userId);
