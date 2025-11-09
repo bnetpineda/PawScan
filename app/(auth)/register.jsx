@@ -518,17 +518,7 @@ export default function Register() {
               </TouchableOpacity>
             </View>
 
-            <Text className="text-center text-xs text-neutral-500 dark:text-neutral-400 mt-6">
-              By creating an account, you agree to our{" "}
-              <Text className="font-inter-bold text-black dark:text-white">
-                Terms of Service
-              </Text>{" "}
-              and{" "}
-              <Text className="font-inter-bold text-black dark:text-white">
-                Privacy Policy
-              </Text>
-              .
-            </Text>
+          
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

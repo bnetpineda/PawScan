@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
-import { submitPostReport } from "../../services/reportService";
+import ReportModal from "./ReportModal";
 
 const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onShare, onOpenImageModal, onViewProfile }) => {
   const isAnonymous = post.is_anonymous;
@@ -16,6 +16,7 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
   const [showDropdown, setShowDropdown] = useState(false);
   // Track user avatar URL
   const [userAvatarUrl, setUserAvatarUrl] = useState(null);
+  const [reportModalVisible, setReportModalVisible] = useState(false);
 
   // Function to determine urgency level from analysis text
   const getUrgencyLevel = (analysisText) => {
@@ -99,6 +100,8 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
   // Check if current user is the post owner
   const isPostOwner = currentUser && post.user_id === currentUser.id;
 
+
+
   // Handle delete post
   const handleDeletePost = () => {
     Alert.alert(
@@ -155,115 +158,24 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
       return;
     }
 
-    // Define report reasons
-    const reportReasons = [
-      "Inappropriate content",
-      "Spam",
-      "Harassment",
-      "False information",
-      "Other"
-    ];
+    // Prevent users from reporting their own posts
+    if (isPostOwner) {
+      Alert.alert("Error", "You cannot report your own post");
+      return;
+    }
 
-    // Create alert with report options
-    const alertButtons = reportReasons.map(reason => ({
-      text: reason,
-      onPress: () => {
-        if (reason === "Other") {
-          // For "Other" reason, show a text input for description
-          Alert.prompt(
-            "Report Post",
-            "Please provide additional details about why you're reporting this post:",
-            [
-              {
-                text: "Cancel",
-                style: "cancel"
-              },
-              {
-                text: "Report",
-                onPress: async (description) => {
-                  const result = await submitPostReport(
-                    post.id,
-                    currentUser.id,
-                    reason,
-                    description || ""
-                  );
-                  
-                  if (result.success) {
-                    Alert.alert(
-                      "Post Reported",
-                      "Thank you for reporting this post. Our team will review it."
-                    );
-                  } else {
-                    Alert.alert("Error", result.error || "Failed to submit report");
-                  }
-                }
-              }
-            ],
-            "plain-text"
-          );
-        } else {
-          // For other reasons, show a text input for description as well
-          Alert.prompt(
-            "Report Post",
-            `Please explain why you're reporting this post for "${reason}":`,
-            [
-              {
-                text: "Cancel",
-                style: "cancel"
-              },
-              {
-                text: "Report",
-                onPress: async (description) => {
-                  // Confirm before submitting
-                  Alert.alert(
-                    "Confirm Report",
-                    `Are you sure you want to report this post for "${reason}"?\n\nDescription: ${description || "No description provided"}`,
-                    [
-                      {
-                        text: "Cancel",
-                        style: "cancel"
-                      },
-                      {
-                        text: "Report",
-                        onPress: async () => {
-                          const result = await submitPostReport(
-                            post.id,
-                            currentUser.id,
-                            reason,
-                            description || ""
-                          );
-                          
-                          if (result.success) {
-                            Alert.alert(
-                              "Post Reported",
-                              "Thank you for reporting this post. Our team will review it."
-                            );
-                          } else {
-                            Alert.alert("Error", result.error || "Failed to submit report");
-                          }
-                        }
-                      }
-                    ]
-                  );
-                }
-              }
-            ],
-            "plain-text"
-          );
-        }
-      }
-    }));
+    setReportModalVisible(true);
+  };
 
-    alertButtons.unshift({
-      text: "Cancel",
-      style: "cancel"
-    });
+  // Handle report success
+  const handleReportSuccess = (message) => {
+    Alert.alert("Success", message);
+    setReportModalVisible(false);
+  };
 
-    Alert.alert(
-      "Report Post",
-      "Why are you reporting this post?",
-      alertButtons
-    );
+  // Handle report error
+  const handleReportError = (error) => {
+    Alert.alert("Error", error);
   };
 
   // Get urgency level for this post
@@ -391,7 +303,7 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
           </View>
         </View>
         <View className="relative">
-          <TouchableOpacity 
+          <TouchableOpacity
             className="p-2"
             onPress={() => setShowDropdown(!showDropdown)}
           >
@@ -401,27 +313,29 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
               color={isDark ? "#8E8E93" : "#6C757D"}
             />
           </TouchableOpacity>
-          
+
           {/* Simple Dropdown */}
           {showDropdown && (
             <View className="absolute right-0 top-8 bg-white dark:bg-neutral-800 rounded-lg shadow-lg w-40 z-10">
-              <TouchableOpacity
-                className="flex-row items-center p-3 border-b border-neutral-200 dark:border-neutral-700"
-                onPress={() => {
-                  handleReportPost();
-                  setShowDropdown(false);
-                }}
-              >
-                <FontAwesome
-                  name="flag"
-                  size={16}
-                  color={isDark ? "#8E8E93" : "#6C757D"}
-                />
-                <Text className="ml-3 text-base font-inter text-black dark:text-white">
-                  Report
-                </Text>
-              </TouchableOpacity>
-              
+              {!isPostOwner && (
+                <TouchableOpacity
+                  className="flex-row items-center p-3 border-b border-neutral-200 dark:border-neutral-700"
+                  onPress={() => {
+                    handleReportPost();
+                    setShowDropdown(false);
+                  }}
+                >
+                  <FontAwesome
+                    name="flag"
+                    size={16}
+                    color={isDark ? "#8E8E93" : "#6C757D"}
+                  />
+                  <Text className="ml-3 text-base font-inter text-black dark:text-white">
+                    Report
+                  </Text>
+                </TouchableOpacity>
+              )}
+
               {isPostOwner && (
                 <TouchableOpacity
                   className="flex-row items-center p-3"
@@ -538,7 +452,7 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
           </TouchableOpacity>
         )}
       </View>
-      
+
       {/* Touchable overlay to close dropdown when tapping elsewhere */}
       {showDropdown && (
         <TouchableOpacity
@@ -547,6 +461,16 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
           activeOpacity={1}
         />
       )}
+
+      <ReportModal
+        visible={reportModalVisible}
+        onClose={() => setReportModalVisible(false)}
+        post={post}
+        currentUser={currentUser}
+        onSuccess={handleReportSuccess}
+        onError={handleReportError}
+        isDark={isDark}
+      />
     </View>
   );
 };

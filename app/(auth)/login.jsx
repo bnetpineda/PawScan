@@ -228,17 +228,7 @@ export default function Login() {
             </TouchableOpacity>
           </View>
 
-          <Text className="text-center text-xs text-neutral-500 dark:text-neutral-400 mt-6 font font-inter">
-            By signing in to PawScan, you agree to our{" "}
-            <Text className="text-black dark:text-white font-inter-bold">
-              Terms
-            </Text>{" "}
-            and{" "}
-            <Text className="text-black dark:text-white font-inter-bold">
-              Privacy Policy
-            </Text>
-            .
-          </Text>
+         
         </View>
       </View>
 
