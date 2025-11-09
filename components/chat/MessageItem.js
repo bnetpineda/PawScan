@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, Image, Dimensions } from 'react-native';
+import { View, Text, Image, Dimensions, Pressable } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 
 const MessageItem = ({ 
   item, 
   user, 
   formatTime, 
-  getMessageStatusIcon 
+  getMessageStatusIcon, 
+  onLongPressMessage 
 }) => {
   const isCurrentUser = item.sender_id === user.id;
   const messageTime = formatTime(item.created_at);
@@ -23,7 +24,7 @@ const MessageItem = ({
 
   return (
     <View className={`mb-3 flex-row ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
-      <View className={`max-w-[80%] ${isCurrentUser ? 'bg-black dark:bg-white rounded-2xl rounded-br-none' : 'bg-white dark:bg-neutral-800 border border-black dark:border-neutral-700 rounded-2xl rounded-bl-none'}`}>
+      <Pressable onLongPress={() => onLongPressMessage && onLongPressMessage(item)} className={`max-w-[80%] ${isCurrentUser ? 'bg-black dark:bg-white rounded-2xl rounded-br-none' : 'bg-white dark:bg-neutral-800 border border-black dark:border-neutral-700 rounded-2xl rounded-bl-none'}`}>
         {item.image_url && (
           <Image 
             source={{ uri: item.image_url }} 
@@ -65,9 +66,9 @@ const MessageItem = ({
             </View>
           </View>
         )}
-      </View>
+      </Pressable>
     </View>
   );
 };
 
-export default MessageItem;
+export default React.memo(MessageItem);

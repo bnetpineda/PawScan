@@ -39,7 +39,16 @@ const ChatScreen = () => {
     markMessagesAsRead,
     loadMessages,
     clearTypingStatus,
+    deleteMessage,
   } = useVetChat(conversationId, user, userName, userId);
+
+  const handleLongPressMessage = useCallback((msg) => {
+    if (msg.sender_id !== user.id) return;
+    Alert.alert('Delete message', 'Do you want to delete this message?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => deleteMessage(msg.id) }
+    ]);
+  }, [user?.id, deleteMessage]);
 
   // Function to fetch user profile image
   const fetchUserProfileImage = async () => {
@@ -306,6 +315,7 @@ const ChatScreen = () => {
           user={user}
           formatTime={formatTime}
           getMessageStatusIcon={getMessageStatusIcon}
+          onLongPressMessage={handleLongPressMessage}
         />
         
         {/* Attachment Options Modal */}

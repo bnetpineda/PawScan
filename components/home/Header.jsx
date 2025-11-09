@@ -18,7 +18,10 @@ const Header = ({
       {/* Top Header */}
       <View className="flex-row items-center px-4 py-4 border-b border-neutral-200 dark:border-neutral-800">
         <Image
-          source={require("../../assets/images/home-logo.png")}
+          source={isDark 
+            ? require("../../assets/images/home-logo-darkmode.png") 
+            : require("../../assets/images/home-logo-whitemode.png")
+          }
           className="w-8 h-9"
           resizeMode="cover"
         />

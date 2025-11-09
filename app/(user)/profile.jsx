@@ -21,6 +21,8 @@ import { useImageUpload } from "../../hooks/useImageUpload";
 import { useProfileUpdate } from "../../hooks/useProfileUpdate";
 import { getThemeColors } from "../../utils/themeColors";
 import { toast } from "../../utils/toast";
+import TutorialOverlay from "../../components/tutorial/TutorialOverlay";
+import { profileTutorialSteps } from "../../components/tutorial/tutorialSteps";
 
 const ProfileScreen = () => {
   const colorScheme = useColorScheme();
@@ -359,6 +361,7 @@ const ProfileScreen = () => {
           isDark={isDark}
         />
       </SafeAreaView>
+      <TutorialOverlay steps={profileTutorialSteps} tutorialId="profile" />
     </ErrorBoundary>
   );
 };

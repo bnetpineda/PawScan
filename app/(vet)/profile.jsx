@@ -26,6 +26,8 @@ import ChangePasswordModal from "../../components/profile/ChangePasswordModal";
 import ImageViewerModal from "../../components/profile/ImageViewerModal";
 import VetProfileEditModal from "../../components/profile/VetProfileEditModal";
 import useProfileData from "../../hooks/useProfileData";
+import TutorialOverlay from "../../components/tutorial/TutorialOverlay";
+import { profileTutorialSteps } from "../../components/tutorial/tutorialSteps";
 
 const ProfileScreen = () => {
   const [current, setCurrentUser] = useState(null);
@@ -514,7 +516,10 @@ const ProfileScreen = () => {
         <View className={`pt-4 pb-4 ${isDark ? "bg-black" : "bg-white"}`}>
           <View className="flex-row justify-between items-center px-4 mb-8">
             <Image
-              source={require("../../assets/images/home-logo.png")}
+              source={isDark 
+                ? require("../../assets/images/home-logo-darkmode.png") 
+                : require("../../assets/images/home-logo-whitemode.png")
+              }
               className="w-8 h-9"
               resizeMode="cover"
             />
@@ -897,6 +902,7 @@ const ProfileScreen = () => {
         updating={updating}
         isDark={isDark}
       />
+      <TutorialOverlay steps={profileTutorialSteps} tutorialId="profile" />
     </SafeAreaView>
   );
 };

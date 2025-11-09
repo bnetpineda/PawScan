@@ -19,9 +19,9 @@
     ],
     "name": "PawScan",
     "slug": "PawScan",
-    "icon": "./assets/images/logo.png",
+    "icon": "./assets/images/app-logo.png",
     "splash": {
-      "image": "./assets/images/logo.png",
+      "image": "./assets/images/app-logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

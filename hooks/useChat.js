@@ -553,7 +553,8 @@ const useChat = (conversationId, user, vetName, vetId) => {
     loadMessages,
     updateTypingStatus,
     clearTypingStatus,
-    sendingLoadingManager
+    sendingLoadingManager,
+    deleteMessage
   };
 };
 

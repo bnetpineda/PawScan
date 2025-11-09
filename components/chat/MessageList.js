@@ -6,7 +6,8 @@ const MessageList = ({
   messages, 
   user, 
   formatTime, 
-  getMessageStatusIcon 
+  getMessageStatusIcon, 
+  onLongPressMessage 
 }) => {
   const renderItem = useCallback(({ item }) => (
     <MessageItem 
@@ -14,8 +15,9 @@ const MessageList = ({
       user={user} 
       formatTime={formatTime} 
       getMessageStatusIcon={getMessageStatusIcon} 
+      onLongPressMessage={onLongPressMessage}
     />
-  ), [user, formatTime, getMessageStatusIcon]);
+  ), [user, formatTime, getMessageStatusIcon, onLongPressMessage]);
 
   return (
     <FlatList
@@ -28,4 +30,4 @@ const MessageList = ({
   );
 };
 
-export default MessageList;
+export default React.memo(MessageList);

@@ -517,6 +517,35 @@ const useVetChat = (conversationId, user, userName, userId) => {
     console.log('Subscribed to typing channel');
   }, [conversationId, user]);
 
+  const deleteMessage = useCallback(async (messageId) => {
+    try {
+      const toDelete = messages.find(m => m.id === messageId);
+      if (!toDelete || toDelete.sender_id !== user.id) {
+        Alert.alert('Cannot delete', 'You can only delete your own messages.');
+        return;
+      }
+
+      // Optimistically update UI
+      setMessages((prev) => prev.filter(m => m.id !== messageId));
+      setMessageStatus((prev) => {
+        const ns = { ...prev };
+        delete ns[messageId];
+        return ns;
+      });
+
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .eq('id', messageId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      Alert.alert('Delete failed', 'Could not delete message. Please try again.');
+      await loadMessages();
+    }
+  }, [messages, user, setMessages, setMessageStatus, loadMessages]);
+  
   // Load messages
   const loadMessages = useCallback(async () => {
     try {
@@ -569,7 +598,8 @@ const useVetChat = (conversationId, user, userName, userId) => {
     loadMessages,
     updateTypingStatus,
     clearTypingStatus,
-    sendingLoadingManager
+    sendingLoadingManager,
+    deleteMessage
   };
 };
 

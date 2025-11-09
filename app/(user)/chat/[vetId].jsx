@@ -44,8 +44,17 @@ const ChatScreen = () => {
     loadMessages,
     updateTypingStatus,
     clearTypingStatus,
-    sendingLoadingManager
+    sendingLoadingManager,
+    deleteMessage
   } = useChat(conversationId, user, resolvedVetName, vetId);
+
+  const handleLongPressMessage = useCallback((msg) => {
+    if (msg.sender_id !== user.id) return;
+    Alert.alert('Delete message', 'Do you want to delete this message?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => deleteMessage(msg.id) }
+    ]);
+  }, [user?.id, deleteMessage]);
 
   const fetchVetProfileInfo = async () => {
     try {
@@ -343,6 +352,7 @@ const ChatScreen = () => {
           user={user}
           formatTime={formatTime}
           getMessageStatusIcon={getMessageStatusIcon}
+          onLongPressMessage={handleLongPressMessage}
         />
         
         {/* Attachment Options Modal */}

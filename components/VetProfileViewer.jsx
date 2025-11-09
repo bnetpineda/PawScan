@@ -137,7 +137,10 @@ const VetProfileViewer = ({
         <View className={`pb-4 ${isDark ? "bg-black" : "bg-white"}`}>
           <View className="flex-row justify-between items-center px-4 mb-8 pt-4">
             <Image
-              source={require("../assets/images/home-logo.png")}
+              source={isDark 
+                ? require("../assets/images/home-logo-darkmode.png") 
+                : require("../assets/images/home-logo-whitemode.png")
+              }
               className="w-8 h-9"
               resizeMode="cover"
             />
