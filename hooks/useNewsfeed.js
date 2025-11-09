@@ -15,7 +15,7 @@ const CACHE_TTL = 300000; // 5 minutes
 // Create a singleton cache
 const postsCache = createCacheWithTTL(CACHE_TTL);
 
-export const useNewsfeed = () => {
+export const useNewsfeed = (searchQuery) => {
   const { user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,20 +23,19 @@ export const useNewsfeed = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState(null);
+
+  const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
 
   // Refs for cleanup
   const mountedRef = useRef(true);
   const loadingRef = useRef(false);
-
-  // Debounced search query
-  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const hasMoreRef = useRef(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(searchQuery);
-    }, 300);
+    }, 200);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -46,7 +45,7 @@ export const useNewsfeed = () => {
   const loadPosts = useCallback(
     async (pageNum = 0, isRefresh = false) => {
       if (loadingRef.current && !isRefresh) return;
-      if (!hasMore && pageNum > 0 && !isRefresh) return;
+      if (!hasMoreRef.current && pageNum > 0 && !isRefresh) return;
 
       loadingRef.current = true;
 
@@ -63,7 +62,7 @@ export const useNewsfeed = () => {
         setError(null);
 
         // Check cache for first page without search
-        const cacheKey = `posts_${debouncedQuery}_${pageNum}`;
+        const cacheKey = `posts_${user?.id || "anon"}_${debouncedQuery}_${pageNum}`;
         if (!isRefresh && !debouncedQuery && pageNum === 0) {
           const cachedData = postsCache.get(cacheKey);
           if (cachedData && mountedRef.current) {
@@ -88,7 +87,6 @@ export const useNewsfeed = () => {
         // Update state based on page
         if (pageNum === 0 || isRefresh) {
           setPosts(result.posts);
-          setPage(0);
         } else {
           setPosts((prev) => [...prev, ...result.posts]);
         }
@@ -114,17 +112,18 @@ export const useNewsfeed = () => {
         }
       }
     },
-    [user?.id, debouncedQuery, hasMore]
+    [user?.id, debouncedQuery]
   );
 
   /**
-   * Load initial posts
+   * Load initial posts or on search change
    */
   useEffect(() => {
     if (user?.id) {
-      loadPosts(0);
+      setPage(0);
+      loadPosts(0, true);
     }
-  }, [user?.id, debouncedQuery]);
+  }, [loadPosts]);
 
   /**
    * Refresh posts
@@ -132,6 +131,7 @@ export const useNewsfeed = () => {
   const refresh = useCallback(() => {
     postsCache.clear();
     setHasMore(true);
+    setPage(0);
     loadPosts(0, true);
   }, [loadPosts]);
 
@@ -168,7 +168,7 @@ export const useNewsfeed = () => {
             ? {
                 ...p,
                 has_liked: newLikeState,
-                likes_count: p.likes_count + likeDelta,
+                likes_count: Math.max(0, p.likes_count + likeDelta),
               }
             : p
         )
@@ -184,7 +184,7 @@ export const useNewsfeed = () => {
               ? {
                   ...p,
                   has_liked: currentlyLiked,
-                  likes_count: p.likes_count - likeDelta,
+                  likes_count: Math.max(0, p.likes_count - likeDelta),
                 }
               : p
           )
@@ -217,6 +217,10 @@ export const useNewsfeed = () => {
     };
   }, []);
 
+  useEffect(() => {
+    hasMoreRef.current = hasMore;
+  }, [hasMore]);
+
   return {
     posts,
     loading,
@@ -224,8 +228,6 @@ export const useNewsfeed = () => {
     loadingMore,
     hasMore,
     error,
-    searchQuery,
-    setSearchQuery,
     refresh,
     loadMore,
     toggleLike,

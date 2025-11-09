@@ -31,6 +31,7 @@ const NewsFeedScreen = () => {
   const isDark = useColorScheme() === "dark";
   const { user } = useAuth();
   const { startTutorial } = useTutorial();
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Use custom hooks for newsfeed and comments
   const {
@@ -39,13 +40,11 @@ const NewsFeedScreen = () => {
     refreshing,
     loadingMore,
     hasMore,
-    searchQuery,
-    setSearchQuery,
     refresh,
     loadMore,
     toggleLike,
     updateCommentCount,
-  } = useNewsfeed();
+  } = useNewsfeed(searchQuery);
 
   // Modal states
   const [selectedImage, setSelectedImage] = useState(null);
@@ -81,13 +80,13 @@ const NewsFeedScreen = () => {
       setSearchQuery(query);
       setIsSearching(query.length > 0);
     },
-    [setSearchQuery]
+    []
   );
 
   const clearSearch = useCallback(() => {
     setSearchQuery("");
     setIsSearching(false);
-  }, [setSearchQuery]);
+  }, []);
 
   // Image modal handlers
   const openImageModal = useCallback((imageUrl) => {
@@ -122,8 +121,8 @@ const NewsFeedScreen = () => {
   // Share handler
   const handleShare = useCallback(async (post) => {
     try {
-      const message = post.caption
-        ? `Check out this post: ${post.caption}`
+      const message = post.analysis_result
+        ? `Check out this post: ${post.analysis_result}`
         : "Check out this post!";
 
       await Share.share({

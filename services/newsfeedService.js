@@ -67,7 +67,7 @@ export const fetchPosts = async ({
     // Add search filter if provided (server-side search)
     if (searchQuery.trim()) {
       query = query.or(
-        `caption.ilike.%${searchQuery}%,user_email.ilike.%${searchQuery}%`
+        `analysis_result.ilike.%${searchQuery}%,pet_name.ilike.%${searchQuery}%,display_name.ilike.%${searchQuery}%`
       );
     }
 
@@ -94,9 +94,17 @@ export const fetchPosts = async ({
     }));
 
     // Check if there are more posts
-    const { count } = await supabase
+    let countQuery = supabase
       .from("newsfeed_posts")
       .select("*", { count: "exact", head: true });
+
+    if (searchQuery.trim()) {
+      countQuery = countQuery.or(
+        `analysis_result.ilike.%${searchQuery}%,pet_name.ilike.%${searchQuery}%,display_name.ilike.%${searchQuery}%`
+      );
+    }
+    
+    const { count } = await countQuery;
 
     const hasMore = offset + limit < (count || 0);
 

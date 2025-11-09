@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -31,6 +31,7 @@ const VetNewsFeedScreen = () => {
   const isDark = useColorScheme() === "dark";
   const { user } = useAuth();
   const { startTutorial } = useTutorial();
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Use custom hooks for newsfeed and comments
   const {
@@ -39,13 +40,11 @@ const VetNewsFeedScreen = () => {
     refreshing,
     loadingMore,
     hasMore,
-    searchQuery,
-    setSearchQuery,
     refresh,
     loadMore,
     toggleLike,
     updateCommentCount,
-  } = useNewsfeed();
+  } = useNewsfeed(searchQuery);
 
   // Modal states
   const [selectedImage, setSelectedImage] = useState(null);
@@ -78,16 +77,15 @@ const VetNewsFeedScreen = () => {
   // Search handlers
   const handleSearch = useCallback(
     (query) => {
-      setSearchQuery(query);
-      setIsSearching(query.length > 0);
+      setSearchQuery(query); // keep search bar mounted; avoid toggling isSearching per keystroke
     },
-    [setSearchQuery]
+    []
   );
 
   const clearSearch = useCallback(() => {
     setSearchQuery("");
     setIsSearching(false);
-  }, [setSearchQuery]);
+  }, []);
 
   // Image modal handlers
   const openImageModal = useCallback((imageUrl) => {
@@ -122,8 +120,8 @@ const VetNewsFeedScreen = () => {
   // Share handler
   const handleShare = useCallback(async (post) => {
     try {
-      const message = post.caption
-        ? `Check out this post: ${post.caption}`
+      const message = post.analysis_result
+        ? `Check out this post: ${post.analysis_result}`
         : "Check out this post!";
 
       await Share.share({
@@ -157,8 +155,8 @@ const VetNewsFeedScreen = () => {
     [isDark, user, toggleLike, openCommentsModal, handleShare, openImageModal]
   );
 
-  // List header component
-  const ListHeaderComponent = useCallback(
+  // List header element (memoized to prevent remounts while typing)
+  const listHeader = useMemo(
     () => (
       <>
         <Header
@@ -240,7 +238,7 @@ const VetNewsFeedScreen = () => {
         data={posts}
         renderItem={renderPost}
         keyExtractor={keyExtractor}
-        ListHeaderComponent={ListHeaderComponent}
+        ListHeaderComponent={listHeader}
         ListEmptyComponent={ListEmptyComponent}
         ListFooterComponent={ListFooterComponent}
         onEndReached={handleEndReached}
