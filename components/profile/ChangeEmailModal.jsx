@@ -15,6 +15,7 @@ const ChangeEmailModal = ({
   onSubmit,
   updating,
   isDark,
+  emailSent,
 }) => (
   <Modal
     visible={visible}
@@ -89,6 +90,13 @@ const ChangeEmailModal = ({
           </Text>
         </View>
 
+        {emailSent && (
+          <View className={`mt-6 p-4 rounded-lg border ${isDark ? "border-green-700 bg-green-900" : "border-green-300 bg-green-50"}`}>
+            <Text className={`text-sm font-inter ${isDark ? "text-green-300" : "text-green-700"}`}>
+              Verification email sent. Please check your inbox.
+            </Text>
+          </View>
+        )}
         <View className="flex-row mt-6">
           <TouchableOpacity
             onPress={onClose}

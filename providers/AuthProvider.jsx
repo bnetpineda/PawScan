@@ -45,8 +45,6 @@ const createProfileAfterAuth = async (user) => {
 
     if (error) {
       console.error(`Error upserting ${isVet ? 'veterinarian' : 'user'} profile:`, error);
-    } else {
-      console.log(`${isVet ? 'Veterinarian' : 'User'} profile handled successfully.`);
     }
   } catch (error) {
     console.error('Error in createProfileAfterAuth:', error);
@@ -61,7 +59,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let isMounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       // The first event fired is the initial session state.
       // Set loading to false only on this initial check.
       if (isMounted) {
@@ -71,7 +69,10 @@ export const AuthProvider = ({ children }) => {
 
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) {
+      
+      // Only create/update profile on sign-in and sign-up events, not on user updates
+      // This prevents unnecessary profile operations during email/password changes
+      if (session?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
         await createProfileAfterAuth(session.user);
       }
     });

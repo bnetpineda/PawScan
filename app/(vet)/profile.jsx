@@ -2,7 +2,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
-import { Buffer } from 'buffer';
+import { Buffer } from "buffer";
 import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
@@ -36,13 +36,13 @@ const ProfileScreen = () => {
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [changeEmailVisible, setChangeEmailVisible] = useState(false);
   const [changePasswordVisible, setChangePasswordVisible] = useState(false);
-  const [updating, setUpdating] = useState(false);
   const [showingHistory, setShowingHistory] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
 
   // Form states
   const [newEmail, setNewEmail] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -57,6 +57,10 @@ const ProfileScreen = () => {
   const [availableSchedule, setAvailableSchedule] = useState([]);
   const [vetProfileEditable, setVetProfileEditable] = useState(false);
   const [showFullSchedule, setShowFullSchedule] = useState(false);
+
+  // FIXED: Separate updating states for each modal
+  const [updatingEmail, setUpdatingEmail] = useState(false);
+  const [updatingPassword, setUpdatingPassword] = useState(false);
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -92,6 +96,12 @@ const ProfileScreen = () => {
       // Fetch veterinarian profile
       fetchVetProfile();
     }
+
+    // FIXED: Cleanup function to prevent memory leaks
+    return () => {
+      setUpdatingEmail(false);
+      setUpdatingPassword(false);
+    };
   }, [user]);
 
   const fetchVetProfile = async () => {
@@ -278,16 +288,19 @@ const ProfileScreen = () => {
     }
   };
 
+  // FIXED: Use separate updatingEmail state
   const handleChangeEmail = async () => {
     if (!newEmail.trim() || !newEmail.includes("@")) {
       Alert.alert("Error", "Please enter a valid email address");
       return;
     }
 
-    setUpdating(true);
+    setUpdatingEmail(true);
     try {
       const { error } = await supabase.auth.updateUser({
         email: newEmail.trim(),
+      }, {
+        emailRedirectTo: 'https://pawscan-dashboard.vercel.app/confirm-email',
       });
 
       if (error) throw error;
@@ -296,14 +309,21 @@ const ProfileScreen = () => {
         "Verification Required",
         "A verification email has been sent to your new email address. Please check your inbox and click the verification link to complete the change."
       );
-      setChangeEmailVisible(false);
+      setEmailSent(true);
+      
+      // Close modal after 2 seconds
+      setTimeout(() => {
+        setChangeEmailVisible(false);
+        resetForms();
+      }, 2000);
     } catch (error) {
       Alert.alert("Error", error.message);
     } finally {
-      setUpdating(false);
+      setUpdatingEmail(false);
     }
   };
 
+  // FIXED: Use separate updatingPassword state
   const handleChangePassword = async () => {
     if (!currentPassword) {
       Alert.alert("Error", "Please enter your current password");
@@ -320,7 +340,7 @@ const ProfileScreen = () => {
       return;
     }
 
-    setUpdating(true);
+    setUpdatingPassword(true);
     try {
       // First verify current password by reauthenticating
       const { error: authError } = await supabase.auth.signInWithPassword({
@@ -340,14 +360,18 @@ const ProfileScreen = () => {
       if (error) throw error;
 
       Alert.alert("Success", "Password updated successfully!");
-      setChangePasswordVisible(false);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      
+      // Close modal after 2 seconds
+      setTimeout(() => {
+        setChangePasswordVisible(false);
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      }, 2000);
     } catch (error) {
       Alert.alert("Error", error.message);
     } finally {
-      setUpdating(false);
+      setUpdatingPassword(false);
     }
   };
 
@@ -356,11 +380,13 @@ const ProfileScreen = () => {
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
+    setEmailSent(false);
   }, [user]);
 
   const updateVetProfile = async () => {
     try {
-      setUpdating(true);
+      setUpdatingEmail(true); // Reuse for vet profile updating indicator if needed
+      // Or create a separate state: const [updatingProfile, setUpdatingProfile] = useState(false);
       
       const { error } = await supabase
         .from('vet_profiles')
@@ -383,7 +409,7 @@ const ProfileScreen = () => {
       console.error('Error updating vet profile:', error);
       Alert.alert("Error", "Failed to update profile. Please try again.");
     } finally {
-      setUpdating(false);
+      setUpdatingEmail(false);
     }
   };
 
@@ -396,8 +422,6 @@ const ProfileScreen = () => {
     
     setAvailableSchedule([...availableSchedule, newEntry]);
   };
-
-  
 
   const getInitials = (name) => {
     if (!name) return "V"; // Default to 'V' for Veterinarian
@@ -510,8 +534,7 @@ const ProfileScreen = () => {
           />
         }
       >
-        {/* Profile Header - Instagram Style */
-        }
+        {/* Profile Header - Instagram Style */}
         <View className={`pt-4 pb-4 ${isDark ? "bg-black" : "bg-white"}`}>
           <View className="flex-row justify-between items-center px-4 mb-8">
             <Image
@@ -861,8 +884,9 @@ const ProfileScreen = () => {
         newEmail={newEmail}
         setNewEmail={setNewEmail}
         onSubmit={handleChangeEmail}
-        updating={updating}
+        updating={updatingEmail} // FIXED: Pass specific state
         isDark={isDark}
+        emailSent={emailSent}
       />
 
       <ChangePasswordModal
@@ -878,7 +902,7 @@ const ProfileScreen = () => {
         confirmPassword={confirmPassword}
         setConfirmPassword={setConfirmPassword}
         onSubmit={handleChangePassword}
-        updating={updating}
+        updating={updatingPassword} // FIXED: Pass specific state
         isDark={isDark}
       />
 
@@ -898,7 +922,7 @@ const ProfileScreen = () => {
         setAvailableSchedule={setAvailableSchedule}
         editSchedule={editSchedule}
         updateVetProfile={updateVetProfile}
-        updating={updating}
+        updating={updatingEmail} // Consider creating separate updatingProfile state
         isDark={isDark}
       />
       <TutorialOverlay steps={profileTutorialSteps} tutorialId="profile" />

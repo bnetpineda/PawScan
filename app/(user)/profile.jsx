@@ -68,6 +68,7 @@ const ProfileScreen = () => {
 
   // Form states
   const [newEmail, setNewEmail] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -144,14 +145,19 @@ const ProfileScreen = () => {
       }
 
       await updateEmail(newEmail);
-      setChangeEmailVisible(false);
-      resetForms();
-      toast.success("Confirmation email sent. Please check your inbox.");
+      setEmailSent(true);
+      toast.success("Confirmation email sent! Please check your inbox and click the confirmation link.");
+      
+      // Close modal after 2 seconds to let user see the success message
+      setTimeout(() => {
+        setChangeEmailVisible(false);
+        resetForms();
+      }, 2000);
     } catch (error) {
       console.error("Error changing email:", error);
       toast.error(error.message || "Failed to change email");
     }
-  }, [newEmail, user?.email, updateEmail]);
+  }, [newEmail, user?.email, updateEmail, resetForms]);
 
   const handleChangePassword = useCallback(async () => {
     try {
@@ -171,14 +177,18 @@ const ProfileScreen = () => {
       }
 
       await updatePassword(currentPassword, newPassword);
-      setChangePasswordVisible(false);
-      resetForms();
       toast.success("Password changed successfully!");
+      
+      // Close modal after 2 seconds to let user see the success message
+      setTimeout(() => {
+        setChangePasswordVisible(false);
+        resetForms();
+      }, 2000);
     } catch (error) {
       console.error("Error changing password:", error);
       toast.error(error.message || "Failed to change password");
     }
-  }, [currentPassword, newPassword, confirmPassword, updatePassword]);
+  }, [currentPassword, newPassword, confirmPassword, updatePassword, resetForms]);
 
   const handleSignOut = useCallback(async () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -210,6 +220,7 @@ const ProfileScreen = () => {
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
+    setEmailSent(false);
   }, [user]);
 
   const renderGridContent = useMemo(() => {
@@ -341,6 +352,7 @@ const ProfileScreen = () => {
           onSubmit={handleChangeEmail}
           updating={updating}
           isDark={isDark}
+          emailSent={emailSent}
         />
 
         {/* Change Password Modal */}

@@ -38,6 +38,8 @@ export const useProfileUpdate = (userId) => {
 
       const { error: updateError } = await supabase.auth.updateUser({
         email: newEmail,
+      }, {
+        emailRedirectTo: 'https://pawscan-dashboard.vercel.app/confirm-email',
       });
 
       if (updateError) {
