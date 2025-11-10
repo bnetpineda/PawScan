@@ -3,7 +3,6 @@ import {
   View, 
   Text, 
   FlatList, 
-  SafeAreaView, 
   TouchableOpacity, 
   Alert, 
   ActivityIndicator, 
@@ -17,6 +16,7 @@ import { useAuth } from '../../../providers/AuthProvider';
 import { supabase } from '../../../lib/supabase';
 import { useRouter } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const VetsListScreen = () => {
   const { user } = useAuth();

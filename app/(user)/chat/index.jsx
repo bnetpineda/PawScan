@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -23,6 +23,15 @@ import NotificationBell from "../../../components/notifications/NotificationBell
 import NotificationsModal from "../../../components/notifications/NotificationsModal";
 import TutorialOverlay from "../../../components/tutorial/TutorialOverlay";
 import { chatTutorialSteps } from "../../../components/tutorial/tutorialSteps";
+import { 
+  formatChatTime, 
+  getInitials, 
+  debounce, 
+  filterConversations,
+  filterAvailableVeterinarians,
+  formatConversationData,
+  truncateText
+} from "../../../utils/chatUtils";
 
 const ChatListScreen = () => {
   const { user } = useAuth();
@@ -50,29 +59,29 @@ const ChatListScreen = () => {
     }
   }, []);
 
+  // Optimized search with debouncing
+  const debouncedSearch = useMemo(
+    () => debounce((query) => {
+      if (query.trim() === "") {
+        setFilteredConversations(conversations);
+        setFilteredVeterinarians([]);
+      } else {
+        // Filter existing conversations
+        const filteredConversationsList = filterConversations(conversations, query, 'user');
+        setFilteredConversations(filteredConversationsList);
+        
+        // Filter veterinarians for new chats
+        const conversationVetIds = conversations.map(c => c.vet_id);
+        const filteredVetsList = filterAvailableVeterinarians(veterinarians, conversationVetIds, query);
+        setFilteredVeterinarians(filteredVetsList);
+      }
+    }, 300),
+    [conversations, veterinarians]
+  );
+
   useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredConversations(conversations);
-      setFilteredVeterinarians([]);
-    } else {
-      // Filter existing conversations
-      const filtered = conversations.filter(conversation => {
-        const vetName = conversation.vetName?.toLowerCase() || "";
-        const latestMessage = conversation.latestMessage?.content?.toLowerCase() || "";
-        const query = searchQuery.toLowerCase();
-        return vetName.includes(query) || latestMessage.includes(query);
-      });
-      setFilteredConversations(filtered);
-      
-      // Filter veterinarians for new chats
-      const filteredVets = veterinarians.filter(vet => {
-        const vetName = vet.display_name?.toLowerCase() || "";
-        const query = searchQuery.toLowerCase();
-        return vetName.includes(query);
-      });
-      setFilteredVeterinarians(filteredVets);
-    }
-  }, [searchQuery, conversations, veterinarians]);
+    debouncedSearch(searchQuery);
+  }, [searchQuery, debouncedSearch]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -137,9 +146,6 @@ const ChatListScreen = () => {
             console.error("Error fetching message:", messageError);
           }
 
-          // Debug log to check the message data structure
-          console.log("Latest message for conversation", conversation.id, ":", latestMessageData);
-
           return {
             ...conversation,
             latestMessage: latestMessageData || null,
@@ -172,7 +178,6 @@ const ChatListScreen = () => {
 
       if (vetsError) {
         console.error("Error fetching veterinarians from vet_profiles:", vetsError);
-        // No fallback - if vet_profiles is not accessible, there are no veterinarians to show
         setVeterinarians([]);
         return;
       }
@@ -181,7 +186,7 @@ const ChatListScreen = () => {
       const formattedVets = vetsData.map(vet => ({
         id: vet.id,
         display_name: vet.name,
-        email: "", // Vet profiles don't necessarily store email directly
+        email: "",
         profile_image_url: vet.profile_image_url
       }));
 
@@ -191,45 +196,8 @@ const ChatListScreen = () => {
     }
   };
 
-  const formatTime = (dateString) => {
-    if (!dateString) return "";
-    
-    try {
-      const date = new Date(dateString);
-      // Check if date is valid
-      if (isNaN(date.getTime())) return "";
-      
-      const now = new Date();
-      const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-
-      if (diffInDays === 0) {
-        return date.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-      } else if (diffInDays === 1) {
-        return "Yesterday";
-      } else if (diffInDays < 7) {
-        return date.toLocaleDateString([], { weekday: "long" });
-      } else {
-        return date.toLocaleDateString([], { month: "short", day: "numeric" });
-      }
-    } catch (error) {
-      console.error("Error formatting time:", error);
-      return "";
-    }
-  };
-
-  // Get initials for avatar fallback
-  const getInitials = (name) => {
-    if (!name) return "V";
-    return name
-      .split(" ")
-      .map((word) => word.charAt(0))
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
-  };
+  // Memoized conversation count for performance
+  const conversationCount = useMemo(() => filteredConversations.length, [filteredConversations]);
 
   const renderConversation = ({ item }) => (
     <TouchableOpacity
@@ -248,10 +216,12 @@ const ChatListScreen = () => {
         shadowRadius: 3,
         elevation: 2,
       }}
+      activeOpacity={0.7}
     >
       <TouchableOpacity 
         className="mr-4"
         onPress={() => router.push(`/(user)/vet-profile?vetId=${item.vet_id}`)}
+        activeOpacity={0.7}
       >
         {item.profile_image_url ? (
           <Image
@@ -270,6 +240,7 @@ const ChatListScreen = () => {
         <View className="flex-row justify-between items-center mb-1">
           <TouchableOpacity 
             onPress={() => router.push(`/(user)/vet-profile?vetId=${item.vet_id}`)}
+            activeOpacity={0.7}
           >
             <Text
               className="text-lg font-inter-bold text-black dark:text-white"
@@ -280,7 +251,7 @@ const ChatListScreen = () => {
           </TouchableOpacity>
           {item.latestMessage && item.latestMessage.created_at && (
             <Text className="text-xs text-neutral-500 dark:text-neutral-400 ml-2">
-              {formatTime(item.latestMessage.created_at)}
+              {formatChatTime(item.latestMessage.created_at)}
             </Text>
           )}
         </View>
@@ -289,7 +260,7 @@ const ChatListScreen = () => {
             className="text-sm text-neutral-600 dark:text-neutral-400"
             numberOfLines={1}
           >
-            {item.latestMessage.content}
+            {truncateText(item.latestMessage.content, 60)}
           </Text>
         ) : (
           <Text className="text-sm italic text-neutral-500 dark:text-neutral-400">
@@ -319,6 +290,7 @@ const ChatListScreen = () => {
         shadowRadius: 3,
         elevation: 2,
       }}
+      activeOpacity={0.7}
     >
       <View className="mr-4">
         {item.profile_image_url ? (
@@ -361,9 +333,16 @@ const ChatListScreen = () => {
       {/* Header */}
       <View className="px-4 py-4 bg-white dark:bg-black">
         <View className="flex-row justify-between items-center">
-          <Text className="text-xl font-inter-bold text-black dark:text-white">
-            Messages
-          </Text>
+          <View>
+            <Text className="text-xl font-inter-bold text-black dark:text-white">
+              Messages
+            </Text>
+            {conversationCount > 0 && !showSearch && (
+              <Text className="text-sm text-neutral-500 dark:text-neutral-400">
+                {conversationCount} conversation{conversationCount !== 1 ? 's' : ''}
+              </Text>
+            )}
+          </View>
           <View className="flex-row items-center gap-2">
             <TouchableOpacity 
               onPress={() => startTutorial('chat')}
@@ -401,56 +380,66 @@ const ChatListScreen = () => {
         onRequestClose={() => setShowSearch(false)}
       >
         <SafeAreaView className="flex-1 bg-white dark:bg-black">
-          <View className="flex-row items-center px-4 py-3 border-b border-neutral-300 dark:border-neutral-700">
-            <TouchableOpacity 
-              onPress={() => {
-                setShowSearch(false);
-                setSearchQuery("");
-              }}
-              className="p-2 mr-2"
-            >
-              <FontAwesome 
-                name="arrow-left" 
-                size={20} 
-                color={isDark ? "#fff" : "#000"} 
-              />
-            </TouchableOpacity>
-            <TextInput
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search chats or veterinarians..."
-              placeholderTextColor={isDark ? "#8E8E93" : "#6C757D"}
-              className="flex-1 border border-neutral-300 dark:border-neutral-700 rounded-full px-4 py-2 text-base font-inter bg-white dark:bg-neutral-800 text-black dark:text-white"
-              autoFocus
-            />
-            {searchQuery.length > 0 && (
+          <View className="px-4 py-4 bg-white dark:bg-black">
+            <View className="flex-row items-center mb-4">
               <TouchableOpacity 
-                onPress={() => setSearchQuery("")}
-                className="p-2 ml-2"
+                onPress={() => {
+                  setShowSearch(false);
+                  setSearchQuery("");
+                }}
+                className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 justify-center items-center mr-3"
               >
                 <FontAwesome 
-                  name="times-circle" 
-                  size={20} 
-                  color={isDark ? "#8E8E93" : "#6C757D"} 
+                  name="arrow-left" 
+                  size={18} 
+                  color={isDark ? "#fff" : "#000"} 
                 />
               </TouchableOpacity>
-            )}
+              <Text className="text-xl font-inter-bold text-black dark:text-white">
+                Search
+              </Text>
+            </View>
+            
+            <View className="flex-row items-center bg-neutral-100 dark:bg-neutral-900 rounded-full px-4 py-3">
+              <FontAwesome name="search" size={16} color={isDark ? "#8E8E93" : "#6C757D"} />
+              <TextInput
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder="Search chats or veterinarians..."
+                placeholderTextColor={isDark ? "#8E8E93" : "#6C757D"}
+                className="flex-1 ml-3 text-base font-inter text-black dark:text-white"
+                autoFocus
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity 
+                  onPress={() => setSearchQuery("")}
+                  className="p-1"
+                >
+                  <FontAwesome 
+                    name="times-circle" 
+                    size={16} 
+                    color={isDark ? "#8E8E93" : "#6C757D"} 
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
           
           {/* Search Results */}
           {searchQuery.trim() !== "" && (
-            <View className="flex-1">
+            <View className="flex-1 pt-4">
               {/* Existing Conversations */}
               {filteredConversations.length > 0 && (
                 <View>
-                  <Text className="px-4 py-2 text-lg font-inter-bold text-black dark:text-white">
+                  <Text className="px-4 pb-2 text-sm font-inter-medium text-neutral-500 dark:text-neutral-400">
                     Your Chats
                   </Text>
                   <FlatList
                     data={filteredConversations}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderConversation}
-                    scrollEnabled={false}
+                    contentContainerStyle={{ paddingBottom: 20 }}
+                    showsVerticalScrollIndicator={false}
                   />
                 </View>
               )}
@@ -458,31 +447,34 @@ const ChatListScreen = () => {
               {/* Veterinarians for New Chats */}
               {filteredVeterinarians.length > 0 && (
                 <View>
-                  <Text className="px-4 py-2 text-lg font-inter-bold text-black dark:text-white mt-2">
+                  <Text className="px-4 pb-2 text-sm font-inter-medium text-neutral-500 dark:text-neutral-400">
                     Veterinarians
                   </Text>
                   <FlatList
                     data={filteredVeterinarians}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderVeterinarian}
-                    scrollEnabled={false}
+                    contentContainerStyle={{ paddingBottom: 20 }}
+                    showsVerticalScrollIndicator={false}
                   />
                 </View>
               )}
               
               {/* No Results */}
               {filteredConversations.length === 0 && filteredVeterinarians.length === 0 && (
-                <View className="flex-1 justify-center items-center p-8">
-                  <FontAwesome
-                    name="search"
-                    size={64}
-                    color={isDark ? "#fff" : "#000"}
-                  />
-                  <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">
+                <View className="flex-1 justify-center items-center px-8">
+                  <View className="w-20 h-20 rounded-full bg-neutral-200 dark:bg-neutral-800 justify-center items-center mb-6">
+                    <FontAwesome
+                      name="search"
+                      size={32}
+                      color={isDark ? "#8E8E93" : "#6C757D"}
+                    />
+                  </View>
+                  <Text className="text-xl font-inter-bold text-black dark:text-white mb-2 text-center">
                     No results found
                   </Text>
-                  <Text className="text-base text-center text-neutral-600 dark:text-neutral-300">
-                    Try a different search term
+                  <Text className="text-base text-neutral-500 dark:text-neutral-400 text-center leading-6">
+                    Try searching with a different term
                   </Text>
                 </View>
               )}
@@ -493,34 +485,49 @@ const ChatListScreen = () => {
       
       {loading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color={isDark ? "#fff" : "#000"} />
-          <Text className="text-lg mt-4 text-black dark:text-white">Loading conversations...</Text>
+          <View className="w-16 h-16 rounded-full bg-neutral-200 dark:bg-neutral-800 justify-center items-center mb-4">
+            <ActivityIndicator size="large" color={isDark ? "#fff" : "#000"} />
+          </View>
+          <Text className="text-lg font-inter-semibold text-black dark:text-white mb-1">
+            Loading conversations
+          </Text>
+          <Text className="text-sm text-neutral-500 dark:text-neutral-400">
+            Please wait a moment...
+          </Text>
         </View>
       ) : filteredConversations.length === 0 && !showSearch ? (
-        <View className="flex-1 justify-center items-center p-8">
-          <FontAwesome
-            name="commenting-o"
-            size={64}
-            color={isDark ? "#fff" : "#000"}
-          />
-          <Text className="text-2xl font-inter-bold mt-4 mb-2 text-black dark:text-white">
+        <View className="flex-1 justify-center items-center px-8">
+          <View className="w-20 h-20 rounded-full bg-neutral-200 dark:bg-neutral-800 justify-center items-center mb-6">
+            <FontAwesome name="commenting-o" size={32} color={isDark ? "#8E8E93" : "#6C757D"} />
+          </View>
+          <Text className="text-xl font-inter-bold text-black dark:text-white mb-2 text-center">
             No conversations yet
           </Text>
-          <Text className="text-base text-center text-neutral-600 dark:text-neutral-300">
-            Start a chat with a veterinarian to begin
+          <Text className="text-base text-neutral-500 dark:text-neutral-400 text-center leading-6">
+            Start a chat with a veterinarian to begin your conversation
           </Text>
         </View>
       ) : (
         !showSearch && (
-          <FlatList
-            data={filteredConversations}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderConversation}
-            className="flex-1"
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? "#fff" : "#000"} />
-            }
-          />
+          <View className="flex-1 pt-4">
+            <FlatList
+              data={filteredConversations}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={renderConversation}
+              className="flex-1"
+              contentContainerStyle={{ paddingBottom: 20 }}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl 
+                  refreshing={refreshing} 
+                  onRefresh={onRefresh} 
+                  tintColor={isDark ? "#fff" : "#000"}
+                  colors={["#525252"]}
+                  progressBackgroundColor={isDark ? "#1F2937" : "#FFFFFF"}
+                />
+              }
+            />
+          </View>
         )
       )}
       <View className="p-4 bg-white border-t border-black dark:bg-neutral-900 dark:border-neutral-700">

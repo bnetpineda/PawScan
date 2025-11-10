@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   View, 
   Text, 
@@ -23,6 +23,13 @@ import NotificationBell from '../../../components/notifications/NotificationBell
 import NotificationsModal from '../../../components/notifications/NotificationsModal';
 import TutorialOverlay from '../../../components/tutorial/TutorialOverlay';
 import { chatTutorialSteps } from '../../../components/tutorial/tutorialSteps';
+import { 
+  formatChatTime, 
+  getInitials, 
+  debounce, 
+  filterConversations,
+  truncateText
+} from '../../../utils/chatUtils';
 
 const ChatListScreen = () => {
   const { user } = useAuth();
@@ -48,19 +55,22 @@ const ChatListScreen = () => {
     }
   }, []);
 
+  // Optimized search with debouncing
+  const debouncedSearch = useMemo(
+    () => debounce((query) => {
+      if (query.trim() === "") {
+        setFilteredConversations(conversations);
+      } else {
+        const filteredConversationsList = filterConversations(conversations, query, 'vet');
+        setFilteredConversations(filteredConversationsList);
+      }
+    }, 300),
+    [conversations]
+  );
+
   useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredConversations(conversations);
-    } else {
-      const filtered = conversations.filter(conversation => {
-        const userName = conversation.userName?.toLowerCase() || "";
-        const latestMessage = conversation.latestMessage?.content?.toLowerCase() || "";
-        const query = searchQuery.toLowerCase();
-        return userName.includes(query) || latestMessage.includes(query);
-      });
-      setFilteredConversations(filtered);
-    }
-  }, [searchQuery, conversations]);
+    debouncedSearch(searchQuery);
+  }, [searchQuery, debouncedSearch]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -164,33 +174,8 @@ const ChatListScreen = () => {
     }
   };
 
-  const formatTime = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-    
-    if (diffInDays === 0) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (diffInDays === 1) {
-      return 'Yesterday';
-    } else if (diffInDays < 7) {
-      return date.toLocaleDateString([], { weekday: 'long' });
-    } else {
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    }
-  };
-
-  // Get initials for avatar fallback
-  const getInitials = (name) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((word) => word.charAt(0))
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
-  };
+  // Memoized conversation count for performance
+  const conversationCount = useMemo(() => filteredConversations.length, [filteredConversations]);
 
   const renderConversation = ({ item }) => (
     <TouchableOpacity
@@ -203,6 +188,7 @@ const ChatListScreen = () => {
         shadowRadius: 3,
         elevation: 2,
       }}
+      activeOpacity={0.7}
     >
       <View className="mr-4">
         {item.profile_image_url ? (
@@ -225,13 +211,13 @@ const ChatListScreen = () => {
           </Text>
           {item.latestMessage && item.latestMessage.created_at && (
             <Text className="text-xs text-neutral-500 dark:text-neutral-400 ml-2">
-              {formatTime(item.latestMessage.created_at)}
+              {formatChatTime(item.latestMessage.created_at)}
             </Text>
           )}
         </View>
         {item.latestMessage ? (
           <Text className="text-sm text-neutral-600 dark:text-neutral-400" numberOfLines={1}>
-            {item.latestMessage.content}
+            {truncateText(item.latestMessage.content, 60)}
           </Text>
         ) : (
           <Text className="text-sm italic text-neutral-500 dark:text-neutral-400">
@@ -252,9 +238,16 @@ const ChatListScreen = () => {
       {/* Header */}
       <View className="px-4 py-4 bg-white dark:bg-black">
         <View className="flex-row justify-between items-center">
-          <Text className="text-xl font-inter-bold text-black dark:text-white">
-            Your Chats
-          </Text>
+          <View>
+            <Text className="text-xl font-inter-bold text-black dark:text-white">
+              Messages
+            </Text>
+            {conversationCount > 0 && !showSearch && (
+              <Text className="text-sm text-neutral-500 dark:text-neutral-400">
+                {conversationCount} conversation{conversationCount !== 1 ? 's' : ''}
+              </Text>
+            )}
+          </View>
           <View className="flex-row items-center gap-2">
             <TouchableOpacity 
               onPress={() => startTutorial('chat')}
@@ -291,11 +284,14 @@ const ChatListScreen = () => {
         visible={showSearch}
         onRequestClose={() => setShowSearch(false)}
       >
-        <SafeAreaView className="flex-1 bg-neutral-50 dark:bg-black">
+        <SafeAreaView className="flex-1 bg-white dark:bg-black">
           <View className="px-4 py-4 bg-white dark:bg-black">
             <View className="flex-row items-center mb-4">
               <TouchableOpacity 
-                onPress={() => setShowSearch(false)}
+                onPress={() => {
+                  setShowSearch(false);
+                  setSearchQuery("");
+                }}
                 className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 justify-center items-center mr-3"
               >
                 <FontAwesome 
@@ -335,36 +331,38 @@ const ChatListScreen = () => {
           </View>
           
           {/* Search Results */}
-          {searchQuery.trim() !== "" && filteredConversations.length > 0 && (
+          {searchQuery.trim() !== "" && (
             <View className="flex-1 pt-4">
-              <Text className="px-4 pb-2 text-sm font-inter-medium text-neutral-500 dark:text-neutral-400">
-                Search Results
-              </Text>
-              <FlatList
-                data={filteredConversations}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={renderConversation}
-                contentContainerStyle={{ paddingBottom: 20 }}
-                showsVerticalScrollIndicator={false}
-              />
-            </View>
-          )}
-          
-          {searchQuery.trim() !== "" && filteredConversations.length === 0 && (
-            <View className="flex-1 justify-center items-center px-8">
-              <View className="w-20 h-20 rounded-full bg-neutral-200 dark:bg-neutral-800 justify-center items-center mb-6">
-                <FontAwesome
-                  name="search"
-                  size={32}
-                  color={isDark ? "#8E8E93" : "#6C757D"}
-                />
-              </View>
-              <Text className="text-xl font-inter-bold text-black dark:text-white mb-2 text-center">
-                No results found
-              </Text>
-              <Text className="text-base text-neutral-500 dark:text-neutral-400 text-center leading-6">
-                Try searching with a different term
-              </Text>
+              {filteredConversations.length > 0 ? (
+                <View>
+                  <Text className="px-4 pb-2 text-sm font-inter-medium text-neutral-500 dark:text-neutral-400">
+                    Search Results
+                  </Text>
+                  <FlatList
+                    data={filteredConversations}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={renderConversation}
+                    contentContainerStyle={{ paddingBottom: 20 }}
+                    showsVerticalScrollIndicator={false}
+                  />
+                </View>
+              ) : (
+                <View className="flex-1 justify-center items-center px-8">
+                  <View className="w-20 h-20 rounded-full bg-neutral-200 dark:bg-neutral-800 justify-center items-center mb-6">
+                    <FontAwesome
+                      name="search"
+                      size={32}
+                      color={isDark ? "#8E8E93" : "#6C757D"}
+                    />
+                  </View>
+                  <Text className="text-xl font-inter-bold text-black dark:text-white mb-2 text-center">
+                    No results found
+                  </Text>
+                  <Text className="text-base text-neutral-500 dark:text-neutral-400 text-center leading-6">
+                    Try searching with a different term
+                  </Text>
+                </View>
+              )}
             </View>
           )}
         </SafeAreaView>
@@ -372,8 +370,8 @@ const ChatListScreen = () => {
       
       {loading ? (
         <View className="flex-1 justify-center items-center">
-          <View className="w-16 h-16 rounded-full bg-neutral-800 dark:bg-neutral-200 justify-center items-center mb-4">
-            <ActivityIndicator size="small" color={isDark ? "#000" : "#fff"} />
+          <View className="w-16 h-16 rounded-full bg-neutral-200 dark:bg-neutral-800 justify-center items-center mb-4">
+            <ActivityIndicator size="large" color={isDark ? "#fff" : "#000"} />
           </View>
           <Text className="text-lg font-inter-semibold text-black dark:text-white mb-1">
             Loading conversations
@@ -382,45 +380,40 @@ const ChatListScreen = () => {
             Please wait a moment...
           </Text>
         </View>
-      ) : filteredConversations.length === 0 ? (
+      ) : filteredConversations.length === 0 && !showSearch ? (
         <View className="flex-1 justify-center items-center px-8">
           <View className="w-20 h-20 rounded-full bg-neutral-200 dark:bg-neutral-800 justify-center items-center mb-6">
             <FontAwesome name="commenting-o" size={32} color={isDark ? "#8E8E93" : "#6C757D"} />
           </View>
           <Text className="text-xl font-inter-bold text-black dark:text-white mb-2 text-center">
-            {searchQuery ? "No chats found" : "No conversations yet"}
+            No conversations yet
           </Text>
           <Text className="text-base text-neutral-500 dark:text-neutral-400 text-center leading-6">
-            {searchQuery 
-              ? "Try searching with a different term" 
-              : "Users will start chats with you. Check back later!"}
+            Users will start chats with you. Check back later!
           </Text>
         </View>
       ) : (
-        <View className="flex-1 pt-4">
-          {filteredConversations.length > 0 && (
-            <Text className="px-4 pb-2 text-sm font-inter-medium text-neutral-500 dark:text-neutral-400">
-              {filteredConversations.length} conversation{filteredConversations.length !== 1 ? 's' : ''}
-            </Text>
-          )}
-          <FlatList
-            data={filteredConversations}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderConversation}
-            className="flex-1"
-            contentContainerStyle={{ paddingBottom: 20 }}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl 
-                refreshing={refreshing} 
-                onRefresh={onRefresh} 
-                tintColor={isDark ? "#fff" : "#000"}
-                colors={["#525252"]}
-                progressBackgroundColor={isDark ? "#1F2937" : "#FFFFFF"}
-              />
-            }
-          />
-        </View>
+        !showSearch && (
+          <View className="flex-1 pt-4">
+            <FlatList
+              data={filteredConversations}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={renderConversation}
+              className="flex-1"
+              contentContainerStyle={{ paddingBottom: 20 }}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl 
+                  refreshing={refreshing} 
+                  onRefresh={onRefresh} 
+                  tintColor={isDark ? "#fff" : "#000"}
+                  colors={["#525252"]}
+                  progressBackgroundColor={isDark ? "#1F2937" : "#FFFFFF"}
+                />
+              }
+            />
+          </View>
+        )
       )}
 
       <NotificationsModal
