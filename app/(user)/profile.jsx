@@ -1,5 +1,20 @@
-import React, { useCallback, useEffect, useState, useMemo } from "react";
-import { ScrollView, useColorScheme, View, RefreshControl, Alert } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
+import { Buffer } from "buffer";
+import { useCallback, useEffect, useState } from "react";
+import {
+  Alert,
+  Image,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  useColorScheme,
+  View,
+  RefreshControl,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../providers/AuthProvider";
@@ -8,32 +23,39 @@ import SettingsModal from "../../components/profile/SettingsModal";
 import ChangeEmailModal from "../../components/profile/ChangeEmailModal";
 import ChangePasswordModal from "../../components/profile/ChangePasswordModal";
 import ImageViewerModal from "../../components/profile/ImageViewerModal";
-import EditProfileModal from "../../components/profile/EditProfileModal";
-import ProfileHeader from "../../components/profile/ProfileHeader";
-import ProfileStats from "../../components/profile/ProfileStats";
-import ProfileBio from "../../components/profile/ProfileBio";
-import ProfileTabs from "../../components/profile/ProfileTabs";
-import ProfileGrid from "../../components/profile/ProfileGrid";
-import ErrorBoundary from "../../components/ErrorBoundary";
 import useProfileData from "../../hooks/useProfileData";
-import { useUserProfile } from "../../hooks/useUserProfile";
-import { useImageUpload } from "../../hooks/useImageUpload";
-import { useProfileUpdate } from "../../hooks/useProfileUpdate";
-import { getThemeColors } from "../../utils/themeColors";
-import { toast } from "../../utils/toast";
-import TutorialOverlay from "../../components/tutorial/TutorialOverlay";
-import { profileTutorialSteps } from "../../components/tutorial/tutorialSteps";
 
 const ProfileScreen = () => {
+  const [current, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [settingsVisible, setSettingsVisible] = useState(false);
+  const [changeEmailVisible, setChangeEmailVisible] = useState(false);
+  const [changePasswordVisible, setChangePasswordVisible] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [showingHistory, setShowingHistory] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
+
+  // Form states
+  const [newEmail, setNewEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [profileImage, setProfileImage] = useState(null);
+
+  // User profile states
+  const [userProfile, setUserProfile] = useState(null);
+  const [name, setName] = useState("");
+  const [location, setLocation] = useState("");
+  const [bio, setBio] = useState("");
+  const [petNames, setPetNames] = useState([]);
+
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const colors = useMemo(() => getThemeColors(isDark), [isDark]);
 
   const { user } = useAuth();
   const { startTutorial } = useTutorial();
-  
-  // Custom hooks
-  const { profile, loading: profileLoading, refreshProfile } = useUserProfile(user?.id);
   const {
     userPosts,
     petScanCount,
@@ -45,152 +67,98 @@ const ProfileScreen = () => {
     fetchHistoryImages,
     refreshAllData,
   } = useProfileData(user);
-  const { pickImage, uploadImage, uploading, progress } = useImageUpload();
-  const {
-    updateProfile,
-    updateEmail,
-    updatePassword,
-    updateProfileImage,
-    updating,
-  } = useProfileUpdate(user?.id);
 
-  // Modal states
-  const [settingsVisible, setSettingsVisible] = useState(false);
-  const [changeEmailVisible, setChangeEmailVisible] = useState(false);
-  const [changePasswordVisible, setChangePasswordVisible] = useState(false);
-  const [editProfileVisible, setEditProfileVisible] = useState(false);
-  const [imageViewerVisible, setImageViewerVisible] = useState(false);
-  
-  // UI states
-  const [refreshing, setRefreshing] = useState(false);
-  const [showingHistory, setShowingHistory] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-
-  // Form states
-  const [newEmail, setNewEmail] = useState("");
-  const [emailSent, setEmailSent] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  // Computed values
-  const profileImage = useMemo(() => {
-    return profile?.profile_image_url || 
-           user?.user_metadata?.avatar_url || 
-           user?.user_metadata?.options?.data?.avatar_url || 
-           null;
-  }, [profile?.profile_image_url, user]);
-
-  const displayName = useMemo(() => {
-    return profile?.name || 
-           user?.user_metadata?.options?.data?.display_name || 
-           user?.email?.split("@")[0] || 
-           "Pet Owner";
-  }, [profile?.name, user]);
-
-  const role = useMemo(() => {
-    return user?.user_metadata?.role || "Pet Owner";
-  }, [user]);
-
-  // Initialize data
   useEffect(() => {
+    setCurrentUser(user);
+    setLoading(false);
     if (user) {
-      setNewEmail(user.email || "");
+      const displayName =
+        user?.user_metadata?.options?.data?.display_name || "";
+      setNewEmail(user?.email || "");
+
+      // Fetch user posts, pet scan count, and history images
+      console.log("Fetching user data...");
       fetchUserPosts();
       fetchPetScanCount();
       fetchHistoryImages();
+
+      // Fetch user profile from the user_profiles table
+      fetchUserProfile();
     }
-  }, [user?.id]);
+  }, [user]);
 
-  // Image handling
-  const handlePickProfileImage = useCallback(async () => {
+  const fetchUserProfile = async () => {
     try {
-      const uri = await pickImage();
-      if (!uri || !user?.id) return;
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
 
-      const publicUrl = await uploadImage(uri, user.id, "profile-images");
-      await updateProfileImage(publicUrl);
-      await refreshProfile();
-      
-      toast.success("Profile picture updated successfully!");
-    } catch (error) {
-      console.error("Error updating profile image:", error);
-      toast.error(error.message || "Failed to update profile picture");
-    }
-  }, [user?.id, pickImage, uploadImage, updateProfileImage, refreshProfile]);
-
-  const handleImagePress = useCallback((imageUrl) => {
-    setSelectedImage(imageUrl);
-    setImageViewerVisible(true);
-  }, []);
-
-  // Profile update handlers
-  const handleUpdateProfile = useCallback(async (updates) => {
-    try {
-      await updateProfile(updates);
-      await refreshProfile();
-      setEditProfileVisible(false);
-      toast.success("Profile updated successfully!");
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      toast.error(error.message || "Failed to update profile");
-    }
-  }, [updateProfile, refreshProfile]);
-
-  const handleChangeEmail = useCallback(async () => {
-    try {
-      if (!newEmail || newEmail === user?.email) {
-        toast.warning("Please enter a new email address");
+      if (error) {
+        if (error.code === "PGRST116") {
+          // No rows returned
+          // Create a default profile for the user
+          await createDefaultUserProfile();
+        } else {
+          console.error("Error fetching user profile:", error);
+        }
         return;
       }
 
-      await updateEmail(newEmail);
-      setEmailSent(true);
-      toast.success("Confirmation email sent! Please check your inbox and click the confirmation link.");
-      
-      // Close modal after 2 seconds to let user see the success message
-      setTimeout(() => {
-        setChangeEmailVisible(false);
-        resetForms();
-      }, 2000);
-    } catch (error) {
-      console.error("Error changing email:", error);
-      toast.error(error.message || "Failed to change email");
-    }
-  }, [newEmail, user?.email, updateEmail, resetForms]);
+      setUserProfile(data);
+      setName(data.name || "");
+      setLocation(data.location || "");
+      setBio(data.bio || "");
+      setPetNames(data.pet_names || []);
 
-  const handleChangePassword = useCallback(async () => {
+      // Set profile image from user_profiles table
+      if (data.profile_image_url) {
+        setProfileImage(data.profile_image_url);
+      } else {
+        // Fallback to auth metadata if no avatar in user_profiles
+        const avatarUrl =
+          user?.user_metadata?.avatar_url ||
+          user?.user_metadata?.options?.data?.avatar_url;
+        if (avatarUrl) {
+          setProfileImage(avatarUrl);
+        }
+      }
+    } catch (error) {
+      console.error("Error in fetchUserProfile:", error);
+    }
+  };
+
+  const createDefaultUserProfile = async () => {
     try {
-      if (!currentPassword || !newPassword || !confirmPassword) {
-        toast.warning("Please fill in all fields");
-        return;
-      }
+      const { error } = await supabase.from("user_profiles").insert([
+        {
+          id: user.id,
+          name:
+            user?.user_metadata?.options?.data?.display_name ||
+            user?.email?.split("@")[0] ||
+            "Pet Owner",
+          created_at: new Date().toISOString(),
+          profile_image_url: null // Initialize with null profile_image_url
+        },
+      ]);
 
-      if (newPassword !== confirmPassword) {
-        toast.error("New passwords do not match");
-        return;
-      }
+      if (error) throw error;
 
-      if (newPassword.length < 6) {
-        toast.error("Password must be at least 6 characters");
-        return;
-      }
-
-      await updatePassword(currentPassword, newPassword);
-      toast.success("Password changed successfully!");
-      
-      // Close modal after 2 seconds to let user see the success message
-      setTimeout(() => {
-        setChangePasswordVisible(false);
-        resetForms();
-      }, 2000);
+      // Fetch the newly created profile
+      fetchUserProfile();
     } catch (error) {
-      console.error("Error changing password:", error);
-      toast.error(error.message || "Failed to change password");
+      console.error("Error creating default user profile:", error);
     }
-  }, [currentPassword, newPassword, confirmPassword, updatePassword, resetForms]);
+  };
 
-  const handleSignOut = useCallback(async () => {
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refreshAllData();
+    setRefreshing(false);
+  };
+
+  const handleSignOut = async () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
       {
         text: "Cancel",
@@ -202,179 +170,528 @@ const ProfileScreen = () => {
         onPress: async () => {
           const { error } = await supabase.auth.signOut();
           if (error) {
-            toast.error(error.message);
+            Alert.alert("Error", error.message);
           }
         },
       },
     ]);
-  }, []);
+  };
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await Promise.all([refreshAllData(), refreshProfile()]);
-    setRefreshing(false);
-  }, [refreshAllData, refreshProfile]);
+  const updateProfileImage = async (imageUri) => {
+    try {
+      // Delete existing avatar if it exists
+      const { data: existingFiles } = await supabase.storage
+        .from("avatars")
+        .list(`${user.id}/`, {
+          limit: 1,
+          offset: 0,
+          sortBy: { column: "name", order: "asc" },
+        });
+
+      if (existingFiles && existingFiles.length > 0) {
+        await supabase.storage
+          .from("avatars")
+          .remove([`${user.id}/avatar.jpg`]);
+      }
+
+      // Upload new avatar using base64 approach like in analyzePetImage.js
+      const fileName = `${user.id}/avatar.jpg`;
+      
+      // Read the image as base64
+      const fileData = await FileSystem.readAsStringAsync(imageUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      
+      // Convert base64 to buffer
+      const fileBuffer = Buffer.from(fileData, "base64");
+      
+      // Determine content type
+      const imageExt = imageUri.split(".").pop()?.toLowerCase();
+      const contentType = `image/${imageExt === "jpg" ? "jpeg" : imageExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(fileName, fileBuffer, {
+          contentType: contentType,
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get the public URL
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(fileName);
+
+      // Update the profile_image_url in the user_profiles table instead of auth metadata
+      const { error: updateError } = await supabase
+        .from('user_profiles')
+        .update({ profile_image_url: publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      // Update local state with the new avatar URL
+      setProfileImage(publicUrl);
+
+      Alert.alert("Success", "Profile picture updated successfully!");
+    } catch (error) {
+      console.error("Error updating profile picture:", error);
+      Alert.alert(
+        "Error",
+        error.message || "Failed to update profile picture. Please try again."
+      );
+    }
+  };
+
+  const pickImage = async () => {
+    // Request permissions
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission required",
+        "We need access to your photos to set a profile picture."
+      );
+      return;
+    }
+
+    // Launch image picker
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      await updateProfileImage(result.assets[0].uri);
+    }
+  };
+
+  const handleChangeEmail = async () => {
+    if (!newEmail.trim() || !newEmail.includes("@")) {
+      Alert.alert("Error", "Please enter a valid email address");
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        email: newEmail.trim(),
+      });
+
+      if (error) throw error;
+
+      Alert.alert(
+        "Verification Required",
+        "A verification email has been sent to your new email address. Please check your inbox and click the verification link to complete the change."
+      );
+      setChangeEmailVisible(false);
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword) {
+      Alert.alert("Error", "Please enter your current password");
+      return;
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      Alert.alert("Error", "New password must be at least 6 characters long");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Error", "New passwords do not match");
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      // First verify current password by reauthenticating
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+
+      if (authError) {
+        throw new Error("Current password is incorrect");
+      }
+
+      // If authentication succeeds, update the password
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) throw error;
+
+      Alert.alert("Success", "Password updated successfully!");
+      setChangePasswordVisible(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   const resetForms = useCallback(() => {
     setNewEmail(user?.email || "");
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
-    setEmailSent(false);
   }, [user]);
 
-  const renderGridContent = useMemo(() => {
-    const items = showingHistory ? historyImages : userPosts;
-    const isLoading = showingHistory ? historyLoading : postsLoading;
-    const emptyMessage = showingHistory 
-      ? "No scan history yet" 
-      : "No posts yet";
+  const getInitials = (name) => {
+    if (!name) return "U"; // Default to 'U' for User
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
 
-    return (
-      <ProfileGrid
-        items={items}
-        loading={isLoading}
-        onImagePress={handleImagePress}
-        emptyMessage={emptyMessage}
-        isDark={isDark}
-      />
-    );
-  }, [showingHistory, historyImages, userPosts, historyLoading, postsLoading, isDark, handleImagePress]);
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
-  if (profileLoading) {
+  if (loading) {
     return (
-      <SafeAreaView className={`flex-1 justify-center items-center ${colors.background}`}>
-        <View />
-      </SafeAreaView>
+      <View
+        className={`flex-1 justify-center items-center ${
+          isDark ? "bg-black" : "bg-white"
+        }`}
+      >
+        <Text
+          className={`text-lg font-inter ${
+            isDark ? "text-white" : "text-black"
+          }`}
+        >
+          Loading...
+        </Text>
+      </View>
     );
   }
 
-  return (
-    <ErrorBoundary onReset={() => refreshProfile()}>
-      <SafeAreaView className={`flex-1 ${colors.background}`} edges={['top']}>
-        <ScrollView
-          className="flex-1"
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={isDark ? "#fff" : "#000"}
-            />
-          }
-        >
-          {/* Profile Header */}
-          <ProfileHeader
-            profileImage={profileImage}
-            onImagePress={handlePickProfileImage}
-            onEditPress={() => setEditProfileVisible(true)}
-            onSettingsPress={() => setSettingsVisible(true)}
-            uploading={uploading}
-            uploadProgress={progress}
-            isDark={isDark}
-          />
+  // Use full name from database consistently
+  const displayName = userProfile?.name || "Pet Owner";
+  const role = user?.user_metadata?.options?.data?.role || "Pet Owner";
+  const email = user?.email || "";
 
-          {/* Stats */}
-          <ProfileStats
-            postsCount={userPosts?.length || 0}
-            petScanCount={petScanCount || 0}
-            isDark={isDark}
+  // Simplified grid rendering function
+  const renderGridContent = () => {
+    const items = showingHistory ? historyImages : userPosts;
+    const isLoading = showingHistory ? historyLoading : postsLoading;
+
+    // If loading, show placeholders
+    if (isLoading) {
+      return Array.from({ length: 6 }).map((_, index) => (
+        <View key={index} className="w-1/3 aspect-square p-1">
+          <View
+            className={`w-full h-full rounded ${
+              isDark ? "bg-neutral-800" : "bg-neutral-200"
+            }`}
           />
+        </View>
+      ));
+    }
+
+    // Loaded - show actual items or empty state
+    if (items.length > 0) {
+      return items.map((item) => (
+        <TouchableOpacity
+          key={item.id}
+          className="w-1/3 aspect-square p-1"
+          onPress={() => {
+            setSelectedImage(item.url);
+            setImageViewerVisible(true);
+          }}
+        >
+          <Image
+            source={{ uri: item.url }}
+            className="w-full h-full rounded"
+            resizeMode="cover"
+          />
+        </TouchableOpacity>
+      ));
+    } else {
+      // Show empty state message
+      return (
+        <View className="w-full py-10 items-center justify-center">
+          <FontAwesome
+            name={showingHistory ? "history" : "table"}
+            size={48}
+            color={isDark ? "#6B7280" : "#9CA3AF"}
+          />
+          <Text
+            className={`mt-4 text-lg font-inter ${
+              isDark ? "text-neutral-400" : "text-neutral-500"
+            }`}
+          >
+            No {showingHistory ? "scan history" : "posts"} yet
+          </Text>
+          <Text
+            className={`mt-2 text-base font-inter ${
+              isDark ? "text-neutral-500" : "text-neutral-400"
+            }`}
+          >
+            {showingHistory
+              ? "Your pet scans will appear here"
+              : "Share posts to see them here"}
+          </Text>
+        </View>
+      );
+    }
+  };
+
+  return (
+    <SafeAreaView className="flex-1 bg-white dark:bg-black" edges={['top']}>
+      <ScrollView
+        className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={isDark ? "#fff" : "#000"}
+          />
+        }
+      >
+        {/* Profile Header - Instagram Style */}
+        <View className={`pt-2 pb-4 ${isDark ? "bg-black" : "bg-white"}`}>
+          <View className="flex-row justify-between items-center px-4 mb-8">
+          <Image
+              source={isDark 
+                ? require("../../assets/images/home-logo-darkmode.png") 
+                : require("../../assets/images/home-logo-whitemode.png")
+              }
+              className="w-8 h-9"
+              resizeMode="cover"
+            />
+            <Text className="text-2xl font-inter-bold text-black dark:text-white ml-2">
+              PawScan
+            </Text>
+            <TouchableOpacity onPress={() => setSettingsVisible(true)}>
+              <FontAwesome
+                name="cog"
+                size={24}
+                color={isDark ? "white" : "black"}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Profile Info - Instagram Style */}
+          <View className="flex-row px-4 pb-4 items-center">
+            {/* Profile Image - Click to change */}
+            <TouchableOpacity onPress={pickImage} className="mr-6">
+              {profileImage ? (
+                <Image
+                  source={{ uri: profileImage }}
+                  className="w-24 h-24 rounded-full"
+                />
+              ) : (
+                <View
+                  className={`w-24 h-24 rounded-full justify-center items-center ${
+                    isDark ? "bg-neutral-800" : "bg-neutral-200"
+                  }`}
+                >
+                  <Text
+                    className={`text-2xl font-inter-bold ${
+                      isDark ? "text-white" : "text-black"
+                    }`}
+                  >
+                    {getInitials(displayName)}
+                  </Text>
+                </View>
+              )}
+              <View
+                className={`absolute bottom-0 right-0 w-6 h-6 rounded-full items-center justify-center ${
+                  isDark ? "bg-neutral-700" : "bg-neutral-300"
+                }`}
+              >
+                <FontAwesome
+                  name="camera"
+                  size={16}
+                  color={isDark ? "white" : "black"}
+                />
+              </View>
+            </TouchableOpacity>
+
+            {/* Stats - Updated for Pet Owners */}
+            <View className="flex-row flex-1 justify-around">
+              <View className="items-center">
+                <Text
+                  className={`text-lg font-inter-bold ${
+                    isDark ? "text-white" : "text-black"
+                  }`}
+                >
+                  {userPosts.length}
+                </Text>
+                <Text
+                  className={`text-sm ${
+                    isDark ? "text-neutral-400" : "text-neutral-500"
+                  }`}
+                >
+                  Posts
+                </Text>
+              </View>
+              <View className="items-center">
+                <Text className="text-xl font-inter-bold text-black dark:text-white">
+                  {petScanCount}
+                </Text>
+                <Text
+                  className={`text-sm ${
+                    isDark ? "text-neutral-400" : "text-neutral-500"
+                  }`}
+                >
+                  Pet Scanned
+                </Text>
+              </View>
+            </View>
+          </View>
 
           {/* Bio */}
-          <ProfileBio
-            displayName={displayName}
-            role={role}
-            createdAt={user?.created_at}
-            bio={profile?.bio}
-            location={profile?.location}
-            isDark={isDark}
-          />
-
-          {/* Tabs */}
-          <View className="mt-2">
-            <ProfileTabs
-              showingHistory={showingHistory}
-              onTabChange={setShowingHistory}
-              isDark={isDark}
-            />
-
-            {/* Grid */}
-            {renderGridContent}
+          <View className="px-4">
+            <Text
+              className={`font-inter-semibold ${
+                isDark ? "text-white" : "text-black"
+              }`}
+            >
+              {displayName}
+            </Text>
+            <Text
+              className={`font-inter ${
+                isDark ? "text-neutral-300" : "text-neutral-600"
+              }`}
+            >
+              {role} | Pet Health Enthusiast
+            </Text>
+            <Text
+              className={`mt-1 font-inter ${
+                isDark ? "text-neutral-400" : "text-neutral-500"
+              }`}
+            >
+              Member since {formatDate(user?.created_at)}
+            </Text>
           </View>
-        </ScrollView>
+        </View>
 
-        {/* Image Viewer Modal */}
-        <ImageViewerModal
-          visible={imageViewerVisible}
-          imageUrl={selectedImage}
-          onClose={() => setImageViewerVisible(false)}
-        />
+        {/* Posts Grid - Instagram Style */}
+        <View className="mt-2">
+          <View className="flex-row border-t border-b border-neutral-300 dark:border-neutral-700">
+            <TouchableOpacity
+              className="flex-1 items-center py-3 border-r border-neutral-300 dark:border-neutral-700"
+              onPress={() => setShowingHistory(false)}
+            >
+              <FontAwesome
+                name="table"
+                size={24}
+                color={
+                  !showingHistory && isDark
+                    ? "#3B82F6"
+                    : !showingHistory
+                    ? "#3B82F6"
+                    : isDark
+                    ? "white"
+                    : "black"
+                }
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-1 items-center py-3"
+              onPress={() => setShowingHistory(true)}
+            >
+              <FontAwesome
+                name="history"
+                size={24}
+                color={
+                  showingHistory && isDark
+                    ? "#3B82F6"
+                    : showingHistory
+                    ? "#3B82F6"
+                    : isDark
+                    ? "white"
+                    : "black"
+                }
+              />
+            </TouchableOpacity>
+          </View>
 
-        {/* Edit Profile Modal */}
-        <EditProfileModal
-          visible={editProfileVisible}
-          onClose={() => setEditProfileVisible(false)}
-          profile={profile}
-          onSave={handleUpdateProfile}
-          updating={updating}
-          isDark={isDark}
-        />
+          {/* Posts/History Grid */}
+          <View className="flex-row flex-wrap w-full">
+            {renderGridContent()}
+          </View>
+        </View>
+      </ScrollView>
 
-        {/* Settings Modal */}
-        <SettingsModal
-          visible={settingsVisible}
-          onClose={() => setSettingsVisible(false)}
-          onEmailPress={() => {
-            setSettingsVisible(false);
-            setChangeEmailVisible(true);
-          }}
-          onPasswordPress={() => {
-            setSettingsVisible(false);
-            setChangePasswordVisible(true);
-          }}
-          onTutorialPress={() => {
-            setSettingsVisible(false);
-            startTutorial('profile');
-          }}
-          onSignOut={handleSignOut}
-          isDark={isDark}
-        />
+      {/* Image Viewer Modal */}
+      <ImageViewerModal
+        visible={imageViewerVisible}
+        imageUrl={selectedImage}
+        onClose={() => setImageViewerVisible(false)}
+      />
 
-        {/* Change Email Modal */}
-        <ChangeEmailModal
-          visible={changeEmailVisible}
-          onClose={() => {
-            setChangeEmailVisible(false);
-            resetForms();
-          }}
-          newEmail={newEmail}
-          setNewEmail={setNewEmail}
-          onSubmit={handleChangeEmail}
-          updating={updating}
-          isDark={isDark}
-          emailSent={emailSent}
-        />
+      {/* Modals */}
+      <SettingsModal
+        visible={settingsVisible}
+        onClose={() => setSettingsVisible(false)}
+        onEmailPress={() => {
+          setSettingsVisible(false);
+          setChangeEmailVisible(true);
+        }}
+        onPasswordPress={() => {
+          setSettingsVisible(false);
+          setChangePasswordVisible(true);
+        }}
+        onTutorialPress={() => {
+          setSettingsVisible(false);
+          startTutorial('profile');
+        }}
+        onSignOut={handleSignOut}
+        isDark={isDark}
+      />
 
-        {/* Change Password Modal */}
-        <ChangePasswordModal
-          visible={changePasswordVisible}
-          onClose={() => {
-            setChangePasswordVisible(false);
-            resetForms();
-          }}
-          currentPassword={currentPassword}
-          setCurrentPassword={setCurrentPassword}
-          newPassword={newPassword}
-          setNewPassword={setNewPassword}
-          confirmPassword={confirmPassword}
-          setConfirmPassword={setConfirmPassword}
-          onSubmit={handleChangePassword}
-          updating={updating}
-          isDark={isDark}
-        />
-      </SafeAreaView>
-      <TutorialOverlay steps={profileTutorialSteps} tutorialId="profile" />
-    </ErrorBoundary>
+      <ChangeEmailModal
+        visible={changeEmailVisible}
+        onClose={() => {
+          setChangeEmailVisible(false);
+          resetForms();
+        }}
+        newEmail={newEmail}
+        setNewEmail={setNewEmail}
+        onSubmit={handleChangeEmail}
+        updating={updating}
+        isDark={isDark}
+      />
+
+      <ChangePasswordModal
+        visible={changePasswordVisible}
+        onClose={() => {
+          setChangePasswordVisible(false);
+          resetForms();
+        }}
+        currentPassword={currentPassword}
+        setCurrentPassword={setCurrentPassword}
+        newPassword={newPassword}
+        setNewPassword={setNewPassword}
+        confirmPassword={confirmPassword}
+        setConfirmPassword={setConfirmPassword}
+        onSubmit={handleChangePassword}
+        updating={updating}
+        isDark={isDark}
+      />
+    </SafeAreaView>
   );
 };
 

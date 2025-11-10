@@ -24,20 +24,35 @@ const TABLE_NAMES = {
  */
 const createProfileAfterAuth = async (user) => {
   try {
-    const userRole = user.user_metadata?.role;
+    // Extract data from the nested metadata structure
+    // Raw metadata structure: raw_user_meta_data.options.data.{role, full_name, license_number}
+    const userData = user.user_metadata?.options?.data || {};
+    const userRole = userData.role;
     const isVet = userRole === ROLES.VETERINARIAN || userRole === ROLES.PENDING_VETERINARIAN;
 
     const tableName = isVet ? TABLE_NAMES.VET_PROFILES : TABLE_NAMES.USER_PROFILES;
     
+    // Get the full name from the nested metadata structure
+    const fullName = userData.full_name;
+    
     const profileData = {
       id: user.id,
-      name: user.user_metadata?.full_name || user.email?.split('@')[0] || (isVet ? 'Veterinarian' : 'Pet Owner'),
+      name: fullName || user.email?.split('@')[0] || (isVet ? 'Veterinarian' : 'Pet Owner'),
       updated_at: new Date().toISOString(),
     };
 
     if (isVet) {
-      profileData.license_number = user.user_metadata?.license_number;
+      profileData.license_number = userData.license_number;
     }
+
+    console.log('Creating/updating profile with data:', {
+      userId: user.id,
+      fullName: fullName,
+      email: user.email,
+      role: userRole,
+      userData: userData,
+      tableName: tableName
+    });
 
     const { error } = await supabase
       .from(tableName)
@@ -45,6 +60,8 @@ const createProfileAfterAuth = async (user) => {
 
     if (error) {
       console.error(`Error upserting ${isVet ? 'veterinarian' : 'user'} profile:`, error);
+    } else {
+      console.log(`Successfully created/updated ${isVet ? 'veterinarian' : 'user'} profile for user:`, user.id);
     }
   } catch (error) {
     console.error('Error in createProfileAfterAuth:', error);
@@ -79,7 +96,8 @@ export const AuthProvider = ({ children }) => {
       
       if (isMounted) {
         // Check if user is pending veterinarian and sign them out
-        const userRole = session?.user?.user_metadata?.role;
+        const userData = session?.user?.user_metadata?.options?.data || {};
+        const userRole = userData.role;
         if (userRole === ROLES.PENDING_VETERINARIAN && event !== 'SIGNED_OUT') {
           console.log('Pending veterinarian detected, signing out');
           await supabase.auth.signOut();
@@ -135,7 +153,8 @@ export const AuthProvider = ({ children }) => {
     }
 
     // Check if user is a pending veterinarian
-    const userRole = data.user?.user_metadata?.role;
+    const userData = data.user?.user_metadata?.options?.data || {};
+    const userRole = userData.role;
     if (userRole === ROLES.PENDING_VETERINARIAN) {
       await supabase.auth.signOut();
       throw new Error(

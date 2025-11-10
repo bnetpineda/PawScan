@@ -152,7 +152,7 @@ const SettingsModal = ({
                     isDark ? "text-neutral-400" : "text-neutral-600"
                   }`}
                 >
-                  Learn how to use PawScan
+                  Learn how to Profile on PawScan
                 </Text>
               </View>
               <FontAwesome

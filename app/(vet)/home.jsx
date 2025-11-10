@@ -77,7 +77,8 @@ const VetNewsFeedScreen = () => {
   // Search handlers
   const handleSearch = useCallback(
     (query) => {
-      setSearchQuery(query); // keep search bar mounted; avoid toggling isSearching per keystroke
+      setSearchQuery(query);
+      setIsSearching(query.length > 0); // Also updates isSearching state
     },
     []
   );

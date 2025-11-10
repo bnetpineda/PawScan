@@ -25,13 +25,10 @@ const ChatScreen = () => {
   // Use the custom hook to handle all chat logic
   const {
     messages,
-    setMessages,
     newMessage,
     setNewMessage,
     isOtherUserTyping,
-    setIsOtherUserTyping,
     messageStatus,
-    setMessageStatus,
     networkError,
     setNetworkError,
     isSending,
@@ -42,9 +39,7 @@ const ChatScreen = () => {
     cleanupSubscriptions,
     markMessagesAsRead,
     loadMessages,
-    updateTypingStatus,
     clearTypingStatus,
-    sendingLoadingManager,
     deleteMessage
   } = useChat(conversationId, user, resolvedVetName, vetId);
 
@@ -81,7 +76,7 @@ const ChatScreen = () => {
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
-          
+
       if (!postError && postData && postData.display_name) {
         setResolvedVetName(postData.display_name);
         return; // Exit if name found
@@ -117,7 +112,7 @@ const ChatScreen = () => {
   const getMessageStatusIcon = useCallback((messageId) => {
     const status = messageStatus[messageId];
     if (!status) return null;
-    
+
     if (status.read) {
       return <FontAwesome name="check-circle" size={12} color="#525252" />;
     } else if (status.delivered) {
@@ -172,15 +167,15 @@ const ChatScreen = () => {
   // Effect to load conversation
   useEffect(() => {
     createOrGetConversation();
-    
+
     // Fetch vet profile info and update the vet name
     fetchVetProfileInfo();
-    
+
     // Cleanup function to unsubscribe when component unmounts
     return () => {
       console.log('Component unmounting, cleaning up...');
       cleanupSubscriptions();
-      
+
       // Clear typing status when leaving chat
       if (conversationId && user) {
         clearTypingStatus();
@@ -195,7 +190,7 @@ const ChatScreen = () => {
       subscribeToMessages();
       subscribeToTyping();
     }
-    
+
     // Cleanup subscription when conversationId changes
     return () => {
       console.log('Conversation ID changed, cleaning up...');
@@ -221,7 +216,7 @@ const ChatScreen = () => {
 
     // Launch image picker
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: [ImagePicker.MediaType.Images],
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,
@@ -258,9 +253,9 @@ const ChatScreen = () => {
   // Send image function
   const sendImage = useCallback(async () => {
     if (!selectedImage) return;
-    
+
     setImageModalVisible(false);
-    
+
     try {
       await sendMessage(selectedImage);
     } catch (error) {
@@ -285,18 +280,18 @@ const ChatScreen = () => {
   const handleBack = useCallback(async () => {
     // Clean up subscriptions before navigating away
     cleanupSubscriptions();
-    
+
     // Clear typing status
     if (conversationId && user) {
       clearTypingStatus();
     }
-    
+
     // Navigate back
     router.push('/(user)/chat');
   }, [cleanupSubscriptions, conversationId, user, clearTypingStatus, router]);
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       className="flex-1 bg-white dark:bg-black"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
@@ -310,7 +305,7 @@ const ChatScreen = () => {
           <TouchableOpacity onPress={handleBack} className="mr-6" activeOpacity={0.7}>
             <FontAwesome name="arrow-left" size={20} color={isDark ? "#fff" : "#000"} />
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             className="mr-3"
             onPress={() => router.push(`/(user)/vet-profile?vetId=${vetId}`)}
           >
@@ -336,7 +331,7 @@ const ChatScreen = () => {
             )}
           </View>
         </View>
-        
+
         {networkError && (
           <View className="bg-red-100 border-l-4 border-red-500 p-4 mx-4 my-2 rounded">
             <View className="flex-row items-center">
@@ -346,7 +341,7 @@ const ChatScreen = () => {
             <Text className="text-red-600 text-sm mt-1">{networkError}</Text>
           </View>
         )}
-        
+
         <MessageList
           messages={messages}
           user={user}
@@ -354,7 +349,7 @@ const ChatScreen = () => {
           getMessageStatusIcon={getMessageStatusIcon}
           onLongPressMessage={handleLongPressMessage}
         />
-        
+
         {/* Attachment Options Modal */}
         <Modal
           animationType="fade"
@@ -362,7 +357,7 @@ const ChatScreen = () => {
           visible={showAttachmentOptions}
           onRequestClose={() => setShowAttachmentOptions(false)}
         >
-          <TouchableOpacity 
+          <TouchableOpacity
             className="flex-1 bg-black bg-opacity-50 justify-end"
             activeOpacity={1}
             onPress={() => setShowAttachmentOptions(false)}
@@ -375,7 +370,7 @@ const ChatScreen = () => {
                 </TouchableOpacity>
               </View>
               <View className="flex-row justify-around py-4">
-                <TouchableOpacity 
+                <TouchableOpacity
                   className="items-center"
                   onPress={() => {
                     setShowAttachmentOptions(false);
@@ -387,7 +382,7 @@ const ChatScreen = () => {
                   </View>
                   <Text className="text-black dark:text-white font-inter">Photo</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                   className="items-center"
                   onPress={() => {
                     setShowAttachmentOptions(false);
@@ -403,7 +398,7 @@ const ChatScreen = () => {
             </View>
           </TouchableOpacity>
         </Modal>
-        
+
         {/* Image Preview Modal */}
         <Modal
           animationType="slide"
@@ -417,15 +412,15 @@ const ChatScreen = () => {
           <View className="flex-1 bg-black bg-opacity-90 justify-center items-center">
             <View className="w-4/5 h-2/3 bg-black rounded-2xl overflow-hidden">
               {selectedImage && (
-                <Image 
-                  source={{ uri: selectedImage }} 
-                  className="w-full h-full" 
-                  resizeMode="contain" 
+                <Image
+                  source={{ uri: selectedImage }}
+                  className="w-full h-full"
+                  resizeMode="contain"
                 />
               )}
             </View>
             <View className="flex-row mt-6">
-              <TouchableOpacity 
+              <TouchableOpacity
                 className="bg-neutral-600 dark:bg-neutral-400 rounded-full px-6 py-3 mx-2"
                 onPress={() => {
                   setImageModalVisible(false);
@@ -434,7 +429,7 @@ const ChatScreen = () => {
               >
                 <Text className="text-white dark:text-black font-inter-bold">Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 className="bg-neutral-800 dark:bg-neutral-200 rounded-full px-6 py-3 mx-2 flex-row items-center"
                 onPress={sendImage}
                 disabled={isSending}
@@ -451,7 +446,7 @@ const ChatScreen = () => {
             </View>
           </View>
         </Modal>
-        
+
         <MessageInput
           newMessage={newMessage}
           setNewMessage={setNewMessage}

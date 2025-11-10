@@ -6,6 +6,9 @@ import { useFonts } from "expo-font";
 import { AuthProvider } from "../providers/AuthProvider";
 import { NotificationProvider } from "../providers/NotificationProvider";
 import { TutorialProvider } from "../providers/TutorialProvider";
+import TutorialOverlay from "../components/tutorial/TutorialOverlay";
+import { profileTutorialSteps, userTutorialSteps, vetTutorialSteps } from "../components/tutorial/tutorialSteps";
+import { useAuth } from "../providers/AuthProvider";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -49,8 +52,29 @@ export default function RootLayout() {
             <Stack.Screen name="(user)" options={{ headerShown: false }} />
             <Stack.Screen name="info" options={{ headerShown: false }} />
           </Stack>
+          <AppTutorialOverlays />
         </TutorialProvider>
       </NotificationProvider>
     </AuthProvider>
+  );
+}
+
+function AppTutorialOverlays() {
+  const { user } = useAuth();
+  const isVet = user?.user_metadata?.options?.data?.role === "vet";
+
+  return (
+    <>
+      <TutorialOverlay 
+        steps={profileTutorialSteps} 
+        tutorialId="profile" 
+        onComplete={() => {}}
+      />
+      <TutorialOverlay 
+        steps={isVet ? vetTutorialSteps : userTutorialSteps} 
+        tutorialId={isVet ? "vet" : "user"} 
+        onComplete={() => {}}
+      />
+    </>
   );
 }
