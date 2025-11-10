@@ -59,25 +59,55 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let isMounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // The first event fired is the initial session state.
-      // Set loading to false only on this initial check.
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (isMounted) {
+        setSession(session);
+        setUser(session?.user ?? null);
         setLoading(false);
-        isMounted = false;
+        if (session?.user?.email) {
+          console.log('User email:', session.user.email);
+        }
       }
+    });
 
-      setSession(session);
-      setUser(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change event:', event);
+      if (session?.user?.email) {
+        console.log('User email:', session.user.email);
+      }
       
-      // Only create/update profile on sign-in and sign-up events, not on user updates
-      // This prevents unnecessary profile operations during email/password changes
-      if (session?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-        await createProfileAfterAuth(session.user);
+      if (isMounted) {
+        // Check if user is pending veterinarian and sign them out
+        const userRole = session?.user?.user_metadata?.role;
+        if (userRole === ROLES.PENDING_VETERINARIAN && event !== 'SIGNED_OUT') {
+          console.log('Pending veterinarian detected, signing out');
+          await supabase.auth.signOut();
+          return;
+        }
+
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Handle token expiration and sign out events
+        if (event === 'TOKEN_REFRESHED') {
+          console.log('Token refreshed successfully');
+        } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out');
+          setSession(null);
+          setUser(null);
+        }
+        
+        // Only create/update profile on sign-in and sign-up events, not on user updates
+        // This prevents unnecessary profile operations during email/password changes
+        if (session?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+          await createProfileAfterAuth(session.user);
+        }
       }
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -102,6 +132,15 @@ export const AuthProvider = ({ children }) => {
         );
       }
       throw error;
+    }
+
+    // Check if user is a pending veterinarian
+    const userRole = data.user?.user_metadata?.role;
+    if (userRole === ROLES.PENDING_VETERINARIAN) {
+      await supabase.auth.signOut();
+      throw new Error(
+        "Your veterinarian account is pending verification by an administrator. You will receive an email once verified."
+      );
     }
 
     return { data, error };
@@ -138,11 +177,41 @@ export const AuthProvider = ({ children }) => {
   
 
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      // Check if session exists before attempting to sign out
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        // Session already expired or doesn't exist, just clear local state
+        console.log("No active session, clearing local state");
+        setSession(null);
+        setUser(null);
+        return;
+      }
+
+      console.log("Logging out user:", session.user?.email);
+      
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        // If error is about missing session, just clear local state
+        if (error.message.includes('session') || error.message.includes('Session')) {
+          console.log("Session already expired, clearing local state");
+          setSession(null);
+          setUser(null);
+          return;
+        }
+        throw error;
+      }
+      
+      console.log("User logged out successfully:", session.user?.email);
+      setSession(null);
+      setUser(null);
+    } catch (error) {
       console.error("Logout error:", error.message);
-    } else {
-      console.log("User logged out successfully");
+      // Even if there's an error, clear local state
+      setSession(null);
+      setUser(null);
+      throw error;
     }
   };
 

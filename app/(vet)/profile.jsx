@@ -65,7 +65,7 @@ const ProfileScreen = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { startTutorial } = useTutorial();
   const {
     userPosts,
@@ -189,9 +189,13 @@ const ProfileScreen = () => {
         text: "Sign Out",
         style: "destructive",
         onPress: async () => {
-          const { error } = await supabase.auth.signOut();
-          if (error) {
-            Alert.alert("Error", error.message);
+          try {
+            await logout();
+            // Logout successful, navigation will be handled by AuthProvider
+          } catch (error) {
+            // Even if there's an error, user will be logged out locally
+            console.log("Sign out completed with error:", error.message);
+            // Don't show error alert since logout still succeeded locally
           }
         },
       },
