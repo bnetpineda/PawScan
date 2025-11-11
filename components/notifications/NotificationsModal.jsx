@@ -14,11 +14,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useNotifications } from '../../providers/NotificationProvider';
+import { useAuth } from '../../providers/AuthProvider';
 import NotificationItem from './NotificationItem';
 
 const NotificationsModal = ({ visible, onClose }) => {
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
+  const { user } = useAuth();
   const {
     notifications,
     loading,
@@ -55,7 +57,8 @@ const NotificationsModal = ({ visible, onClose }) => {
           if (notification.related_id) {
             onClose();
             // Determine if user is vet or regular user based on their role
-            const userRole = notification.user_metadata?.options?.data?.role;
+            const userData = user?.user_metadata?.options?.data || {};
+            const userRole = userData.role;
             if (userRole === 'veterinarian') {
               router.push(`/(vet)/chat/${notification.sender_id}`);
             } else {
@@ -82,7 +85,7 @@ const NotificationsModal = ({ visible, onClose }) => {
     } catch (error) {
       console.error('Error handling notification press:', error);
     }
-  }, [markAsRead, onClose, router]);
+  }, [markAsRead, onClose, router, user]);
 
   const handleDeleteNotification = useCallback((notificationId) => {
     Alert.alert(
