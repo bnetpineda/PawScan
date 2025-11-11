@@ -1,35 +1,35 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  View, 
-  Text, 
-  FlatList, 
-  TouchableOpacity, 
-  Alert, 
-  RefreshControl, 
-  useColorScheme, 
-  StatusBar, 
-  TextInput, 
-  Modal, 
+import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  Alert,
+  RefreshControl,
+  useColorScheme,
+  StatusBar,
+  TextInput,
+  Modal,
   ActivityIndicator,
-  Image
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../../../providers/AuthProvider';
-import { useTutorial } from '../../../providers/TutorialProvider';
-import { supabase } from '../../../lib/supabase';
-import { useRouter } from 'expo-router';
-import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
-import NotificationBell from '../../../components/notifications/NotificationBell';
-import NotificationsModal from '../../../components/notifications/NotificationsModal';
-import TutorialOverlay from '../../../components/tutorial/TutorialOverlay';
-import { chatTutorialSteps } from '../../../components/tutorial/tutorialSteps';
+  Image,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../../../providers/AuthProvider";
+import { useTutorial } from "../../../providers/TutorialProvider";
+import { supabase } from "../../../lib/supabase";
+import { useRouter } from "expo-router";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import NotificationBell from "../../../components/notifications/NotificationBell";
+import NotificationsModal from "../../../components/notifications/NotificationsModal";
+import TutorialOverlay from "../../../components/tutorial/TutorialOverlay";
+import { chatTutorialSteps } from "../../../components/tutorial/tutorialSteps";
 import { 
   formatChatTime, 
   getInitials, 
   debounce, 
   filterConversations,
   truncateText
-} from '../../../utils/chatUtils';
+} from "../../../utils/chatUtils";
 
 const ChatListScreen = () => {
   const { user } = useAuth();
@@ -41,7 +41,7 @@ const ChatListScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredConversations, setFilteredConversations] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
-  const isDark = useColorScheme() === 'dark';
+  const isDark = useColorScheme() === "dark";
   const [notificationsVisible, setNotificationsVisible] = useState(false);
 
   useEffect(() => {
@@ -228,6 +228,28 @@ const ChatListScreen = () => {
     </TouchableOpacity>
   );
 
+  const renderStartNewChatButton = () => {
+    if (showSearch) return null; // Hide during search
+
+    if (conversationCount === 0) {
+      // Header button for empty state
+      return (
+        <TouchableOpacity
+          onPress={() => router.push("/(vet)/chat/users")}
+          className="bg-black dark:bg-white rounded-full px-4 py-2 flex-row items-center"
+          activeOpacity={0.8}
+        >
+          <FontAwesome name="plus" size={16} color={isDark ? "#000" : "#fff"} />
+          <Text className="text-white dark:text-black text-sm font-inter-bold ml-2">
+            New Chat
+          </Text>
+        </TouchableOpacity>
+      );
+    }
+
+    return null; // Will show floating button instead
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-neutral-50 dark:bg-black" edges={['top', 'bottom']}>
       <StatusBar
@@ -236,7 +258,7 @@ const ChatListScreen = () => {
       />
       
       {/* Header */}
-      <View className="px-4 py-4 bg-white dark:bg-black">
+      <View className="px-5 py-4 bg-white dark:bg-black">
         <View className="flex-row justify-between items-center">
           <View>
             <Text className="text-xl font-inter-bold text-black dark:text-white">
@@ -249,6 +271,7 @@ const ChatListScreen = () => {
             )}
           </View>
           <View className="flex-row items-center gap-2">
+            {renderStartNewChatButton()}
             <TouchableOpacity 
               onPress={() => startTutorial('chat')}
               className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 justify-center items-center"
@@ -414,6 +437,26 @@ const ChatListScreen = () => {
             />
           </View>
         )
+      )}
+
+      {/* Floating Action Button for existing conversations */}
+      {conversationCount > 0 && !showSearch && (
+        <View className="absolute bottom-6 right-6">
+          <TouchableOpacity
+            onPress={() => router.push("/(vet)/chat/users")}
+            className="w-14 h-14 rounded-full bg-black dark:bg-white justify-center items-center"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 6,
+              elevation: 8,
+            }}
+            activeOpacity={0.8}
+          >
+            <FontAwesome name="plus" size={24} color={isDark ? "#000" : "#fff"} />
+          </TouchableOpacity>
+        </View>
       )}
 
       <NotificationsModal
