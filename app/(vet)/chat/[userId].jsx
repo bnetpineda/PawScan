@@ -11,7 +11,7 @@ import MessageList from '../../../components/chat/MessageList';
 import MessageInput from '../../../components/chat/MessageInput';
 
 const ChatScreen = () => {
-  const { userId, userName } = useLocalSearchParams();
+  const { userId, userName: urlUserName } = useLocalSearchParams();
   const router = useRouter();
   const { user } = useAuth();
   const [conversationId, setConversationId] = useState(null);
@@ -19,6 +19,7 @@ const ChatScreen = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [userProfileImage, setUserProfileImage] = useState(null);
+  const [userName, setUserName] = useState(urlUserName || 'Pet Owner');
   const isDark = useColorScheme() === 'dark';
 
   // Use the custom hook to handle all chat logic
@@ -55,15 +56,21 @@ const ChatScreen = () => {
     try {
       const { data: userProfile, error } = await supabase
         .from('user_profiles')
-        .select('profile_image_url')
+        .select('profile_image_url, name')
         .eq('id', userId)
         .single();
 
-      if (!error && userProfile && userProfile.profile_image_url) {
-        setUserProfileImage(userProfile.profile_image_url);
+      if (!error && userProfile) {
+        if (userProfile.profile_image_url) {
+          setUserProfileImage(userProfile.profile_image_url);
+        }
+        // Update userName if not provided in URL params
+        if (!urlUserName && userProfile.name) {
+          setUserName(userProfile.name);
+        }
       }
     } catch (error) {
-      console.error('Error fetching user profile image:', error);
+      console.error('Error fetching user profile:', error);
     }
   };
 

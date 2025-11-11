@@ -189,16 +189,9 @@ const VetsListScreen = () => {
 
       {/* Vet Info */}
       <View className="flex-1">
-        <TouchableOpacity
-          onPress={(e) => {
-            e.stopPropagation();
-            router.push(`/(user)/vet-profile?vetId=${item.id}`);
-          }}
-        >
-          <Text className="text-lg font-inter-bold text-black dark:text-white mb-1">
-            {item.name}
-          </Text>
-        </TouchableOpacity>
+        <Text className="text-lg font-inter-bold text-black dark:text-white mb-1">
+          {item.name}
+        </Text>
         <Text className="text-sm text-neutral-600 dark:text-neutral-400 font-inter-medium">
           Veterinarian • Available for chat
         </Text>

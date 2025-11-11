@@ -54,34 +54,64 @@ const UsersListScreen = () => {
 
   const loadUsers = async () => {
     try {
-      // Get all pet owners from the user_profiles table
+      console.log('Loading pet owners...');
+      console.log('Current vet user ID:', user.id);
+      
+      // Query user_profiles - pet owners should be visible to vets
       const { data: usersData, error: usersError } = await supabase
         .from('user_profiles')
-        .select('id, name, profile_image_url')
-        .order('name', { ascending: true });
+        .select('id, name, profile_image_url, created_at');
+
+      console.log('Query response:', { 
+        data: usersData, 
+        error: usersError,
+        dataLength: usersData?.length 
+      });
 
       if (usersError) {
-        console.error('Error loading users from user_profiles:', usersError);
-        // If user_profiles is not accessible, there are no pet owners to show
+        console.error('Error loading user_profiles:', usersError);
+        console.error('Error code:', usersError.code);
+        console.error('Error message:', usersError.message);
+        console.error('Error hint:', usersError.hint);
+        console.error('Error details:', usersError.details);
+        
+        // Show specific error to help debug RLS issues
+        Alert.alert(
+          'Database Error', 
+          `Could not load pet owners. This might be due to Row Level Security policies.\n\nError: ${usersError.message}`
+        );
         setUsers([]);
         setFilteredUsers([]);
         return;
       }
+
+      if (!usersData || usersData.length === 0) {
+        console.log('No user profiles found in database');
+        setUsers([]);
+        setFilteredUsers([]);
+        return;
+      }
+
+      console.log(`Found ${usersData.length} total user profiles`);
+      console.log('Sample user:', usersData[0]);
 
       // Format the data for display
       const formattedUsers = usersData
         .map(petOwner => ({
           id: petOwner.id,
           name: petOwner.name || 'Pet Owner',
-          email: '', // User profiles may not store email directly
+          email: '',
           profile_image_url: petOwner.profile_image_url
         }))
-        .filter(petOwner => petOwner.id !== user.id); // Exclude current user if they're also a pet owner
+        .filter(petOwner => petOwner.id !== user.id)
+        .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
+      console.log(`After filtering out current user: ${formattedUsers.length} pet owners available`);
+      
       setUsers(formattedUsers);
       setFilteredUsers(formattedUsers);
     } catch (error) {
-      console.error('Error loading users:', error);
+      console.error('Unexpected error loading users:', error);
       Alert.alert('Error', 'Could not load pet owners. Please try again later.');
     } finally {
       setLoading(false);
@@ -104,7 +134,7 @@ const UsersListScreen = () => {
 
       if (existingConversation) {
         // Navigate to existing conversation
-        router.push(`/(vet)/chat/${selectedUser.id}`);
+        router.push(`/(vet)/chat/${selectedUser.id}?userName=${encodeURIComponent(selectedUser.name)}`);
       } else {
         // Create new conversation
         const { data: newConversation, error: createError } = await supabase
@@ -119,7 +149,7 @@ const UsersListScreen = () => {
         if (createError) throw createError;
 
         // Navigate to new conversation
-        router.push(`/(vet)/chat/${selectedUser.id}`);
+        router.push(`/(vet)/chat/${selectedUser.id}?userName=${encodeURIComponent(selectedUser.name)}`);
       }
     } catch (error) {
       console.error('Error selecting user:', error);
@@ -162,13 +192,9 @@ const UsersListScreen = () => {
 
       {/* User Info */}
       <View className="flex-1">
-        <TouchableOpacity
-          activeOpacity={1}
-        >
-          <Text className="text-lg font-inter-bold text-black dark:text-white mb-1">
-            {item.name}
-          </Text>
-        </TouchableOpacity>
+        <Text className="text-lg font-inter-bold text-black dark:text-white mb-1">
+          {item.name}
+        </Text>
         <Text className="text-sm text-neutral-600 dark:text-neutral-400 font-inter-medium">
           Pet Owner • Available for chat
         </Text>
