@@ -1,5 +1,6 @@
 import { Buffer } from "buffer"; // Ensure you have buffer polyfill for React Native
 import * as FileSystem from "expo-file-system";
+import * as ImageManipulator from "expo-image-manipulator";
 import OpenAI from "openai";
 import { supabase } from "../lib/supabase"; // Adjust the import path as needed
 
@@ -19,6 +20,58 @@ function getOpenAIClient() {
     });
   }
   return openaiClient;
+}
+
+// Helper for exponential backoff retry logic
+async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
+  let lastError;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      
+      // Don't retry on client errors (4xx) or auth errors
+      if (error.status >= 400 && error.status < 500) {
+        throw error;
+      }
+      
+      // Last attempt, throw the error
+      if (attempt === maxRetries - 1) {
+        throw error;
+      }
+      
+      // Calculate delay with exponential backoff: 1s, 2s, 4s
+      const delay = baseDelay * Math.pow(2, attempt);
+      console.log(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
+}
+
+// Helper to optimize image before upload (resize to 1024px max dimension)
+async function optimizeImage(imageUri) {
+  try {
+    console.log("Optimizing image...");
+    
+    const manipulatedImage = await ImageManipulator.manipulateAsync(
+      imageUri,
+      [{ resize: { width: 1024 } }], // Resize to max 1024px width (maintains aspect ratio)
+      { 
+        compress: 0.8, // 80% quality - good balance between quality and size
+        format: ImageManipulator.SaveFormat.JPEG 
+      }
+    );
+    
+    console.log("Image optimized:", manipulatedImage.uri);
+    return manipulatedImage.uri;
+  } catch (error) {
+    console.warn("Image optimization failed, using original:", error);
+    return imageUri; // Fallback to original if optimization fails
+  }
 }
 
 // Helper to upload image to Supabase Storage and return the public URL
@@ -50,18 +103,14 @@ async function uploadImageToSupabase(imageUri, userId) {
       throw new Error("Invalid image URI format");
     }
 
-    const imageExt = imageUri.split(".").pop()?.toLowerCase();
-    const validExtensions = ["jpg", "jpeg", "png", "webp", "gif"];
+    // Optimize image before upload
+    const optimizedUri = await optimizeImage(imageUri);
 
-    if (!imageExt || !validExtensions.includes(imageExt)) {
-      throw new Error("Invalid image format. Please use JPG, PNG, WEBP, or GIF.");
-    }
-
-    // ✅ Simpler fileName (requires updated RLS policy)
+    const imageExt = "jpg"; // Always JPG after optimization
     const fileName = `${actualUserId}/${Date.now()}.${imageExt}`;
     console.log("Upload path:", fileName);
 
-    const fileData = await FileSystem.readAsStringAsync(imageUri, {
+    const fileData = await FileSystem.readAsStringAsync(optimizedUri, {
       encoding: FileSystem.EncodingType.Base64,
     });
     
@@ -71,7 +120,7 @@ async function uploadImageToSupabase(imageUri, userId) {
     }
     
     const fileBuffer = Buffer.from(fileData, "base64");
-    const contentType = `image/${imageExt === "jpg" ? "jpeg" : imageExt}`;
+    const contentType = "image/jpeg";
 
     const { data, error } = await supabase.storage
       .from("pet-images")
@@ -134,36 +183,18 @@ export async function shareToNewsfeed(
       throw new Error("Analysis not found or access denied");
     }
 
-    // Validate that this is a proper pet analysis by checking for the structured format
-    // The analysis should contain these key headers to be considered valid
+    // Validate that this is a proper pet analysis using regex pattern matching
     const analysisResult = analysisData.analysis_result;
     
-    // Check if it's the "unable to analyze" message
-    const isInvalidAnalysis = analysisResult.includes("I'm unable to analyze this image as it does not contain a cat or dog");
-    
-    if (isInvalidAnalysis) {
+    // Quick check for invalid analysis message
+    if (/unable to analyze.*does not contain a cat or dog/i.test(analysisResult)) {
       throw new Error("Only valid pet analyses can be shared. This analysis doesn't appear to be of a cat or dog.");
     }
     
-    // Check for required sections in a valid analysis (more flexible approach)
-    const requiredKeywords = [
-      "Breed of the pet",
-      "Specific Skin Disease Detected",
-      "Confidence score",
-      "suggested treatments",
-      "Urgency level",
-      "first aid care steps",
-      "Recommended medication",
-      "Veterinarian should be contacted"
-    ];
+    // Use comprehensive regex to validate required format (matches at least 6 of 8 sections)
+    const validFormatPattern = /(?=.*Breed of the pet)(?=.*Specific Skin Disease Detected)(?=.*Confidence score)(?=.*suggested treatments)(?=.*Urgency level)(?=.*first aid care steps)/is;
     
-    // Check if analysis contains most of the required information
-    const foundKeywords = requiredKeywords.filter(keyword => 
-      analysisResult.toLowerCase().includes(keyword.toLowerCase())
-    );
-    
-    // Require at least 6 out of 8 keywords to consider it valid
-    if (foundKeywords.length < 6) {
+    if (!validFormatPattern.test(analysisResult)) {
       throw new Error("Only valid pet analyses can be shared. This analysis doesn't have the required format.");
     }
 
@@ -241,17 +272,6 @@ export async function analyzePetImage(imageUri, userId) {
     // 1. Upload image to Supabase Storage
     const imageUrl = await uploadImageToSupabase(imageUri, userId);
     console.log("Image uploaded successfully:", imageUrl);
-
-    // 2. Read the original image as base64 for OpenAI
-    // This bypasses the URL access issue entirely
-    const base64Data = await FileSystem.readAsStringAsync(imageUri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-
-    // Determine image format
-    const imageExt = imageUri.split(".").pop()?.toLowerCase();
-    const mimeType = `image/${imageExt === "jpg" ? "jpeg" : imageExt}`;
-    const base64Url = `data:${mimeType};base64,${base64Data}`;
 
     console.log("Preparing image for OpenAI analysis...");
 
@@ -345,20 +365,24 @@ export async function analyzePetImage(imageUri, userId) {
     }
 
     console.log("Sending request to OpenAI...");
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: prompt },
-            { type: "image_url", image_url: { url: base64Url } }, // Use base64 instead of URL
-          ],
-        },
-      ],
-      max_tokens: 600,
-      temperature: 0.8,
-    });
+    
+    // Wrap OpenAI call with retry logic
+    const response = await retryWithBackoff(async () => {
+      return await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              { type: "image_url", image_url: { url: imageUrl } }, // Use Supabase public URL
+            ],
+          },
+        ],
+        max_tokens: 400,
+        temperature: 0.5,
+      });
+    }, 3, 1000); // 3 retries with 1s base delay
 
     const analysisResult =
       response.choices[0]?.message?.content || "No analysis result returned.";
@@ -395,27 +419,41 @@ export async function analyzePetImage(imageUri, userId) {
   } catch (err) {
     console.error("Image analysis failed:", err);
 
-    // More specific error handling
-    if (err.message?.includes("OpenAI")) {
-      return {
-        analysis: "OpenAI analysis failed. Please try again.",
-        analysisId: null,
-      };
-    } else if (err.message?.includes("upload")) {
-      return {
-        analysis: "Image upload failed. Please check your connection.",
-        analysisId: null,
-      };
+    // Enhanced error handling with error codes
+    let errorCode = "UNKNOWN_ERROR";
+    let errorMessage = "Image analysis failed. Please try again.";
+
+    // OpenAI API errors
+    if (err.status === 401) {
+      errorCode = "AUTH_ERROR";
+      errorMessage = "AI service authentication failed. Please contact support.";
+    } else if (err.status === 429) {
+      errorCode = "RATE_LIMIT";
+      errorMessage = "Too many requests. Please try again in a few moments.";
+    } else if (err.status >= 500) {
+      errorCode = "SERVER_ERROR";
+      errorMessage = "AI service is temporarily unavailable. Please try again later.";
     } else if (err.message?.includes("API key")) {
-      return {
-        analysis: "AI service is not properly configured. Please contact support.",
-        analysisId: null,
-      };
-    } else {
-      return {
-        analysis: "Image analysis failed. Please try again.",
-        analysisId: null,
-      };
+      errorCode = "CONFIG_ERROR";
+      errorMessage = "AI service is not properly configured. Please contact support.";
+    } else if (err.message?.includes("upload") || err.message?.includes("Storage")) {
+      errorCode = "UPLOAD_ERROR";
+      errorMessage = "Image upload failed. Please check your connection and try again.";
+    } else if (err.message?.includes("network") || err.message?.includes("fetch")) {
+      errorCode = "NETWORK_ERROR";
+      errorMessage = "Network error. Please check your connection and try again.";
+    } else if (err.message?.includes("Authentication")) {
+      errorCode = "USER_AUTH_ERROR";
+      errorMessage = "User authentication failed. Please sign in again.";
+    } else if (err.message?.includes("optimize") || err.message?.includes("image")) {
+      errorCode = "IMAGE_PROCESSING_ERROR";
+      errorMessage = "Failed to process image. Please try a different image.";
     }
+
+    return {
+      analysis: errorMessage,
+      analysisId: null,
+      errorCode, // Include error code for client-side handling
+    };
   }
 }
