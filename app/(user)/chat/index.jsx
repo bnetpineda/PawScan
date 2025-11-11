@@ -199,6 +199,29 @@ const ChatListScreen = () => {
   // Memoized conversation count for performance
   const conversationCount = useMemo(() => filteredConversations.length, [filteredConversations]);
 
+  // Render Start New Chat Button based on context
+  const renderStartNewChatButton = () => {
+    if (showSearch) return null; // Hide during search
+
+    if (conversationCount === 0) {
+      // Header button for empty state
+      return (
+        <TouchableOpacity
+          onPress={() => router.push("/(user)/chat/vets")}
+          className="bg-black dark:bg-white rounded-full px-4 py-2 flex-row items-center"
+          activeOpacity={0.8}
+        >
+          <FontAwesome name="plus" size={16} color={isDark ? "#000" : "#fff"} />
+          <Text className="text-white dark:text-black text-sm font-inter-bold ml-2">
+            New Chat
+          </Text>
+        </TouchableOpacity>
+      );
+    }
+
+    return null; // Will show floating button instead
+  };
+
   const renderConversation = ({ item }) => (
     <TouchableOpacity
       className="flex-row items-center p-4 mx-4 mb-3 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800"
@@ -368,6 +391,7 @@ const ChatListScreen = () => {
                 color={isDark ? "#fff" : "#000"} 
               />
             </TouchableOpacity>
+            {renderStartNewChatButton()}
           </View>
         </View>
       </View>
@@ -515,7 +539,7 @@ const ChatListScreen = () => {
               keyExtractor={(item) => item.id.toString()}
               renderItem={renderConversation}
               className="flex-1"
-              contentContainerStyle={{ paddingBottom: 20 }}
+              contentContainerStyle={{ paddingBottom: 100 }}
               showsVerticalScrollIndicator={false}
               refreshControl={
                 <RefreshControl 
@@ -530,18 +554,26 @@ const ChatListScreen = () => {
           </View>
         )
       )}
-      <View className="p-4 bg-white border-t border-black dark:bg-neutral-900 dark:border-neutral-700">
-        <TouchableOpacity
-          className="flex-row bg-black dark:bg-white rounded-full p-4 items-center justify-center"
-          onPress={() => router.push("/(user)/chat/vets")}
-          activeOpacity={0.8}
-        >
-          <FontAwesome name="plus" size={20} color={isDark ? "#000" : "#fff"} />
-          <Text className="text-white dark:text-black text-lg font-inter-bold ml-4">
-            Start New Chat
-          </Text>
-        </TouchableOpacity>
-      </View>
+
+      {/* Floating Action Button for existing conversations */}
+      {conversationCount > 0 && !showSearch && (
+        <View className="absolute bottom-6 right-6">
+          <TouchableOpacity
+            onPress={() => router.push("/(user)/chat/vets")}
+            className="w-14 h-14 rounded-full bg-black dark:bg-white justify-center items-center"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 6,
+              elevation: 8,
+            }}
+            activeOpacity={0.8}
+          >
+            <FontAwesome name="plus" size={24} color={isDark ? "#000" : "#fff"} />
+          </TouchableOpacity>
+        </View>
+      )}
 
       <NotificationsModal
         visible={notificationsVisible}
