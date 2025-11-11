@@ -60,14 +60,6 @@ export default function CameraScreen({ userType = "user" }) {
 
   const cameraRef = useRef(null);
 
-  // Show tutorial on first visit
-  useEffect(() => {
-    if (!isTutorialCompleted('camera')) {
-      // We'll trigger tutorial from parent when camera permission is granted
-      return;
-    }
-  }, []);
-
   const handleRetake = () => {
     setImageUri(null);
     setAnalysisResult("");
@@ -136,10 +128,16 @@ export default function CameraScreen({ userType = "user" }) {
     }
   };
 
-  const handleTutorialTrigger = () => {
+  // Auto-trigger tutorial on first visit (called by CameraView on permission grant)
+  const handleAutoTutorialTrigger = () => {
     if (!isTutorialCompleted('camera')) {
       startTutorial('camera');
     }
+  };
+
+  // Manual trigger from help button (always works)
+  const handleTutorialTrigger = () => {
+    startTutorial('camera');
   };
 
   return (
@@ -171,7 +169,7 @@ export default function CameraScreen({ userType = "user" }) {
             isLoading={isLoading}
             setIsLoading={setIsLoading}
             isCameraActive={isCameraActive}
-            onPermissionGranted={handleTutorialTrigger}
+            onPermissionGranted={handleAutoTutorialTrigger}
           />
         )}
         {imageUri && (

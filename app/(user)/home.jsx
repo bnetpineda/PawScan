@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import {
   ActivityIndicator,
@@ -32,6 +32,7 @@ const NewsFeedScreen = () => {
   const { user } = useAuth();
   const { startTutorial } = useTutorial();
   const [searchQuery, setSearchQuery] = useState("");
+  const { openComments } = useLocalSearchParams();
 
   // Use custom hooks for newsfeed and comments
   const {
@@ -117,6 +118,17 @@ const NewsFeedScreen = () => {
       loadComments();
     }
   }, [commentsModalVisible, selectedPostId, loadComments]);
+
+  // Handle openComments query parameter from notifications
+  useEffect(() => {
+    if (openComments) {
+      // Open comments modal for the specified post
+      setSelectedPostId(openComments);
+      setCommentsModalVisible(true);
+      // Clear the query parameter
+      router.replace('/(user)/home');
+    }
+  }, [openComments]);
 
   // Share handler
   const handleShare = useCallback(async (post) => {

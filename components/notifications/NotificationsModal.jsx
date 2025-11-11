@@ -59,19 +59,40 @@ const NotificationsModal = ({ visible, onClose }) => {
             // Determine if user is vet or regular user based on their role
             const userData = user?.user_metadata?.options?.data || {};
             const userRole = userData.role;
+            // Extract sender name from notification data
+            const senderName = notification.sender_name || notification.title || '';
             if (userRole === 'veterinarian') {
-              router.push(`/(vet)/chat/${notification.sender_id}`);
+              router.push(`/(vet)/chat/${notification.sender_id}?userName=${encodeURIComponent(senderName)}`);
             } else {
-              router.push(`/(user)/chat/${notification.sender_id}`);
+              router.push(`/(user)/chat/${notification.sender_id}?originalVetName=${encodeURIComponent(senderName)}`);
             }
           }
           break;
 
         case 'comment':
+          // Navigate to home and open comments modal for the post
+          if (notification.related_id) {
+            onClose();
+            const userData = user?.user_metadata?.options?.data || {};
+            const userRole = userData.role;
+            if (userRole === 'veterinarian') {
+              router.push(`/(vet)/home?openComments=${notification.related_id}`);
+            } else {
+              router.push(`/(user)/home?openComments=${notification.related_id}`);
+            }
+          }
+          break;
+
         case 'like':
           // Navigate to home/newsfeed where they can see the post
           onClose();
-          // The home screen will show all posts, user can find their post
+          const userData2 = user?.user_metadata?.options?.data || {};
+          const userRole2 = userData2.role;
+          if (userRole2 === 'veterinarian') {
+            router.push('/(vet)/home');
+          } else {
+            router.push('/(user)/home');
+          }
           break;
 
         case 'reply':

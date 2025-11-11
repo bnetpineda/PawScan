@@ -33,11 +33,18 @@
     "android": {
       "package": "com.markbennettpineda.PawScan",
       "permissions": [
+        "android.permission.RECORD_AUDIO",
         "android.permission.RECORD_AUDIO"
       ]
     },
     "ios": {
       "bundleIdentifier": "com.markbennettpineda.PawScan"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/811df3d6-1d27-4436-bef0-e87848db2296"
     }
   }
 }

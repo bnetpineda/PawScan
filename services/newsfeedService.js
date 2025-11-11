@@ -147,7 +147,7 @@ export const togglePostLike = async (postId, userId, currentlyLiked) => {
 };
 
 /**
- * Fetch comments for a post
+ * Fetch comments for a post with user details
  */
 export const fetchComments = async (postId) => {
   try {
@@ -158,6 +158,62 @@ export const fetchComments = async (postId) => {
       .order("created_at", { ascending: true });
 
     if (error) throw error;
+
+    // Enrich comments with user information
+    if (data && data.length > 0) {
+      const enrichedComments = await Promise.all(
+        data.map(async (comment) => {
+          try {
+            // Try to get user info from vet_profiles first
+            const { data: vetProfile } = await supabase
+              .from("vet_profiles")
+              .select("name")
+              .eq("id", comment.user_id)
+              .single();
+
+            if (vetProfile) {
+              return {
+                ...comment,
+                display_name: vetProfile.name,
+                role: "veterinarian",
+              };
+            }
+
+            // If not a vet, try user_profiles
+            const { data: userProfile } = await supabase
+              .from("user_profiles")
+              .select("name")
+              .eq("id", comment.user_id)
+              .single();
+
+            if (userProfile) {
+              return {
+                ...comment,
+                display_name: userProfile.name,
+                role: "user",
+              };
+            }
+
+            // Fallback if no profile found
+            return {
+              ...comment,
+              display_name: null,
+              role: "user",
+            };
+          } catch (err) {
+            console.error("Error fetching user info for comment:", err);
+            return {
+              ...comment,
+              display_name: null,
+              role: "user",
+            };
+          }
+        })
+      );
+
+      return enrichedComments;
+    }
+
     return data || [];
   } catch (error) {
     console.error("Error fetching comments:", error);
@@ -166,7 +222,7 @@ export const fetchComments = async (postId) => {
 };
 
 /**
- * Post a new comment
+ * Post a new comment with user details
  */
 export const postComment = async (postId, userId, userEmail, commentText) => {
   try {
@@ -175,14 +231,59 @@ export const postComment = async (postId, userId, userEmail, commentText) => {
       .insert({
         post_id: postId,
         user_id: userId,
-        user_email: userEmail,
-        comment: commentText.trim(),
+        comment_text: commentText.trim(),
       })
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+
+    // Enrich the comment with user information
+    try {
+      // Try to get user info from vet_profiles first
+      const { data: vetProfile } = await supabase
+        .from("vet_profiles")
+        .select("name")
+        .eq("id", userId)
+        .single();
+
+      if (vetProfile) {
+        return {
+          ...data,
+          display_name: vetProfile.name,
+          role: "veterinarian",
+        };
+      }
+
+      // If not a vet, try user_profiles
+      const { data: userProfile } = await supabase
+        .from("user_profiles")
+        .select("name")
+        .eq("id", userId)
+        .single();
+
+      if (userProfile) {
+        return {
+          ...data,
+          display_name: userProfile.name,
+          role: "user",
+        };
+      }
+
+      // Fallback if no profile found
+      return {
+        ...data,
+        display_name: null,
+        role: "user",
+      };
+    } catch (err) {
+      console.error("Error fetching user info for new comment:", err);
+      return {
+        ...data,
+        display_name: null,
+        role: "user",
+      };
+    }
   } catch (error) {
     console.error("Error posting comment:", error);
     throw error;

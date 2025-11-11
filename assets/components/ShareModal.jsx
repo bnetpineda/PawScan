@@ -152,13 +152,6 @@ export default function ShareModal({
                       autoCapitalize="words"
                       returnKeyType="done"
                     />
-                    {petName.length > 0 && (
-                      <View className="absolute right-3 top-3">
-                        <Text className="text-xs font-inter-regular text-zinc-400 dark:text-zinc-600">
-                          {petName.length}/50
-                        </Text>
-                      </View>
-                    )}
                   </View>
                 </View>
 
