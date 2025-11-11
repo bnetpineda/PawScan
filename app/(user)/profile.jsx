@@ -23,6 +23,7 @@ import SettingsModal from "../../components/profile/SettingsModal";
 import ChangeEmailModal from "../../components/profile/ChangeEmailModal";
 import ChangePasswordModal from "../../components/profile/ChangePasswordModal";
 import ImageViewerModal from "../../components/profile/ImageViewerModal";
+import EditProfileModal from "../../components/profile/EditProfileModal";
 import useProfileData from "../../hooks/useProfileData";
 
 const ProfileScreen = () => {
@@ -32,6 +33,7 @@ const ProfileScreen = () => {
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [changeEmailVisible, setChangeEmailVisible] = useState(false);
   const [changePasswordVisible, setChangePasswordVisible] = useState(false);
+  const [editProfileVisible, setEditProfileVisible] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [showingHistory, setShowingHistory] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -149,6 +151,38 @@ const ProfileScreen = () => {
       fetchUserProfile();
     } catch (error) {
       console.error("Error creating default user profile:", error);
+    }
+  };
+
+  const updateUserProfile = async (profileData) => {
+    try {
+      setUpdating(true);
+      
+      const { error } = await supabase
+        .from("user_profiles")
+        .update({
+          name: profileData.name,
+          location: profileData.location,
+          bio: profileData.bio,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setName(profileData.name);
+      setLocation(profileData.location);
+      setBio(profileData.bio);
+
+      Alert.alert("Success", "Profile updated successfully!");
+      setEditProfileVisible(false);
+      fetchUserProfile(); // Refresh the profile data
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      Alert.alert("Error", "Failed to update profile. Please try again.");
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -390,6 +424,7 @@ const ProfileScreen = () => {
   const role = user?.user_metadata?.options?.data?.role || "Pet Owner";
   const email = user?.email || "";
 
+
   // Simplified grid rendering function
   const renderGridContent = () => {
     const items = showingHistory ? historyImages : userPosts;
@@ -471,7 +506,7 @@ const ProfileScreen = () => {
         {/* Profile Header - Instagram Style */}
         <View className={`pt-2 pb-4 ${isDark ? "bg-black" : "bg-white"}`}>
           <View className="flex-row justify-between items-center px-4 mb-8">
-          <Image
+            <Image
               source={isDark 
                 ? require("../../assets/images/home-logo-darkmode.png") 
                 : require("../../assets/images/home-logo-whitemode.png")
@@ -482,13 +517,25 @@ const ProfileScreen = () => {
             <Text className="text-2xl font-inter-bold text-black dark:text-white ml-2">
               PawScan
             </Text>
-            <TouchableOpacity onPress={() => setSettingsVisible(true)}>
-              <FontAwesome
-                name="cog"
-                size={24}
-                color={isDark ? "white" : "black"}
-              />
-            </TouchableOpacity>
+            <View className="flex-row">
+              <TouchableOpacity 
+                className="mr-4"
+                onPress={() => setSettingsVisible(true)}
+              >
+                <FontAwesome
+                  name="cog"
+                  size={24}
+                  color={isDark ? "white" : "black"}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setEditProfileVisible(true)}>
+                <FontAwesome
+                  name="edit"
+                  size={24}
+                  color={isDark ? "white" : "black"}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Profile Info - Instagram Style */}
@@ -561,29 +608,86 @@ const ProfileScreen = () => {
             </View>
           </View>
 
-          {/* Bio */}
+          {/* Bio Section - Enhanced with edit capability */}
           <View className="px-4">
-            <Text
-              className={`font-inter-semibold ${
-                isDark ? "text-white" : "text-black"
-              }`}
-            >
-              {displayName}
-            </Text>
-            <Text
-              className={`font-inter ${
-                isDark ? "text-neutral-300" : "text-neutral-600"
-              }`}
-            >
-              {role} | Pet Health Enthusiast
-            </Text>
-            <Text
-              className={`mt-1 font-inter ${
-                isDark ? "text-neutral-400" : "text-neutral-500"
-              }`}
-            >
-              Member since {formatDate(user?.created_at)}
-            </Text>
+            <View className="flex-row items-start justify-between">
+              <View className="flex-1">
+                <Text
+                  className={`font-inter-semibold text-lg ${
+                    isDark ? "text-white" : "text-black"
+                  }`}
+                >
+                  {displayName}
+                </Text>
+                <Text
+                  className={`font-inter ${
+                    isDark ? "text-neutral-300" : "text-neutral-600"
+                  }`}
+                >
+                  {role === "user" ? "Pet Owner" : role} | Pet Health Enthusiast
+                </Text>
+                <Text
+                  className={`mt-1 font-inter ${
+                    isDark ? "text-neutral-400" : "text-neutral-500"
+                  }`}
+                >
+                  Member since {formatDate(user?.created_at)}
+                </Text>
+                
+                {/* Location */}
+                {location && (
+                  <View className="flex-row items-center mt-2">
+                    <FontAwesome
+                      name="map-marker"
+                      size={14}
+                      color={isDark ? "#6B7280" : "#9CA3AF"}
+                    />
+                    <Text
+                      className={`ml-2 font-inter ${
+                        isDark ? "text-neutral-400" : "text-neutral-500"
+                      }`}
+                    >
+                      {location}
+                    </Text>
+                  </View>
+                )}
+                
+                {/* Bio */}
+                {bio && (
+                  <Text
+                    className={`mt-2 font-inter ${
+                      isDark ? "text-neutral-300" : "text-neutral-600"
+                    }`}
+                    numberOfLines={3}
+                    ellipsizeMode="tail"
+                  >
+                    {bio}
+                  </Text>
+                )}
+                
+                {/* Pet Names */}
+                {petNames && petNames.length > 0 && (
+                  <View className="mt-2">
+                    <Text
+                      className={`font-inter-semibold text-sm ${
+                        isDark ? "text-neutral-300" : "text-neutral-600"
+                      }`}
+                    >
+                      My Pets:
+                    </Text>
+                    <Text
+                      className={`font-inter ${
+                        isDark ? "text-neutral-400" : "text-neutral-500"
+                      }`}
+                    >
+                      {petNames.join(", ")}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              
+
+            </View>
           </View>
         </View>
 
@@ -640,6 +744,16 @@ const ProfileScreen = () => {
         visible={imageViewerVisible}
         imageUrl={selectedImage}
         onClose={() => setImageViewerVisible(false)}
+      />
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        visible={editProfileVisible}
+        onClose={() => setEditProfileVisible(false)}
+        profile={userProfile}
+        onSave={updateUserProfile}
+        updating={updating}
+        isDark={isDark}
       />
 
       {/* Modals */}

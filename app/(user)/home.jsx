@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -157,7 +157,7 @@ const NewsFeedScreen = () => {
   );
 
   // List header component
-  const ListHeaderComponent = useCallback(
+  const ListHeaderComponent = useMemo(
     () => (
       <>
         <Header
