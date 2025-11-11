@@ -23,7 +23,7 @@
     "splash": {
       "image": "./assets/images/app-logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#010100"
     },
     "extra": {
       "eas": {
