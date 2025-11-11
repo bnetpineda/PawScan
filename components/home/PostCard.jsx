@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
@@ -17,6 +17,8 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
   // Track user avatar URL
   const [userAvatarUrl, setUserAvatarUrl] = useState(null);
   const [reportModalVisible, setReportModalVisible] = useState(false);
+  // Track like button loading state to prevent spam clicking
+  const [isLiking, setIsLiking] = useState(false);
 
   // Function to determine urgency level from analysis text
   const getUrgencyLevel = (analysisText) => {
@@ -180,6 +182,36 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
 
   // Get urgency level for this post
   const urgencyInfo = getUrgencyLevel(post.analysis_result);
+
+  // Debounced like handler to prevent spam clicking
+  const handleLikePress = useCallback(() => {
+    // Prevent multiple rapid clicks
+    if (isLiking) return;
+    
+    // Prevent liking if user is not logged in
+    if (!currentUser) {
+      Alert.alert("Login Required", "Please log in to like posts");
+      return;
+    }
+
+    // Set loading state
+    setIsLiking(true);
+    
+    // Call the parent handler
+    onToggleLike(post.id, post.has_liked);
+    
+    // Reset loading state after a short delay to prevent rapid re-clicks
+    setTimeout(() => {
+      setIsLiking(false);
+    }, 500); // 500ms debounce
+  }, [isLiking, currentUser, onToggleLike, post.id, post.has_liked]);
+
+  // Reset loading state when post state changes (in case of external updates)
+  useEffect(() => {
+    if (isLiking) {
+      setIsLiking(false);
+    }
+  }, [post.has_liked, post.likes_count]);
 
   // Fetch user avatar when component mounts
   useEffect(() => {
@@ -375,17 +407,20 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
       <View className="flex-row items-center px-4 py-3">
         <TouchableOpacity
           className="flex-row items-center mr-6"
-          onPress={() => onToggleLike(post.id, post.user_has_liked)}
-          activeOpacity={0.7}
+          onPress={handleLikePress}
+          disabled={isLiking}
+          activeOpacity={isLiking ? 1 : 0.7}
         >
           <FontAwesome
-            name={post.user_has_liked ? "heart" : "heart-o"}
+            name={post.has_liked ? "heart" : "heart-o"}
             size={20}
             color={
-              post.user_has_liked ? "#FF3B30" : isDark ? "#8E8E93" : "#6C757D"
+              isLiking 
+                ? "#ccc" 
+                : post.has_liked ? "#FF3B30" : isDark ? "#8E8E93" : "#6C757D"
             }
           />
-          <Text className="ml-2 text-sm font-inter text-neutral-600 dark:text-neutral-400">
+          <Text className={`ml-2 text-sm font-inter ${isLiking ? "text-neutral-400 dark:text-neutral-600" : "text-neutral-600 dark:text-neutral-400"}`}>
             {post.likes_count || 0}
           </Text>
         </TouchableOpacity>

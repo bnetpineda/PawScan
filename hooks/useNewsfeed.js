@@ -146,6 +146,9 @@ export const useNewsfeed = (searchQuery) => {
     }
   }, [hasMore, loading, page, loadPosts]);
 
+  // Track pending like operations to prevent concurrent requests
+  const pendingLikeOperations = useRef(new Set());
+
   /**
    * Toggle like on a post
    */
@@ -153,28 +156,38 @@ export const useNewsfeed = (searchQuery) => {
     async (postId) => {
       if (!user?.id) return;
 
-      // Optimistic update
-      const post = posts.find((p) => p.id === postId);
-      if (!post) return;
+      // Prevent concurrent operations on the same post
+      if (pendingLikeOperations.current.has(postId)) {
+        return;
+      }
 
-      const currentlyLiked = post.has_liked;
-      const newLikeState = !currentlyLiked;
-      const likeDelta = newLikeState ? 1 : -1;
+      // Mark this post as having a pending operation
+      pendingLikeOperations.current.add(postId);
 
-      // Update UI immediately
-      setPosts((prev) =>
-        prev.map((p) =>
-          p.id === postId
-            ? {
-                ...p,
-                has_liked: newLikeState,
-                likes_count: Math.max(0, p.likes_count + likeDelta),
-              }
-            : p
-        )
-      );
+      let currentlyLiked, newLikeState, likeDelta;
 
       try {
+        // Optimistic update
+        const post = posts.find((p) => p.id === postId);
+        if (!post) return;
+
+        currentlyLiked = post.has_liked;
+        newLikeState = !currentlyLiked;
+        likeDelta = newLikeState ? 1 : -1;
+
+        // Update UI immediately
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  has_liked: newLikeState,
+                  likes_count: Math.max(0, p.likes_count + likeDelta),
+                }
+              : p
+          )
+        );
+
         await newsfeedService.togglePostLike(postId, user.id, currentlyLiked);
       } catch (err) {
         // Revert on error
@@ -189,7 +202,16 @@ export const useNewsfeed = (searchQuery) => {
               : p
           )
         );
-        Alert.alert("Error", "Failed to update like. Please try again.");
+        
+        // Show user-friendly error message
+        if (err.code === "23505") {
+          Alert.alert("Already Liked", "You have already liked this post.");
+        } else {
+          Alert.alert("Error", "Failed to update like. Please try again.");
+        }
+      } finally {
+        // Always remove the pending operation
+        pendingLikeOperations.current.delete(postId);
       }
     },
     [posts, user?.id]
