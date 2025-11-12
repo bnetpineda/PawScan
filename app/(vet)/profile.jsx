@@ -54,6 +54,7 @@ const ProfileScreen = () => {
   const [medicalSpecialty, setMedicalSpecialty] = useState("");
   const [clinicLocation, setClinicLocation] = useState("");
   const [contactInfo, setContactInfo] = useState("");
+  const [bio, setBio] = useState("");
   const [availableSchedule, setAvailableSchedule] = useState([]);
   const [vetProfileEditable, setVetProfileEditable] = useState(false);
   const [showFullSchedule, setShowFullSchedule] = useState(false);
@@ -127,6 +128,7 @@ const ProfileScreen = () => {
       setMedicalSpecialty(data.medical_specialty || '');
       setClinicLocation(data.clinic_location || '');
       setContactInfo(data.contact_info || '');
+      setBio(data.bio || '');
       setAvailableSchedule(data.available_schedule || []);
       
       // Set profile image from vet_profiles table
@@ -399,6 +401,7 @@ const ProfileScreen = () => {
           medical_specialty: medicalSpecialty,
           clinic_location: clinicLocation,
           contact_info: contactInfo,
+          bio,
           available_schedule: availableSchedule,
           updated_at: new Date().toISOString()
         })
@@ -922,6 +925,8 @@ const ProfileScreen = () => {
         setClinicLocation={setClinicLocation}
         contactInfo={contactInfo}
         setContactInfo={setContactInfo}
+        bio={bio}
+        setBio={setBio}
         availableSchedule={availableSchedule}
         setAvailableSchedule={setAvailableSchedule}
         editSchedule={editSchedule}

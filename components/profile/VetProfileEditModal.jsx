@@ -22,6 +22,8 @@ const VetProfileEditModal = ({
   setClinicLocation,
   contactInfo,
   setContactInfo,
+  bio,
+  setBio,
   availableSchedule,
   setAvailableSchedule,
   editSchedule,
@@ -60,7 +62,7 @@ const VetProfileEditModal = ({
 
         {/* Name Input */}
         <View className="mb-3">
-          <Text className={`mb-1 font-inter-semibold ${
+        <Text className={`mb-1 font-inter-semibold ${
             isDark ? "text-neutral-300" : "text-neutral-600"
           }`}>
             Name
@@ -69,6 +71,7 @@ const VetProfileEditModal = ({
             value={name}
             onChangeText={setName}
             placeholder="Enter your name"
+            placeholderTextColor={isDark ? "#6B7280" : "#9CA3AF"}
             className={`border rounded-lg px-3 py-2 ${
               isDark 
                 ? "bg-neutral-800 text-white border-neutral-700" 
@@ -88,6 +91,7 @@ const VetProfileEditModal = ({
             value={medicalSpecialty}
             onChangeText={setMedicalSpecialty}
             placeholder="Enter your specialty"
+            placeholderTextColor={isDark ? "#6B7280" : "#9CA3AF"}
             className={`border rounded-lg px-3 py-2 ${
               isDark 
                 ? "bg-neutral-800 text-white border-neutral-700" 
@@ -107,6 +111,7 @@ const VetProfileEditModal = ({
             value={clinicLocation}
             onChangeText={setClinicLocation}
             placeholder="Enter clinic location"
+            placeholderTextColor={isDark ? "#6B7280" : "#9CA3AF"}
             className={`border rounded-lg px-3 py-2 ${
               isDark 
                 ? "bg-neutral-800 text-white border-neutral-700" 
@@ -126,12 +131,42 @@ const VetProfileEditModal = ({
             value={contactInfo}
             onChangeText={setContactInfo}
             placeholder="Enter contact information"
+            placeholderTextColor={isDark ? "#6B7280" : "#9CA3AF"}
             className={`border rounded-lg px-3 py-2 ${
               isDark 
                 ? "bg-neutral-800 text-white border-neutral-700" 
                 : "bg-neutral-100 text-black border-neutral-300"
             }`}
           />
+        </View>
+
+        {/* Bio Input */}
+        <View className="mb-3">
+          <Text className={`mb-1 font-inter-semibold ${
+            isDark ? "text-neutral-300" : "text-neutral-600"
+          }`}>
+            Bio
+          </Text>
+          <TextInput
+            value={bio}
+            onChangeText={setBio}
+            placeholder="Tell us about your veterinary experience"
+            placeholderTextColor={isDark ? "#6B7280" : "#9CA3AF"}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+            maxLength={200}
+            className={`border rounded-lg px-3 py-2 ${
+              isDark 
+                ? "bg-neutral-800 text-white border-neutral-700" 
+                : "bg-neutral-100 text-black border-neutral-300"
+            }`}
+          />
+          <Text className={`mt-1 text-right ${
+            isDark ? "text-neutral-400" : "text-neutral-500"
+          } text-xs`}>
+            {bio.length}/200
+          </Text>
         </View>
 
         {/* Schedule Section */}

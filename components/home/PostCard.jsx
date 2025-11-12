@@ -26,25 +26,36 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
 
     const text = analysisText.toLowerCase();
 
+    // First, try to extract urgency level from the explicit "Urgency level:" line
+    const urgencyMatch = text.match(/urgency level:\s*(none|low|medium|emergency)/i);
+    if (urgencyMatch) {
+      const level = urgencyMatch[1].toLowerCase();
+      switch (level) {
+        case "none":
+          return { level: "none", color: "#4CAF50", text: "No Disease" };
+        case "low":
+          return { level: "low", color: "#FFC107", text: "Low Urgency" };
+        case "medium":
+          return { level: "medium", color: "#FF9800", text: "Medium Urgency" };
+        case "emergency":
+          return { level: "high", color: "#EF4444", text: "High Urgency" };
+      }
+    }
+
+    // Fallback to keyword matching if explicit parsing fails
     // Check for high urgency keywords
     if (text.includes("urgent") || text.includes("emergency") ||
       text.includes("immediate") || text.includes("severe") ||
       text.includes("critical") || text.includes("serious condition") ||
-      text.includes("high urgency") || text.includes("life-threatening")) {
-      return { level: "high", color: "#EF4444", text: "High Urgency" };
-    }
-
-    // Check for high urgency keywords
-    if (text.includes("urgent") || text.includes("immediate") || text.includes("emergency") ||
-      text.includes("severe") || text.includes("critical") || text.includes("serious") ||
+      text.includes("high urgency") || text.includes("life-threatening") ||
       text.includes("high risk") || text.includes("dangerous")) {
-      return { level: "high", color: "#F44336", text: "High Urgency" };
+      return { level: "high", color: "#EF4444", text: "High Urgency" };
     }
 
     // Check for medium urgency keywords
     if (text.includes("moderate") || text.includes("concerning") ||
-      text.includes("veterinarian") || text.includes("vet") || text.includes("medical attention") ||
-      text.includes("medium") || text.includes("caution")) {
+      text.includes("veterinarian") || text.includes("vet") ||
+      text.includes("medical attention") || text.includes("caution")) {
       return { level: "medium", color: "#FF9800", text: "Medium Urgency" };
     }
 
@@ -56,7 +67,8 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
 
     // Check for no disease keywords
     if (text.includes("no skin disease detected") ||
-      text.includes("no specific skin disease detected") || text.includes("low")) {
+      text.includes("no specific skin disease detected") ||
+      text.includes("no disease detected")) {
       return { level: "none", color: "#4CAF50", text: "No Disease" };
     }
 
