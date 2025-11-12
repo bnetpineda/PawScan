@@ -161,7 +161,7 @@ const VetNewsFeedScreen = () => {
         onShare={handleShare}
         onOpenImageModal={openImageModal}
         onViewProfile={(userId) =>
-          router.push(`/(user)/vet-profile?vetId=${userId}`)
+          router.push(`/(vet)/vet-profile?vetId=${userId}`)
         }
       />
     ),
@@ -295,7 +295,7 @@ const VetNewsFeedScreen = () => {
         selectedPost={posts.find((p) => p.id === selectedPostId)}
         formatFullDateTime={formatFullDateTime}
         onViewProfile={(userId) =>
-          router.push(`/(user)/vet-profile?vetId=${userId}`)
+          router.push(`/(vet)/vet-profile?vetId=${userId}`)
         }
       />
 

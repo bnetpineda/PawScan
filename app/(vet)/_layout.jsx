@@ -20,10 +20,10 @@ export default function VetLayout() {
         headerShown: false,
         tabBarShowLabel: false, // Removes text labels
         tabBarActiveTintColor: isDarkMode ? "#f5f5f5" : "#171717",
-        tabBarInactiveTintColor: isDarkMode ? "#737373" : "#a3a3a3", 
+        tabBarInactiveTintColor: isDarkMode ? "#737373" : "#a3a3a3",
         tabBarStyle: {
-          backgroundColor: isDarkMode ? "#0A0A0A" : "#FFFFFF", 
-          borderTopColor: isDarkMode ? "#FFFFFF" : "#0A0A0A" ,
+          backgroundColor: isDarkMode ? "#0A0A0A" : "#FFFFFF",
+          borderTopColor: isDarkMode ? "#FFFFFF" : "#0A0A0A",
           borderTopWidth: 1,
           height: 65,
         },
@@ -64,6 +64,15 @@ export default function VetLayout() {
       />
       <Tabs.Screen
         name="history"
+        options={{
+          href: null,
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome name="user" color={color} size={20} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="vet-profile"
         options={{
           href: null,
           tabBarIcon: ({ color, size }) => (
