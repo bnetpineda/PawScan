@@ -47,11 +47,17 @@ import {
     const isDark = colorScheme === "dark";
     const [isExpanded, setIsExpanded] = useState(true);
     const [copied, setCopied] = useState(false);
+    const [isShareable, setIsShareable] = useState(false);
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
     useEffect(() => {
       if (analysisResult) {
+        const isNotInvalid = !/unable to analyze.*does not contain a cat or dog/i.test(analysisResult);
+        const validFormatPattern = /(?=.*Breed of the pet)(?=.*Specific Skin Disease Detected)(?=.*Confidence score)(?=.*suggested treatments)(?=.*Urgency level)(?=.*first aid care steps)/is;
+        const isValidFormat = validFormatPattern.test(analysisResult);
+        setIsShareable(isNotInvalid && isValidFormat);
+
         Animated.parallel([
           Animated.timing(fadeAnim, {
             toValue: 1,
@@ -65,6 +71,8 @@ import {
             useNativeDriver: true,
           }),
         ]).start();
+      } else {
+        setIsShareable(false);
       }
     }, [analysisResult]);
 
@@ -281,7 +289,7 @@ import {
                       </Text>
                     </TouchableOpacity>
                     
-                    {currentAnalysisId && (
+                    {isShareable && currentAnalysisId && onSharePress && (
                       <TouchableOpacity
                         onPress={() => handleButtonPress(onSharePress)}
                         className="flex-1 flex-row items-center justify-center bg-zinc-900 dark:bg-zinc-100 rounded-lg py-2.5 px-3"
