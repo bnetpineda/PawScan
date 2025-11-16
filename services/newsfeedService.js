@@ -46,6 +46,56 @@ const fetchPostEngagementBatch = async (postIds, userId) => {
 };
 
 /**
+ * Fetch user location for posts
+ * Gets location from user_profiles for regular users and vet_profiles for veterinarians
+ */
+const fetchUserLocations = async (userIds) => {
+  if (!userIds.length) return {};
+
+  try {
+    // Query both user_profiles and vet_profiles to get locations
+    const [userProfilesResult, vetProfilesResult] = await Promise.all([
+      supabase
+        .from("user_profiles")
+        .select("id, location")
+        .in("id", userIds),
+      supabase
+        .from("vet_profiles")
+        .select("id, clinic_location")
+        .in("id", userIds)
+    ]);
+
+    // Build location map
+    const locationMap = {};
+    
+    // Process regular user locations
+    if (userProfilesResult?.data) {
+      userProfilesResult.data.forEach(userProfile => {
+        locationMap[userProfile.id] = {
+          location: userProfile.location,
+          isVet: false
+        };
+      });
+    }
+
+    // Process veterinarian clinic locations (overrides regular user locations)
+    if (vetProfilesResult?.data) {
+      vetProfilesResult.data.forEach(vetProfile => {
+        locationMap[vetProfile.id] = {
+          location: vetProfile.clinic_location,
+          isVet: true
+        };
+      });
+    }
+
+    return locationMap;
+  } catch (error) {
+    console.error("Error fetching user locations:", error);
+    return {};
+  }
+};
+
+/**
  * Fetch posts with pagination and engagement data
  */
 export const fetchPosts = async ({
@@ -83,6 +133,10 @@ export const fetchPosts = async ({
     const postIds = postsData.map((p) => p.id);
     const engagementMap = await fetchPostEngagementBatch(postIds, userId);
 
+    // Batch fetch user locations
+    const userIds = postsData.map((p) => p.user_id).filter(Boolean);
+    const locationMap = await fetchUserLocations(userIds);
+
     // Merge engagement data with posts
     const enrichedPosts = postsData.map((post) => ({
       ...post,
@@ -91,6 +145,9 @@ export const fetchPosts = async ({
         comments_count: 0,
         has_liked: false,
       }),
+      // Add location information
+      location: locationMap[post.user_id]?.location || null,
+      isVet: locationMap[post.user_id]?.isVet || false,
     }));
 
     // Check if there are more posts

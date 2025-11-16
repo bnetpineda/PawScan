@@ -7,9 +7,10 @@ import {
   Alert,
   StatusBar,
   useColorScheme,
-  Share,
   TouchableOpacity,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
+import { toast } from "../../utils/toast";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
@@ -41,7 +42,7 @@ const AnalysisHistoryScreen = () => {
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [isTutorialCompleted, startTutorial]);
 
   const fetchAnalyses = async () => {
     try {
@@ -106,17 +107,12 @@ const AnalysisHistoryScreen = () => {
 
   const handleShare = async (analysis) => {
     try {
-      await Share.share({
-        message: `Check out my pet's health analysis!
-
-${analysis.analysis_result.substring(
-          0,
-          200
-        )}...`,
-        title: "Pet Health Analysis",
-      });
+      const textToCopy = `Check out my pet's health analysis!\n\n${analysis.analysis_result}`;
+      await Clipboard.setStringAsync(textToCopy);
+      toast.success("Copied to clipboard!");
     } catch (error) {
-      console.error("Error sharing:", error);
+      console.error("Error copying to clipboard:", error);
+      toast.error("Failed to copy to clipboard.");
     }
   };
 

@@ -341,6 +341,19 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
                 Pet: {post.pet_name}
               </Text>
             )}
+            {post.location && (
+              <View className="flex-row items-center">
+                <FontAwesome
+                  name="map-marker"
+                  size={12}
+                  color={isDark ? "#8E8E93" : "#6C757D"}
+                  className="mr-1"
+                />
+                <Text className="text-sm font-inter text-neutral-500 dark:text-neutral-400">
+                  {post.location}
+                </Text>
+              </View>
+            )}
             <Text className="text-xs font-inter text-neutral-400 dark:text-neutral-500">
               {formatFullDateTime(post.created_at)}
             </Text>
