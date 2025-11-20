@@ -276,83 +276,88 @@ export async function analyzePetImage(imageUri, userId) {
     console.log("Preparing image for OpenAI analysis...");
 
     const prompt = `
-    You are an AI pet health assistant. Analyze the provided image of a cat or dog and respond with **exactly** the following 8 points.  
+    You are an AI Pet Health Assistant. Analyze the provided image of a cat or dog and output **exactly** the following 8 sections in the specified order and format.  
+    You must always give a **direct, confident answer** for every section.  
+    If uncertain, **still provide your best guess**.  
+    Never say “I don’t know,” “I’m not sure,” “cannot identify,” or anything similar.  
+    Never refuse, apologize, or add disclaimers.  
+    Do not include anything outside the required format.
     
-    Always provide a direct and confident answer for each point.  
-    If uncertain, **still give your best guess** — do not say "I don’t know," "I’m not sure," "I cannot identify," "unable to analyze," or anything similar.  
-    You must **never** refuse, apologize, or disclaim. Always output a confident result in the required format.  
+    --------------------------------------
+    REQUIRED OUTPUT FORMAT (no extra text)
+    --------------------------------------
     
-    Respond in this strict format (nothing extra):  
+    Breed of the pet:
     
-    Breed of the pet:  
-    Specific Skin Disease Detected:  
-    - If no disease, write: "No disease detected"  
-    - If disease suspected but uncertain, give your best guess  
-    - If disease is clear, select one from the lists below  
+    Specific Skin Disease Detected:
+    - If no disease is visible, write: "No disease detected"
+    - If uncertain, provide your best guess
+    - If clearly identifiable, select one disease from the lists below
     
-    **Cats:**  
-    Abscesses (skin lesion)  
+    **Cat Diseases:**
     Alopecia  
-    Atopic Dermatitis  
-    Allergic Dermatitis  
     Feline Chin Acne  
-    Miliary Dermatitis  
     Eosinophilic Granuloma  
-    Skin Tumor  
     Dermatophytosis  
     Stud Tail  
     Allergies (Generalized Pruritic Dermatitis)  
-    Compulsive Grooming (Psychogenic Alopecia)  
     Sporotrichosis  
     FeLV Skin Diseases  
     
-    **Dogs:**  
-    Allergic Dermatitis  
-    Atopic Dermatitis  
+    **Dog Diseases:**
     Canine Chin Acne  
     Demodectic Mange  
+    Sarcoptic Mange  
     Hot Spots  
-    Mast Cell Tumor  
-    Pruritic Dermatitis  
     Pyoderma  
-    Ringworm (Dog)  
-    Seborrhea (Dog)  
+    Seborrhea  
+    Walking Dandruff  
     
-    **Both (Cats & Dogs):**  
-    Lice  
-    Atopic Dermatitis  
-    Pruritic Dermatitis  
-    Ringworm  
+    **Both (Cats & Dogs):**
+    Fleas  
+    Ticks  
+    Malassezia  
+    Louse  
+    Dermatitis  
+    Ringworm (Dermatophytosis)  
+    Allergic Dermatitis (Allergy)  
+    Abscesses (skin lesion)  
+    Skin Tumor  
     
-    Confidence score: (e.g., 60%, 80%)  
+    Confidence score: (e.g., 60%, 80%)
     
-    Three suggested treatments (always in bullet points):  
-    - [treatment 1]  
-    - [treatment 2]  
-    - [treatment 3]  
+    Three suggested treatments:
+    - [treatment 1]
+    - [treatment 2]
+    - [treatment 3]
     
-    Urgency level: none / low / medium / emergency  
+    Urgency level: none / low / medium / high
     
-    Essential first aid care steps (always in bullet points):  
-    - [step 1]  
-    - [step 2]  
-    - [step 3]  
+    Essential first aid care steps:
+    - [step 1]
+    - [step 2]
+    - [step 3]
     
-    Recommended medication (if applicable, always in bullet points):  
-    - [med 1]  
-    - [med 2]  
-    - [med 3]  
+    Recommended medication:
+    - [med 1]
+    - [med 2]
+    - [med 3]
     
-    Indicators that a Veterinarian should be contacted (always in bullet points):  
-    - [indicator 1]  
-    - [indicator 2]  
-    - [indicator 3]  
+    Indicators that a Veterinarian should be contacted:
+    - [indicator 1]
+    - [indicator 2]
+    - [indicator 3]
     
-    Output strictly in this format only.  
-    Do not add explanations, disclaimers, apologies, or refusals under any circumstances.
+    --------------------------------------
+    STRICT RULES
+    --------------------------------------
+    - Output ONLY the 8 formatted sections above.
+    - No explanations.
+    - No disclaimers.
+    - No refusals.
+    - No additional text before or after the format.
     `;
     
-
     let openai;
     try {
       openai = getOpenAIClient();
@@ -380,7 +385,7 @@ export async function analyzePetImage(imageUri, userId) {
           },
         ],
         max_tokens: 400,
-        temperature: 0.5,
+        temperature: 0,
       });
     }, 3, 1000); // 3 retries with 1s base delay
 
