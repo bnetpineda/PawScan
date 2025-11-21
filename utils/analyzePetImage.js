@@ -287,9 +287,9 @@ export async function analyzePetImage(imageUri, userId) {
     REQUIRED OUTPUT FORMAT (no extra text)
     --------------------------------------
     
-    Breed of the pet:
+    Breed of the pet: [Breed name]
     
-    Specific Skin Disease Detected:
+    Specific Skin Disease Detected: [Skin disease name]
     - If no disease is visible, write: "No disease detected"
     - If uncertain, provide your best guess
     - If clearly identifiable, select one disease from the lists below
@@ -298,11 +298,10 @@ export async function analyzePetImage(imageUri, userId) {
     Alopecia  
     Feline Chin Acne  
     Eosinophilic Granuloma  
-    Dermatophytosis  
     Stud Tail  
     Allergies (Generalized Pruritic Dermatitis)  
     Sporotrichosis  
-    FeLV Skin Diseases  
+    FeLV Skin Disease  
     
     **Dog Diseases:**
     Canine Chin Acne  
@@ -317,8 +316,7 @@ export async function analyzePetImage(imageUri, userId) {
     Fleas  
     Ticks  
     Malassezia  
-    Louse  
-    Dermatitis  
+    Louse    
     Ringworm (Dermatophytosis)  
     Allergic Dermatitis (Allergy)  
     Abscesses (skin lesion)  
@@ -326,10 +324,10 @@ export async function analyzePetImage(imageUri, userId) {
     
     Confidence score: (e.g., 60%, 80%)
     
-    Three suggested treatments:
-    - [treatment 1]
-    - [treatment 2]
-    - [treatment 3]
+    Three suggested preventives:
+    - [preventive 1]
+    - [preventive 2]
+    - [preventive 3]
     
     Urgency level: none / low / medium / high
     
@@ -347,6 +345,7 @@ export async function analyzePetImage(imageUri, userId) {
     - [indicator 1]
     - [indicator 2]
     - [indicator 3]
+
     
     --------------------------------------
     STRICT RULES
@@ -356,6 +355,7 @@ export async function analyzePetImage(imageUri, userId) {
     - No disclaimers.
     - No refusals.
     - No additional text before or after the format.
+    - Put this message on the last part of the result "Note: This result is a tentative screening and not a definitive diagnosis. "
     `;
     
     let openai;
@@ -385,7 +385,7 @@ export async function analyzePetImage(imageUri, userId) {
           },
         ],
         max_tokens: 400,
-        temperature: 0,
+        temperature: 0.25,
       });
     }, 3, 1000); // 3 retries with 1s base delay
 
