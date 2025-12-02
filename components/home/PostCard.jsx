@@ -4,7 +4,16 @@ import { FontAwesome } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
 import ReportModal from "./ReportModal";
 
-const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onShare, onOpenImageModal, onViewProfile }) => {
+const PostCard = ({
+  post,
+  isDark,
+  currentUser,
+  onToggleLike,
+  onOpenComments,
+  onShare,
+  onOpenImageModal,
+  onViewProfile,
+}) => {
   const isAnonymous = post.is_anonymous;
   const userDisplayName = isAnonymous
     ? "Anonymous User"
@@ -22,12 +31,15 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
 
   // Function to determine urgency level from analysis text
   const getUrgencyLevel = (analysisText) => {
-    if (!analysisText) return { level: "none", color: "#10B981", text: "No Analysis" };
+    if (!analysisText)
+      return { level: "none", color: "#10B981", text: "No Analysis" };
 
     const text = analysisText.toLowerCase();
 
     // First, try to extract urgency level from the explicit "Urgency level:" line
-    const urgencyMatch = text.match(/urgency level:\s*(none|low|medium|emergency)/i);
+    const urgencyMatch = text.match(
+      /urgency level:\s*(none|low|medium|emergency)/i
+    );
     if (urgencyMatch) {
       const level = urgencyMatch[1].toLowerCase();
       switch (level) {
@@ -44,31 +56,50 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
 
     // Fallback to keyword matching if explicit parsing fails
     // Check for high urgency keywords
-    if (text.includes("urgent") || text.includes("emergency") ||
-      text.includes("immediate") || text.includes("severe") ||
-      text.includes("critical") || text.includes("serious condition") ||
-      text.includes("high urgency") || text.includes("life-threatening") ||
-      text.includes("high risk") || text.includes("dangerous")) {
+    if (
+      text.includes("urgent") ||
+      text.includes("emergency") ||
+      text.includes("immediate") ||
+      text.includes("severe") ||
+      text.includes("critical") ||
+      text.includes("serious condition") ||
+      text.includes("high urgency") ||
+      text.includes("life-threatening") ||
+      text.includes("high risk") ||
+      text.includes("dangerous")
+    ) {
       return { level: "high", color: "#EF4444", text: "High Urgency" };
     }
 
     // Check for medium urgency keywords
-    if (text.includes("moderate") || text.includes("concerning") ||
-      text.includes("veterinarian") || text.includes("vet") ||
-      text.includes("medical attention") || text.includes("caution")) {
+    if (
+      text.includes("moderate") ||
+      text.includes("concerning") ||
+      text.includes("veterinarian") ||
+      text.includes("vet") ||
+      text.includes("medical attention") ||
+      text.includes("caution")
+    ) {
       return { level: "medium", color: "#FF9800", text: "Medium Urgency" };
     }
 
     // Check for low urgency keywords
-    if (text.includes("mild") || text.includes("minor") ||
-      text.includes("slight") || text.includes("observe") || text.includes("watch")) {
+    if (
+      text.includes("mild") ||
+      text.includes("minor") ||
+      text.includes("slight") ||
+      text.includes("observe") ||
+      text.includes("watch")
+    ) {
       return { level: "low", color: "#FFC107", text: "Low Urgency" };
     }
 
     // Check for no disease keywords
-    if (text.includes("no skin disease detected") ||
+    if (
+      text.includes("no skin disease detected") ||
       text.includes("no specific skin disease detected") ||
-      text.includes("no disease detected")) {
+      text.includes("no disease detected")
+    ) {
       return { level: "none", color: "#4CAF50", text: "No Disease" };
     }
 
@@ -84,8 +115,10 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
     let timeAgo;
     if (secondsAgo < 60) timeAgo = "Just now";
     else if (secondsAgo < 3600) timeAgo = `${Math.floor(secondsAgo / 60)}m ago`;
-    else if (secondsAgo < 86400) timeAgo = `${Math.floor(secondsAgo / 3600)}h ago`;
-    else if (secondsAgo < 604800) timeAgo = `${Math.floor(secondsAgo / 86400)}d ago`;
+    else if (secondsAgo < 86400)
+      timeAgo = `${Math.floor(secondsAgo / 3600)}h ago`;
+    else if (secondsAgo < 604800)
+      timeAgo = `${Math.floor(secondsAgo / 86400)}d ago`;
     else timeAgo = postTime.toLocaleDateString();
 
     return timeAgo;
@@ -94,18 +127,18 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
   const formatFullDateTime = (timestamp) => {
     const postTime = new Date(timestamp);
     const dateOptions = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     };
     const timeOptions = {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
     };
 
-    const date = postTime.toLocaleDateString('en-US', dateOptions);
-    const time = postTime.toLocaleTimeString('en-US', timeOptions);
+    const date = postTime.toLocaleDateString("en-US", dateOptions);
+    const time = postTime.toLocaleTimeString("en-US", timeOptions);
     const timeAgo = formatTimeAgo(timestamp);
 
     return `${date}   ${time}  ${timeAgo}`;
@@ -113,8 +146,6 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
 
   // Check if current user is the post owner
   const isPostOwner = currentUser && post.user_id === currentUser.id;
-
-
 
   // Handle delete post
   const handleDeletePost = () => {
@@ -124,7 +155,7 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
       [
         {
           text: "Cancel",
-          style: "cancel"
+          style: "cancel",
         },
         {
           text: "Delete",
@@ -159,8 +190,8 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
               console.error("Error deleting post:", error);
               Alert.alert("Error", "Failed to delete post. Please try again.");
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -199,7 +230,7 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
   const handleLikePress = useCallback(() => {
     // Prevent multiple rapid clicks
     if (isLiking) return;
-    
+
     // Prevent liking if user is not logged in
     if (!currentUser) {
       Alert.alert("Login Required", "Please log in to like posts");
@@ -208,10 +239,10 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
 
     // Set loading state
     setIsLiking(true);
-    
+
     // Call the parent handler
     onToggleLike(post.id, post.has_liked);
-    
+
     // Reset loading state after a short delay to prevent rapid re-clicks
     setTimeout(() => {
       setIsLiking(false);
@@ -233,23 +264,25 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
       try {
         // Check if avatar exists in storage
         const { data: avatarData } = await supabase.storage
-          .from('avatars')
+          .from("avatars")
           .list(`${post.user_id}/`, {
             limit: 1,
             offset: 0,
-            sortBy: { column: 'name', order: 'asc' }
+            sortBy: { column: "name", order: "asc" },
           });
 
         if (avatarData && avatarData.length > 0) {
           // Get public URL for the avatar
-          const { data: { publicUrl } } = supabase.storage
-            .from('avatars')
+          const {
+            data: { publicUrl },
+          } = supabase.storage
+            .from("avatars")
             .getPublicUrl(`${post.user_id}/avatar.jpg`);
 
           setUserAvatarUrl(publicUrl);
         }
       } catch (error) {
-        console.error('Error fetching user avatar:', error);
+        console.error("Error fetching user avatar:", error);
       }
     };
 
@@ -280,57 +313,37 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
                 color={isDark ? "#ffffff" : "#000000"}
               />
             </View>
+          ) : /* Non-Anonymous User Avatar */
+          userAvatarUrl ? (
+            <TouchableOpacity
+              className="w-10 h-10 rounded-full mr-3"
+              onPress={() => onViewProfile(post.user_id)}
+              disabled={isAnonymous || !post.isVet}
+            >
+              <Image
+                source={{ uri: userAvatarUrl }}
+                className="w-10 h-10 rounded-full"
+                resizeMode="cover"
+                onError={() => setUserAvatarUrl(null)} // Fallback to icon if image fails to load
+              />
+            </TouchableOpacity>
           ) : (
-            /* Non-Anonymous User Avatar */
-            userAvatarUrl ? (
-              <TouchableOpacity
-                className="w-10 h-10 rounded-full mr-3"
-                onPress={() => {
-                  // Check if this is a vet's post by their role
-                  const isVet = post.role === 'veterinarian';
-                  if (isVet && post.user_id) {
-                    // Navigate to vet profile page
-                    onViewProfile(post.user_id);
-                  }
-                }}
-              >
-                <Image
-                  source={{ uri: userAvatarUrl }}
-                  className="w-10 h-10 rounded-full"
-                  resizeMode="cover"
-                  onError={() => setUserAvatarUrl(null)} // Fallback to icon if image fails to load
-                />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                className="w-10 h-10 rounded-full border-2 border-black dark:border-white justify-center items-center mr-3 bg-white dark:bg-black"
-                onPress={() => {
-                  // Check if this is a vet's post by their role
-                  const isVet = post.role === 'veterinarian';
-                  if (isVet && post.user_id) {
-                    // Navigate to vet profile page
-                    onViewProfile(post.user_id);
-                  }
-                }}
-              >
-                <FontAwesome
-                  name="user-circle"
-                  size={32}
-                  color={isDark ? "#ffffff" : "#000000"}
-                />
-              </TouchableOpacity>
-            )
+            <TouchableOpacity
+              className="w-10 h-10 rounded-full border-2 border-black dark:border-white justify-center items-center mr-3 bg-white dark:bg-black"
+              onPress={() => onViewProfile(post.user_id)}
+              disabled={isAnonymous || !post.isVet}
+            >
+              <FontAwesome
+                name="user-circle"
+                size={32}
+                color={isDark ? "#ffffff" : "#000000"}
+              />
+            </TouchableOpacity>
           )}
           <View className="flex-1">
             <TouchableOpacity
-              onPress={() => {
-                // Check if this is a vet's post by their role
-                const isVet = post.role === 'veterinarian';
-                if (isVet && post.user_id) {
-                  // Navigate to vet profile page
-                  onViewProfile(post.user_id);
-                }
-              }}
+              onPress={() => onViewProfile(post.user_id)}
+              disabled={isAnonymous || !post.isVet}
             >
               <Text className="text-base font-inter-semibold text-black dark:text-white">
                 {userDisplayName}
@@ -401,11 +414,7 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
                     setShowDropdown(false);
                   }}
                 >
-                  <FontAwesome
-                    name="trash"
-                    size={16}
-                    color="#EF4444"
-                  />
+                  <FontAwesome name="trash" size={16} color="#EF4444" />
                   <Text className="ml-3 text-base font-inter text-red-500">
                     Delete
                   </Text>
@@ -440,12 +449,22 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
             name={post.has_liked ? "heart" : "heart-o"}
             size={20}
             color={
-              isLiking 
-                ? "#ccc" 
-                : post.has_liked ? "#FF3B30" : isDark ? "#8E8E93" : "#6C757D"
+              isLiking
+                ? "#ccc"
+                : post.has_liked
+                ? "#FF3B30"
+                : isDark
+                ? "#8E8E93"
+                : "#6C757D"
             }
           />
-          <Text className={`ml-2 text-sm font-inter ${isLiking ? "text-neutral-400 dark:text-neutral-600" : "text-neutral-600 dark:text-neutral-400"}`}>
+          <Text
+            className={`ml-2 text-sm font-inter ${
+              isLiking
+                ? "text-neutral-400 dark:text-neutral-600"
+                : "text-neutral-600 dark:text-neutral-400"
+            }`}
+          >
             {post.likes_count || 0}
           </Text>
         </TouchableOpacity>
@@ -479,11 +498,7 @@ const PostCard = ({ post, isDark, currentUser, onToggleLike, onOpenComments, onS
 
         {/* Urgency Level Indicator */}
         <View className="flex-row items-center">
-          <FontAwesome
-            name="flag"
-            size={18}
-            color={urgencyInfo.color}
-          />
+          <FontAwesome name="flag" size={18} color={urgencyInfo.color} />
           <Text
             className="ml-2 text-sm font-inter-semibold"
             style={{ color: urgencyInfo.color }}

@@ -192,7 +192,7 @@ export async function shareToNewsfeed(
     }
     
     // Use comprehensive regex to validate required format (matches at least 6 of 8 sections)
-    const validFormatPattern = /(?=.*Breed of the pet)(?=.*Specific Skin Disease Detected)(?=.*Confidence score)(?=.*suggested treatments)(?=.*Urgency level)(?=.*first aid care steps)/is;
+    const validFormatPattern = /(?=.*Breed of the pet)(?=.*Specific Skin Disease Detected)(?=.*Confidence score)(?=.*suggested preventive)(?=.*Urgency level)(?=.*first aid care steps)/is;
     
     if (!validFormatPattern.test(analysisResult)) {
       throw new Error("Only valid pet analyses can be shared. This analysis doesn't have the required format.");
