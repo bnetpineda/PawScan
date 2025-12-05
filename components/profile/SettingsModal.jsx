@@ -1,20 +1,15 @@
 import { FontAwesome } from "@expo/vector-icons";
-import { useCallback } from "react";
 import {
-  Alert,
   Modal,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { supabase } from "../../lib/supabase";
 
 const SettingsModal = ({
   visible,
   onClose,
-  onEmailPress,
   onPasswordPress,
   onSignOut,
   onTutorialPress,
@@ -57,42 +52,6 @@ const SettingsModal = ({
         <View>
           <TouchableOpacity
             className={`p-4 rounded-lg border ${
-              isDark ? "bg-neutral border-neutral-600" : "bg-white border-neutral-400"
-            }`}
-            onPress={onEmailPress}
-          >
-            <View className="flex-row items-center">
-              <FontAwesome
-                name="envelope"
-                size={20}
-                color={isDark ? "white" : "black"}
-              />
-              <View className="ml-3 flex-1">
-                <Text
-                  className={`text-base font-inter-semibold ${
-                    isDark ? "text-white" : "text-black"
-                  }`}
-                >
-                  Change Email
-                </Text>
-                <Text
-                  className={`text-sm font-inter mt-1 ${
-                    isDark ? "text-neutral-400" : "text-neutral-600"
-                  }`}
-                >
-                  Update your email address
-                </Text>
-              </View>
-              <FontAwesome
-                name="angle-right"
-                size={20}
-                color={isDark ? "#9CA3AF" : "#6B7280"}
-              />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className={`p-4 rounded-lg border mt-4 ${
               isDark ? "bg-neutral border-neutral-700" : "bg-white border-neutral-400"
             }`}
             onPress={onPasswordPress}

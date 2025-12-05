@@ -8,25 +8,25 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Modal,
+  useColorScheme,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome } from "@expo/vector-icons";
 import { useAuth } from "../../providers/AuthProvider";
-import { useColorScheme } from "react-native";
-import { supabase } from "../../lib/supabase";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [isResetLoading, setIsResetLoading] = useState(false);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { signInWithEmail, resetPassword } = useAuth();
+  const { signInWithEmail, signInWithGoogle, resetPassword } = useAuth();
   const router = useRouter();
 
   const handleLogin = async () => {
@@ -85,6 +85,21 @@ export default function Login() {
 
   const navigateToRegister = () => {
     router.replace("/(auth)/register");
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+      // Navigation is handled by AuthProvider's onAuthStateChange listener
+      // which updates the user state and triggers redirect in index.jsx
+    } catch (error) {
+      if (error.message !== "Google Sign-In was cancelled.") {
+        Alert.alert("Google Sign-In Failed", error.message || "An unexpected error occurred");
+      }
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   const isEmailPasswordValid = () => {
@@ -193,6 +208,23 @@ export default function Login() {
           <Text className="mx-4 text-neutral-700 dark:text-neutral-600">or</Text>
           <View className="flex-1 h-0.5 bg-neutral-900 dark:bg-neutral-500" />
         </View>
+
+        <TouchableOpacity
+          className="flex-row items-center justify-center rounded-lg py-3.5 border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+          onPress={handleGoogleSignIn}
+          disabled={isGoogleLoading}
+        >
+          {isGoogleLoading ? (
+            <ActivityIndicator color={isDark ? "#fff" : "#000"} size="small" />
+          ) : (
+            <>
+              <FontAwesome name="google" size={20} color={isDark ? "#fff" : "#000"} style={{ marginRight: 12 }} />
+              <Text className="font-inter-bold text-base text-black dark:text-white">
+                Continue with Google
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
 
         <View className="mt-6">
           <View className="flex-row justify-center">

@@ -31,30 +31,6 @@ export const useProfileUpdate = (userId) => {
     }
   }, [userId]);
 
-  const updateEmail = useCallback(async (newEmail) => {
-    try {
-      setUpdating(true);
-      setError(null);
-
-      const { error: updateError } = await supabase.auth.updateUser({
-        email: newEmail,
-      }, {
-        emailRedirectTo: 'https://pawscan-dashboard.vercel.app/confirm-email',
-      });
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      return true;
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setUpdating(false);
-    }
-  }, []);
-
   const updatePassword = useCallback(async (currentPassword, newPassword) => {
     try {
       setUpdating(true);
@@ -119,7 +95,6 @@ export const useProfileUpdate = (userId) => {
 
   return {
     updateProfile,
-    updateEmail,
     updatePassword,
     updateProfileImage,
     updating,

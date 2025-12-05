@@ -866,10 +866,6 @@ const ProfileScreen = () => {
       <SettingsModal
         visible={settingsVisible}
         onClose={() => setSettingsVisible(false)}
-        onEmailPress={() => {
-          setSettingsVisible(false);
-          setChangeEmailVisible(true);
-        }}
         onPasswordPress={() => {
           setSettingsVisible(false);
           setChangePasswordVisible(true);

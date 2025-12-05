@@ -127,7 +127,7 @@ CREATE TABLE public.vet_profiles (
   bio text,
   education text,
   years_of_experience integer,
-  license_number character varying,
+  license_id_url character varying,
   profile_image_url text,
   CONSTRAINT vet_profiles_pkey PRIMARY KEY (id),
   CONSTRAINT vet_profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)

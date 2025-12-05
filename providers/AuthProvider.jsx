@@ -1,7 +1,27 @@
 // providers/AuthProvider.jsx
-import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "../lib/supabase"; // make sure this points to your client
-import { Session, User } from "@supabase/supabase-js";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { supabase } from "../lib/supabase";
+import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
+
+// Configure Google Sign-In
+GoogleSignin.configure({
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+  offlineAccess: true,
+});
+
+// Environment-based configuration
+const CONFIG = {
+  EMAIL_REDIRECT_URL: process.env.EXPO_PUBLIC_EMAIL_REDIRECT_URL || 'https://pawscan-dashboard.vercel.app/confirm-email',
+  PASSWORD_RESET_URL: process.env.EXPO_PUBLIC_PASSWORD_RESET_URL || 'https://pawscan-dashboard.vercel.app/reset-password',
+  IS_DEV: typeof __DEV__ !== 'undefined' ? __DEV__ : false,
+};
+
+// Conditional logging utility
+const log = {
+  info: (...args) => CONFIG.IS_DEV && console.log(...args),
+  error: (...args) => console.error(...args),
+};
 
 const AuthContext = createContext(null);
 
@@ -20,19 +40,15 @@ const TABLE_NAMES = {
  * Creates or updates a user or vet profile in the database after authentication.
  * This function is designed to be idempotent, using Supabase's `upsert` functionality.
  * It determines the user's role from their metadata and populates the correct table.
- * @param {User} user - The Supabase user object.
+ * @param {object} user - The Supabase user object.
  */
 const createProfileAfterAuth = async (user) => {
   try {
-    // Extract data from the nested metadata structure
-    // Raw metadata structure: raw_user_meta_data.options.data.{role, full_name, license_number}
     const userData = user.user_metadata?.options?.data || {};
     const userRole = userData.role;
     const isVet = userRole === ROLES.VETERINARIAN || userRole === ROLES.PENDING_VETERINARIAN;
 
     const tableName = isVet ? TABLE_NAMES.VET_PROFILES : TABLE_NAMES.USER_PROFILES;
-    
-    // Get the full name from the nested metadata structure
     const fullName = userData.full_name;
     
     const profileData = {
@@ -45,26 +61,19 @@ const createProfileAfterAuth = async (user) => {
       profileData.license_number = userData.license_number;
     }
 
-    console.log('Creating/updating profile with data:', {
-      userId: user.id,
-      fullName: fullName,
-      email: user.email,
-      role: userRole,
-      userData: userData,
-      tableName: tableName
-    });
+    log.info('Creating/updating profile:', { userId: user.id, role: userRole, tableName });
 
     const { error } = await supabase
       .from(tableName)
       .upsert(profileData, { onConflict: 'id' });
 
     if (error) {
-      console.error(`Error upserting ${isVet ? 'veterinarian' : 'user'} profile:`, error);
+      log.error(`Error upserting ${isVet ? 'veterinarian' : 'user'} profile:`, error);
     } else {
-      console.log(`Successfully created/updated ${isVet ? 'veterinarian' : 'user'} profile for user:`, user.id);
+      log.info(`Successfully created/updated profile for user:`, user.id);
     }
   } catch (error) {
-    console.error('Error in createProfileAfterAuth:', error);
+    log.error('Error in createProfileAfterAuth:', error);
   }
 };
 
@@ -72,6 +81,61 @@ export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const isGoogleSigningInRef = useRef(false);
+
+  // Google Sign In using native Google Sign-In + Supabase
+  const signInWithGoogle = useCallback(async () => {
+    try {
+      isGoogleSigningInRef.current = true;
+      log.info("Starting native Google Sign-In...");
+      
+      // Check if user is already signed in with Google
+      await GoogleSignin.hasPlayServices();
+      
+      // Sign in with Google
+      const userInfo = await GoogleSignin.signIn();
+      log.info("Google Sign-In successful:", userInfo.data?.user?.email);
+      
+      // Get the ID token
+      const idToken = userInfo.data?.idToken;
+      
+      if (!idToken) {
+        throw new Error("No ID token received from Google");
+      }
+      
+      log.info("Got Google ID token, signing into Supabase...");
+      
+      // Sign in to Supabase with the Google ID token
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: idToken,
+      });
+      
+      if (error) throw error;
+      
+      log.info("Supabase sign-in successful:", data.user?.email);
+      
+      // Manually update state immediately to avoid race condition
+      if (data?.session) {
+        setSession(data.session);
+        setUser(data.session.user);
+      }
+      
+      return { data, error: null };
+    } catch (error) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        throw new Error("Google Sign-In was cancelled.");
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        throw new Error("Google Sign-In is already in progress.");
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        throw new Error("Google Play Services is not available.");
+      }
+      log.error("Google sign-in error:", error);
+      throw error;
+    } finally {
+      isGoogleSigningInRef.current = false;
+    }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -82,45 +146,41 @@ export const AuthProvider = ({ children }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-        if (session?.user?.email) {
-          console.log('User email:', session.user.email);
-        }
+        log.info('Initial session loaded:', session?.user?.email);
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state change event:', event);
-      if (session?.user?.email) {
-        console.log('User email:', session.user.email);
+      log.info('Auth state change:', event, session?.user?.email);
+      
+      if (!isMounted) return;
+      
+      // Skip if we're in the middle of Google sign-in (we handle state manually)
+      // This prevents race conditions with the manual state update
+      if (isGoogleSigningInRef.current && event === 'SIGNED_IN') {
+        log.info('Skipping onAuthStateChange during Google sign-in (handled manually)');
+        return;
       }
       
-      if (isMounted) {
-        // Check if user is pending veterinarian and sign them out
-        const userData = session?.user?.user_metadata?.options?.data || {};
-        const userRole = userData.role;
-        if (userRole === ROLES.PENDING_VETERINARIAN && event !== 'SIGNED_OUT') {
-          console.log('Pending veterinarian detected, signing out');
-          await supabase.auth.signOut();
-          return;
-        }
+      // Check if user is pending veterinarian and sign them out
+      const userData = session?.user?.user_metadata?.options?.data || {};
+      const userRole = userData.role;
+      if (userRole === ROLES.PENDING_VETERINARIAN && event !== 'SIGNED_OUT') {
+        log.info('Pending veterinarian detected, signing out');
+        await supabase.auth.signOut();
+        return;
+      }
 
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Handle token expiration and sign out events
-        if (event === 'TOKEN_REFRESHED') {
-          console.log('Token refreshed successfully');
-        } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out');
-          setSession(null);
-          setUser(null);
-        }
-        
-        // Only create/update profile on sign-in and sign-up events, not on user updates
-        // This prevents unnecessary profile operations during email/password changes
-        if (session?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-          await createProfileAfterAuth(session.user);
-        }
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (event === 'TOKEN_REFRESHED') {
+        log.info('Token refreshed successfully');
+      }
+      
+      // Only create/update profile on sign-in and initial session events
+      if (session?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+        await createProfileAfterAuth(session.user);
       }
     });
 
@@ -130,7 +190,7 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  const signInWithEmail = async (email, password) => {
+  const signInWithEmail = useCallback(async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -142,7 +202,7 @@ export const AuthProvider = ({ children }) => {
           type: "signup",
           email: email,
           options: {
-            emailRedirectTo: 'https://pawscan-dashboard.vercel.app/confirm-email',
+            emailRedirectTo: CONFIG.EMAIL_REDIRECT_URL,
           }
         });
         throw new Error(
@@ -163,21 +223,23 @@ export const AuthProvider = ({ children }) => {
     }
 
     return { data, error };
-  };
+  }, []);
 
-  const signUpWithEmail = async (email, password, userData = {}) => {
-    return await supabase.auth.signUp({
+  const signUpWithEmail = useCallback(async (email, password, userData = {}) => {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: 'https://pawscan-dashboard.vercel.app/confirm-email',
-        data: userData, // Pass username, role, etc.
+        emailRedirectTo: CONFIG.EMAIL_REDIRECT_URL,
+        data: userData,
       },
     });
-  };
 
-  const resetPassword = async (email) => {
-    // Validate email
+    if (error) throw error;
+    return { data, error };
+  }, []);
+
+  const resetPassword = useCallback(async (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) throw new Error("Email is required");
   
@@ -186,35 +248,30 @@ export const AuthProvider = ({ children }) => {
       throw new Error(`"${trimmedEmail}" is not a valid email address`);
     }
   
-    // TODO: Move this URL to an environment variable for better configuration.
-    const redirectTo = "https://pawscan-dashboard.vercel.app/reset-password";
-  
     return await supabase.auth.resetPasswordForEmail(trimmedEmail, {
-      redirectTo,
+      redirectTo: CONFIG.PASSWORD_RESET_URL,
     });
-  };
+  }, []);
   
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
-      // Check if session exists before attempting to sign out
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
       
-      if (!session) {
-        // Session already expired or doesn't exist, just clear local state
-        console.log("No active session, clearing local state");
+      if (!currentSession) {
+        log.info("No active session, clearing local state");
         setSession(null);
         setUser(null);
         return;
       }
 
-      console.log("Logging out user:", session.user?.email);
+      log.info("Logging out user:", currentSession.user?.email);
       
       const { error } = await supabase.auth.signOut();
       if (error) {
         // If error is about missing session, just clear local state
-        if (error.message.includes('session') || error.message.includes('Session')) {
-          console.log("Session already expired, clearing local state");
+        if (error.message.toLowerCase().includes('session')) {
+          log.info("Session already expired, clearing local state");
           setSession(null);
           setUser(null);
           return;
@@ -222,30 +279,29 @@ export const AuthProvider = ({ children }) => {
         throw error;
       }
       
-      console.log("User logged out successfully:", session.user?.email);
-      setSession(null);
-      setUser(null);
+      log.info("User logged out successfully");
     } catch (error) {
-      console.error("Logout error:", error.message);
+      log.error("Logout error:", error.message);
       // Even if there's an error, clear local state
       setSession(null);
       setUser(null);
       throw error;
     }
-  };
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    session,
+    user,
+    loading,
+    signInWithEmail,
+    signUpWithEmail,
+    signInWithGoogle,
+    resetPassword,
+    logout,
+  }), [session, user, loading, signInWithEmail, signUpWithEmail, signInWithGoogle, resetPassword, logout]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        session,
-        user,
-        loading,
-        signInWithEmail,
-        signUpWithEmail,
-        resetPassword,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

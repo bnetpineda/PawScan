@@ -15,7 +15,13 @@
       ],
       "expo-font",
       "expo-web-browser",
-      "expo-router"
+      "expo-router",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.YOUR_IOS_CLIENT_ID"
+        }
+      ]
     ],
     "name": "PawScan",
     "slug": "PawScan",
