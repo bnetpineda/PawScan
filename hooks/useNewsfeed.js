@@ -16,7 +16,7 @@ const CACHE_TTL = 300000; // 5 minutes
 const postsCache = createCacheWithTTL(CACHE_TTL);
 
 export const useNewsfeed = (searchQuery) => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -119,11 +119,13 @@ export const useNewsfeed = (searchQuery) => {
    * Load initial posts or on search change
    */
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && session) {
       setPage(0);
       loadPosts(0, true);
+    } else if (!user?.id) {
+      setLoading(false);
     }
-  }, [loadPosts]);
+  }, [loadPosts, user?.id, session]);
 
   /**
    * Refresh posts

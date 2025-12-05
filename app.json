@@ -14,14 +14,8 @@
         }
       ],
       "expo-font",
-      "expo-web-browser",
       "expo-router",
-      [
-        "@react-native-google-signin/google-signin",
-        {
-          "iosUrlScheme": "com.googleusercontent.apps.YOUR_IOS_CLIENT_ID"
-        }
-      ]
+      "@react-native-google-signin/google-signin"
     ],
     "name": "PawScan",
     "slug": "PawScan",
@@ -39,7 +33,6 @@
     "android": {
       "package": "com.markbennettpineda.PawScan",
       "permissions": [
-        "android.permission.RECORD_AUDIO",
         "android.permission.RECORD_AUDIO"
       ]
     },
