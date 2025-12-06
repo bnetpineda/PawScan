@@ -1,5 +1,6 @@
 // providers/AuthProvider.jsx
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { AppState } from "react-native";
 import { supabase } from "../lib/supabase";
 import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
 
@@ -140,20 +141,47 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let isMounted = true;
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (isMounted) {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        log.info('Initial session loaded:', session?.user?.email);
+    // Get initial session and fetch fresh user data from server
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session) {
+          // Fetch fresh user data from server (not cached) to get latest role
+          const { data: { user: freshUser } } = await supabase.auth.getUser();
+          
+          if (isMounted) {
+            setSession(session);
+            setUser(freshUser ?? session.user);
+            log.info('Initial session loaded with fresh user data:', freshUser?.email);
+          }
+        } else {
+          if (isMounted) {
+            setSession(null);
+            setUser(null);
+          }
+        }
+      } catch (error) {
+        log.error('Error initializing auth:', error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-    });
+    };
+
+    initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       log.info('Auth state change:', event, session?.user?.email);
       
       if (!isMounted) return;
+      
+      // Skip INITIAL_SESSION since we handle it in initializeAuth with fresh data
+      if (event === 'INITIAL_SESSION') {
+        log.info('Skipping onAuthStateChange for INITIAL_SESSION (handled in initializeAuth)');
+        return;
+      }
       
       // Skip if we're in the middle of Google sign-in (we handle state manually)
       // This prevents race conditions with the manual state update
@@ -162,25 +190,24 @@ export const AuthProvider = ({ children }) => {
         return;
       }
       
-      // Check if user is pending veterinarian and sign them out
-      const userData = session?.user?.user_metadata?.options?.data || {};
-      const userRole = userData.role;
-      if (userRole === ROLES.PENDING_VETERINARIAN && event !== 'SIGNED_OUT') {
-        log.info('Pending veterinarian detected, signing out');
-        await supabase.auth.signOut();
-        return;
+      // For other events, fetch fresh user data
+      if (session) {
+        const { data: { user: freshUser } } = await supabase.auth.getUser();
+        setSession(session);
+        setUser(freshUser ?? session.user);
+      } else {
+        setSession(null);
+        setUser(null);
       }
-
-      setSession(session);
-      setUser(session?.user ?? null);
       
       if (event === 'TOKEN_REFRESHED') {
         log.info('Token refreshed successfully');
       }
       
-      // Only create/update profile on sign-in and initial session events
-      if (session?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-        await createProfileAfterAuth(session.user);
+      // Only create/update profile on sign-in events
+      if (session?.user && event === 'SIGNED_IN') {
+        const { data: { user: freshUser } } = await supabase.auth.getUser();
+        await createProfileAfterAuth(freshUser ?? session.user);
       }
     });
 
@@ -189,6 +216,68 @@ export const AuthProvider = ({ children }) => {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Refresh user role when app becomes active (foreground)
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState) => {
+      if (nextAppState === 'active' && session?.user) {
+        log.info('App became active, checking for role updates...');
+        try {
+          // Fetch fresh user data from server (not cached)
+          const { data: { user: freshUser }, error } = await supabase.auth.getUser();
+          
+          if (error) {
+            log.error('Error fetching fresh user data:', error);
+            return;
+          }
+
+          if (freshUser) {
+            const currentRole = user?.user_metadata?.options?.data?.role;
+            const newRole = freshUser.user_metadata?.options?.data?.role;
+            
+            // Check if role changed (e.g., pending_veterinarian -> veterinarian)
+            if (currentRole !== newRole) {
+              log.info('Role changed from', currentRole, 'to', newRole);
+              setUser(freshUser);
+            }
+          }
+        } catch (error) {
+          log.error('Error refreshing user data:', error);
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      subscription?.remove();
+    };
+  }, [session, user]);
+
+  // Manual refresh function to check for role updates
+  const refreshUser = useCallback(async () => {
+    if (!session?.user) return null;
+    
+    try {
+      log.info('Manually refreshing user data...');
+      const { data: { user: freshUser }, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        log.error('Error refreshing user:', error);
+        return null;
+      }
+
+      if (freshUser) {
+        setUser(freshUser);
+        log.info('User data refreshed successfully');
+        return freshUser;
+      }
+      return null;
+    } catch (error) {
+      log.error('Error in refreshUser:', error);
+      return null;
+    }
+  }, [session]);
 
   const signInWithEmail = useCallback(async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -210,16 +299,6 @@ export const AuthProvider = ({ children }) => {
         );
       }
       throw error;
-    }
-
-    // Check if user is a pending veterinarian
-    const userData = data.user?.user_metadata?.options?.data || {};
-    const userRole = userData.role;
-    if (userRole === ROLES.PENDING_VETERINARIAN) {
-      await supabase.auth.signOut();
-      throw new Error(
-        "Your veterinarian account is pending verification by an administrator. You will receive an email once verified."
-      );
     }
 
     return { data, error };
@@ -298,7 +377,8 @@ export const AuthProvider = ({ children }) => {
     signInWithGoogle,
     resetPassword,
     logout,
-  }), [session, user, loading, signInWithEmail, signUpWithEmail, signInWithGoogle, resetPassword, logout]);
+    refreshUser,
+  }), [session, user, loading, signInWithEmail, signUpWithEmail, signInWithGoogle, resetPassword, logout, refreshUser]);
 
   return (
     <AuthContext.Provider value={contextValue}>

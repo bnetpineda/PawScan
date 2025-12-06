@@ -30,29 +30,6 @@ const GetStartedScreen = () => {
     const role = user.user_metadata?.options?.data?.role;
     console.log("User role:", role);
     
-    // Block pending veterinarians
-    if (role === "pending_veterinarian") {
-      return (
-        <View className="flex-1 items-center justify-center bg-white dark:bg-black p-6">
-          <Text className="text-xl font-inter-semibold text-black dark:text-white text-center mb-4">
-            Account Pending Verification
-          </Text>
-          <Text className="text-base text-gray-600 dark:text-gray-400 text-center mb-6">
-            Your veterinarian account is pending verification by an administrator. 
-            You will receive an email once verified.
-          </Text>
-          <TouchableOpacity
-            onPress={handleSignOut}
-            className="bg-primary dark:bg-white py-3 px-6 rounded-lg"
-          >
-            <Text className="text-white dark:text-black font-inter-semibold">
-              Sign Out
-            </Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-    
     if (role === "veterinarian") {
       return <Redirect href="/(vet)/home" />;
     } else {

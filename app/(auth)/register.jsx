@@ -43,10 +43,11 @@ export default function Register() {
   const [showCamera, setShowCamera] = useState(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [uploadingId, setUploadingId] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const cameraRef = useRef(null);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { signUpWithEmail } = useAuth();
+  const { signUpWithEmail, signInWithGoogle } = useAuth();
   const router = useRouter();
 
   // Real-time validation
@@ -276,6 +277,89 @@ export default function Register() {
 
   const navigateToLogin = () => {
     router.replace("/(auth)/login");
+  };
+
+  const handleGoogleSignUp = async () => {
+    // For veterinarians, require ID image first
+    if (userRole === "veterinarian" && !idImageUri) {
+      Alert.alert(
+        "License ID Required",
+        "Please upload your veterinary license ID before signing up with Google."
+      );
+      return;
+    }
+
+    setIsGoogleLoading(true);
+    try {
+      // For veterinarians, upload ID image first
+      let idUrl = null;
+      if (userRole === "veterinarian" && idImageUri) {
+        try {
+          const tempId = `pending_google_${Date.now()}`;
+          idUrl = await uploadIdImage(tempId);
+        } catch (uploadError) {
+          console.error("Failed to upload ID image:", uploadError);
+          Alert.alert(
+            "Sign-Up Failed",
+            "Failed to upload your ID image. Please try again."
+          );
+          setIsGoogleLoading(false);
+          return;
+        }
+      }
+
+      // Proceed with Google sign-in
+      const { data } = await signInWithGoogle();
+      
+      // For veterinarians, update their profile with vet data
+      if (userRole === "veterinarian" && data?.user) {
+        const userId = data.user.id;
+        
+        // Update user metadata with vet role
+        await supabase.auth.updateUser({
+          data: {
+            options: {
+              data: {
+                role: "pending_veterinarian",
+                license_id_url: idUrl,
+              }
+            }
+          }
+        });
+
+        // Create vet profile
+        const { error: vetProfileError } = await supabase
+          .from("vet_profiles")
+          .upsert({
+            id: userId,
+            name: data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "Veterinarian",
+            license_id_url: idUrl,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: "id" });
+
+        if (vetProfileError) {
+          console.error("Error creating vet profile:", vetProfileError);
+        }
+
+        // Sign out the user since they need admin verification
+        await supabase.auth.signOut();
+        
+        Alert.alert(
+          "Application Submitted",
+          "Your veterinarian application has been submitted for review. You will receive an email once verified by an administrator.",
+          [{ text: "OK", onPress: () => router.replace("/(auth)/login") }]
+        );
+        return;
+      }
+      
+      // For regular users, navigation is handled by AuthProvider
+    } catch (error) {
+      if (error.message !== "Google Sign-In was cancelled.") {
+        Alert.alert("Google Sign-Up Failed", error.message || "An unexpected error occurred");
+      }
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   const isFormValid = () => {
@@ -662,6 +746,23 @@ export default function Register() {
               </Text>
               <View className="flex-1 h-0.5 bg-neutral-900 dark:bg-neutral-500" />
             </View>
+
+            <TouchableOpacity
+              className="flex-row items-center justify-center rounded-lg py-3.5 border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+              onPress={handleGoogleSignUp}
+              disabled={isGoogleLoading}
+            >
+              {isGoogleLoading ? (
+                <ActivityIndicator color={isDark ? "#fff" : "#000"} size="small" />
+              ) : (
+                <>
+                  <FontAwesome name="google" size={20} color={isDark ? "#fff" : "#000"} style={{ marginRight: 12 }} />
+                  <Text className="font-inter-bold text-base text-black dark:text-white">
+                    Continue with Google
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
 
             <View className="flex-row justify-center mt-4 mb-6">
               <Text className="text-neutral-600 dark:text-neutral-400">
