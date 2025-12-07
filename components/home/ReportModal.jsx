@@ -239,7 +239,7 @@ const ReportModal = ({
                 className="max-h-80"
               />
 
-              {selectedReason === "Other" && (
+              {selectedReason && (
                 <View
                   className={`p-4 ${
                     isDark ? "bg-neutral-800" : "bg-neutral-100"

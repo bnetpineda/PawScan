@@ -20,6 +20,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../providers/AuthProvider";
 import { useTutorial } from "../../providers/TutorialProvider";
 import SettingsModal from "../../components/profile/SettingsModal";
+import BecomeVetModal from "../../components/profile/BecomeVetModal";
 import ChangeEmailModal from "../../components/profile/ChangeEmailModal";
 import ChangePasswordModal from "../../components/profile/ChangePasswordModal";
 import ImageViewerModal from "../../components/profile/ImageViewerModal";
@@ -31,6 +32,7 @@ const ProfileScreen = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [becomeVetVisible, setBecomeVetVisible] = useState(false);
   const [changeEmailVisible, setChangeEmailVisible] = useState(false);
   const [changePasswordVisible, setChangePasswordVisible] = useState(false);
   const [editProfileVisible, setEditProfileVisible] = useState(false);
@@ -624,7 +626,7 @@ const ProfileScreen = () => {
                     isDark ? "text-neutral-300" : "text-neutral-600"
                   }`}
                 >
-                  {role === "user" ? "Pet Owner" : role} | Pet Health Enthusiast
+                  {role === "user" || "pending_veterinarian" ? "Pet Owner" : role} | Pet Health Enthusiast
                 </Text>
                 <Text
                   className={`mt-1 font-inter ${
@@ -768,7 +770,18 @@ const ProfileScreen = () => {
           setSettingsVisible(false);
           startTutorial('profile');
         }}
+        onBecomeVetPress={() => {
+          setSettingsVisible(false);
+          setBecomeVetVisible(true);
+        }}
+        userRole={user?.user_metadata?.options?.data?.role}
         onSignOut={handleSignOut}
+        isDark={isDark}
+      />
+
+      <BecomeVetModal
+        visible={becomeVetVisible}
+        onClose={() => setBecomeVetVisible(false)}
         isDark={isDark}
       />
 
