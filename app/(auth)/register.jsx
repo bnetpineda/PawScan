@@ -546,7 +546,7 @@ export default function Register() {
                     />
                   </View>
                   <Text className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                    Password must contain uppercase, lowercase, and number
+                    Password must be alphanumeric (uppercase, lowercase, number) and include a special character
                   </Text>
                 </View>
               )}
