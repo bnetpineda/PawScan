@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useNotifications } from '../../providers/NotificationProvider';
 
@@ -9,18 +9,17 @@ const NotificationBell = ({ onPress, isDark = false }) => {
   return (
     <TouchableOpacity
       onPress={onPress}
-      style={styles.container}
       activeOpacity={0.7}
     >
-      <View style={styles.iconContainer}>
+      <View className="relative">
         <FontAwesome
           name="bell"
           size={20}
-          color={isDark ? '#FFFFFF' : '#1F2937'}
+          color={isDark ? "#fff" : "#0A0A0A"}
         />
         {unreadCount > 0 && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>
+          <View className="absolute -top-1 -right-2 bg-red-500 rounded-full min-w-[16px] h-4 justify-center items-center px-1">
+            <Text className="text-white text-[10px] font-inter-bold">
               {unreadCount > 99 ? '99+' : unreadCount}
             </Text>
           </View>
@@ -29,31 +28,5 @@ const NotificationBell = ({ onPress, isDark = false }) => {
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 8,
-  },
-  iconContainer: {
-    position: 'relative',
-  },
-  badge: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: '#EF4444',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-  },
-  badgeText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-});
 
 export default NotificationBell;

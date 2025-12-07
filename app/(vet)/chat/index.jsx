@@ -282,10 +282,12 @@ const ChatListScreen = () => {
                 color={isDark ? "#d4d4d4" : "#525252"} 
               />
             </TouchableOpacity>
-            <NotificationBell 
-              onPress={() => setNotificationsVisible(true)} 
-              isDark={isDark} 
-            />
+            <View className="mx-2">
+              <NotificationBell 
+                onPress={() => setNotificationsVisible(true)} 
+                isDark={isDark} 
+              />
+            </View>
             <TouchableOpacity 
               onPress={() => setShowSearch(true)}
               className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 justify-center items-center"

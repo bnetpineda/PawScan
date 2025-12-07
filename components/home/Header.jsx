@@ -29,10 +29,6 @@ const Header = ({
           PawScan
         </Text>
         <View className="flex-1" />
-        <NotificationBell 
-          onPress={onNotificationPress} 
-          isDark={isDark} 
-        />
         <TouchableOpacity
           className="px-2 py-1 ml-1"
           onPress={onShowTutorial}
@@ -95,16 +91,12 @@ const Header = ({
               color={isDark ? "#fff" : "#0A0A0A"}
             />
           </TouchableOpacity>
-          <TouchableOpacity
-            className="flex-1 items-center"
-            onPress={() => router.push("history")}
-          >
-            <FontAwesome
-              name="history"
-              size={20}
-              color={isDark ? "#fff" : "#0A0A0A"}
+          <View className="flex-1 items-center">
+            <NotificationBell 
+              onPress={onNotificationPress} 
+              isDark={isDark}
             />
-          </TouchableOpacity>
+          </View>
         </View>
       )}
     </>

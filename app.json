@@ -34,7 +34,11 @@
       "package": "com.markbennettpineda.PawScan",
       "permissions": [
         "android.permission.RECORD_AUDIO"
-      ]
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/app-logo.png",
+        "backgroundColor": "#010100"
+      }
     },
     "ios": {
       "bundleIdentifier": "com.markbennettpineda.PawScan"
