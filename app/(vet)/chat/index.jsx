@@ -112,18 +112,14 @@ const ChatListScreen = () => {
               // Check if error is due to no rows found (PGRST116) or RLS violation
               if (userError.code === 'PGRST116') {
                 // No user profile found - user might not have created a profile yet
-                console.log(`User profile not found for user ID: ${conversation.user_id}`);
                 userName = 'Pet Owner';
                 profileImageUrl = null;
               } else if (userError.code === '42501') { // Permission denied
-                console.warn(`Permission denied accessing profile for user ID: ${conversation.user_id}. This might be due to RLS policies.`);
                 // For now, use a default name, but we might want to implement a function in the future
                 // that allows limited access to user information necessary for chat functionality
                 userName = 'Pet Owner';
                 profileImageUrl = null;
               } else {
-                // Log other errors
-                console.error('Error fetching user data from user_profiles:', userError);
                 userName = 'Pet Owner';
                 profileImageUrl = null;
               }

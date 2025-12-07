@@ -44,7 +44,6 @@ async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
       
       // Calculate delay with exponential backoff: 1s, 2s, 4s
       const delay = baseDelay * Math.pow(2, attempt);
-      console.log(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -55,8 +54,6 @@ async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
 // Helper to optimize image before upload (resize to 1024px max dimension)
 async function optimizeImage(imageUri) {
   try {
-    console.log("Optimizing image...");
-    
     const manipulatedImage = await ImageManipulator.manipulateAsync(
       imageUri,
       [{ resize: { width: 1024 } }], // Resize to max 1024px width (maintains aspect ratio)
@@ -66,10 +63,8 @@ async function optimizeImage(imageUri) {
       }
     );
     
-    console.log("Image optimized:", manipulatedImage.uri);
     return manipulatedImage.uri;
   } catch (error) {
-    console.warn("Image optimization failed, using original:", error);
     return imageUri; // Fallback to original if optimization fails
   }
 }
@@ -81,10 +76,8 @@ async function uploadImageToSupabase(imageUri, userId) {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
-    console.log("Authenticated user:", user?.id);
 
     if (authError) {
-      console.error("Authentication error:", authError);
       throw new Error("Authentication failed");
     }
 
@@ -108,7 +101,6 @@ async function uploadImageToSupabase(imageUri, userId) {
 
     const imageExt = "jpg"; // Always JPG after optimization
     const fileName = `${actualUserId}/${Date.now()}.${imageExt}`;
-    console.log("Upload path:", fileName);
 
     const fileData = await FileSystem.readAsStringAsync(optimizedUri, {
       encoding: FileSystem.EncodingType.Base64,
@@ -130,7 +122,6 @@ async function uploadImageToSupabase(imageUri, userId) {
       });
 
     if (error) {
-      console.error("Upload error:", error);
       throw new Error(`Upload failed: ${error.message}`);
     }
 
@@ -142,10 +133,8 @@ async function uploadImageToSupabase(imageUri, userId) {
       throw new Error("Failed to retrieve public URL");
     }
 
-    console.log("Upload successful:", publicUrlData.publicUrl);
     return publicUrlData.publicUrl;
   } catch (error) {
-    console.error("Upload error:", error);
     throw error;
   }
 }
@@ -253,27 +242,19 @@ export async function shareToNewsfeed(
       .single();
 
     if (postError) {
-      console.error("Failed to share to newsfeed:", postError);
       throw new Error("Failed to share to newsfeed");
     }
 
-    console.log("Successfully shared to newsfeed:", postData.id);
     return postData;
   } catch (error) {
-    console.error("Share to newsfeed error:", error);
     throw error;
   }
 }
 
 export async function analyzePetImage(imageUri, userId) {
   try {
-    console.log("Starting pet image analysis...");
-
     // 1. Upload image to Supabase Storage
     const imageUrl = await uploadImageToSupabase(imageUri, userId);
-    console.log("Image uploaded successfully:", imageUrl);
-
-    console.log("Preparing image for OpenAI analysis...");
 
     const prompt = `
     You are an AI Pet Health Assistant. Analyze the provided image of a cat or dog and output **exactly** the following 8 sections in the specified order and format.  
@@ -362,14 +343,11 @@ export async function analyzePetImage(imageUri, userId) {
     try {
       openai = getOpenAIClient();
     } catch (err) {
-      console.error("Failed to initialize OpenAI client:", err);
       return {
         analysis: "AI service is not properly configured. Please contact support.",
         analysisId: null,
       };
     }
-
-    console.log("Sending request to OpenAI...");
     
     // Wrap OpenAI call with retry logic
     const response = await retryWithBackoff(async () => {
@@ -391,7 +369,6 @@ export async function analyzePetImage(imageUri, userId) {
 
     const analysisResult =
       response.choices[0]?.message?.content || "No analysis result returned.";
-    console.log("OpenAI analysis completed");
 
     // 3. Save to Supabase (with the Supabase imageUrl for storage reference)
     const { data: analysisData, error } = await supabase
@@ -408,22 +385,18 @@ export async function analyzePetImage(imageUri, userId) {
       .single();
 
     if (error) {
-      console.error("Supabase insert failed:", error.message);
       // Don't throw here, still return the analysis
       return {
         analysis: analysisResult,
         analysisId: null,
       };
     } else {
-      console.log("Analysis saved to database");
       return {
         analysis: analysisResult,
         analysisId: analysisData.id,
       };
     }
   } catch (err) {
-    console.error("Image analysis failed:", err);
-
     // Enhanced error handling with error codes
     let errorCode = "UNKNOWN_ERROR";
     let errorMessage = "Image analysis failed. Please try again.";

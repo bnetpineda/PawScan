@@ -88,7 +88,7 @@ export default function VetProfileScreen() {
           displayName = postData.display_name;
         }
       } catch (error) {
-        console.log('Could not get display name from posts, using vet profile name');
+        // Use vet profile name as fallback
       }
 
       const combinedData = {

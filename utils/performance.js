@@ -218,11 +218,12 @@ export const createCacheWithTTL = (ttl = 300000) => { // 5 minutes default
 };
 
 /**
- * Performance monitoring helper
+ * Performance monitoring helper (silent in production)
  * @returns {Object} Performance monitoring methods
  */
 export const createPerformanceMonitor = () => {
   const startTime = {};
+  const isDev = typeof __DEV__ !== 'undefined' ? __DEV__ : false;
   
   return {
     /**
@@ -234,13 +235,12 @@ export const createPerformanceMonitor = () => {
     },
     
     /**
-     * End timing and log duration
+     * End timing and return duration (only logs in dev)
      * @param {string} name - Operation name
      */
     end: (name) => {
       if (startTime[name]) {
         const duration = performance.now() - startTime[name];
-        console.log(`[PERFORMANCE] ${name} took ${duration.toFixed(2)}ms`);
         delete startTime[name];
         return duration;
       }

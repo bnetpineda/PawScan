@@ -229,7 +229,7 @@ export default function Login() {
         <View className="mt-6">
           <View className="flex-row justify-center">
             <Text className="text-neutral-500 dark:text-neutral-400 font-inter">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
             </Text>
             <TouchableOpacity onPress={navigateToRegister}>
               <Text className="font-inter-bold text-black dark:text-white">
@@ -264,7 +264,7 @@ export default function Login() {
             </View>
 
             <Text className="text-neutral-600 dark:text-neutral-400 mb-4">
-              Enter your email address and we'll send you a link to reset your password.
+              Enter your email address and we&apos;ll send you a link to reset your password.
             </Text>
 
             <View className="mb-5 rounded-2xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900">

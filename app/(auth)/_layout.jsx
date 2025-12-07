@@ -17,8 +17,6 @@ export default function AuthLayout() {
     // Correctly access the role and display_name from the nested structure
     const role = user.user_metadata?.options?.data?.role;
 
-    console.log("User role:", role);
-
     const redirectPath =
       role === "veterinarian" ? "/(vet)/home" : "/(user)/home";
     return <Redirect href={redirectPath} />;

@@ -82,7 +82,6 @@ export default function CameraScreen({ userType = "user" }) {
 
     setIsSharing(true);
     try {
-      console.log(currentAnalysisId, petName, isAnonymous);
       await shareToNewsfeed(
         currentAnalysisId,
         petName.trim() || null,

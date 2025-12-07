@@ -33,8 +33,6 @@ const useChat = (conversationId, user, vetName, vetId) => {
 
   // Cleanup function for all subscriptions
   const cleanupSubscriptions = useCallback(() => {
-    console.log('Cleaning up subscriptions...');
-    
     // Unsubscribe from messages channel
     if (messagesChannelRef.current) {
       try {
@@ -42,9 +40,8 @@ const useChat = (conversationId, user, vetName, vetId) => {
         messagesChannelRef.current = null;
         isSubscribedRef.current.messages = false;
         channel.unsubscribe();
-        console.log('Unsubscribed from messages channel');
       } catch (error) {
-        console.error('Error unsubscribing from messages channel:', error);
+        // Silent cleanup
       }
     }
     
@@ -55,9 +52,8 @@ const useChat = (conversationId, user, vetName, vetId) => {
         typingChannelRef.current = null;
         isSubscribedRef.current.typing = false;
         channel.unsubscribe();
-        console.log('Unsubscribed from typing channel');
       } catch (error) {
-        console.error('Error unsubscribing from typing channel:', error);
+        // Silent cleanup
       }
     }
   }, []);
@@ -83,7 +79,6 @@ const useChat = (conversationId, user, vetName, vetId) => {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error updating typing status:', error);
       // Don't show alert for typing status errors as they're not critical
     }
   }, [conversationId, user]);
@@ -99,7 +94,6 @@ const useChat = (conversationId, user, vetName, vetId) => {
         .eq('conversation_id', conversationId)
         .eq('user_id', user.id);
     } catch (error) {
-      console.error('Error clearing typing status:', error);
       // Don't show alert for typing status errors as they're not critical
     }
   }, [conversationId, user]);
@@ -112,7 +106,6 @@ const useChat = (conversationId, user, vetName, vetId) => {
         .update({ read: true })
         .eq('id', messageId);
     } catch (error) {
-      console.error('Error marking message as read:', error);
       // Don't show alert for read status errors as they're not critical
     }
   }, []);
@@ -210,8 +203,6 @@ const useChat = (conversationId, user, vetName, vetId) => {
       setNetworkError(null);
       return data;
     } catch (error) {
-      console.error(`Error sending message (attempt ${retryCount + 1}):`, error);
-      
       if (retryCount < maxRetries) {
         // Wait before retrying (exponential backoff)
         const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
@@ -287,7 +278,6 @@ const useChat = (conversationId, user, vetName, vetId) => {
       updateTypingStatus(false);
     } catch (error) {
       // Error already handled in retrySendMessage
-      console.error('Error sending message:', error);
     } finally {
       sendingLoadingManager.stop();
     }
@@ -315,12 +305,10 @@ const useChat = (conversationId, user, vetName, vetId) => {
   const subscribeToMessages = useCallback(() => {
     // Prevent duplicate subscriptions
     if (isSubscribedRef.current.messages || !conversationId || !user) {
-      console.log('Skipping messages subscription - already subscribed or missing dependencies');
       return;
     }
 
     // Create new subscription
-    console.log('Creating new messages subscription');
     isSubscribedRef.current.messages = true;
     
     const channelName = `messages-${conversationId}`;
@@ -419,31 +407,20 @@ const useChat = (conversationId, user, vetName, vetId) => {
         }
       )
       .subscribe((status) => {
-        console.log('Messages subscription status:', status);
-        if (status === 'SUBSCRIBED') {
-          console.log('Successfully subscribed to messages channel');
-        } else if (status === 'CLOSED') {
-          console.log('Messages subscription closed');
-          isSubscribedRef.current.messages = false;
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('Messages subscription error');
+        if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
           isSubscribedRef.current.messages = false;
         }
       });
-
-    console.log('Subscribed to messages channel');
   }, [conversationId, user, vetName, vetId]);
 
   // Subscribe to typing
   const subscribeToTyping = useCallback(() => {
     // Prevent duplicate subscriptions
     if (isSubscribedRef.current.typing || !conversationId || !user) {
-      console.log('Skipping typing subscription - already subscribed or missing dependencies');
       return;
     }
 
     // Create new subscription for typing status
-    console.log('Creating new typing subscription');
     isSubscribedRef.current.typing = true;
     
     const channelName = `typing-${conversationId}`;
@@ -486,19 +463,10 @@ const useChat = (conversationId, user, vetName, vetId) => {
         }
       )
       .subscribe((status) => {
-        console.log('Typing subscription status:', status);
-        if (status === 'SUBSCRIBED') {
-          console.log('Successfully subscribed to typing channel');
-        } else if (status === 'CLOSED') {
-          console.log('Typing subscription closed');
-          isSubscribedRef.current.typing = false;
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('Typing subscription error');
+        if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
           isSubscribedRef.current.typing = false;
         }
       });
-
-    console.log('Subscribed to typing channel');
   }, [conversationId, user]);
 
   // Load messages
@@ -526,7 +494,6 @@ const useChat = (conversationId, user, vetName, vetId) => {
       setMessageStatus(initialStatus);
       setNetworkError(null);
     } catch (error) {
-      console.error('Error loading messages:', error);
       setNetworkError('Failed to load messages. Please check your connection and try again.');
       Alert.alert('Error', 'Could not load messages');
     }
@@ -555,7 +522,6 @@ const useChat = (conversationId, user, vetName, vetId) => {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error deleting message:', error);
       Alert.alert('Delete failed', 'Could not delete message. Please try again.');
       await loadMessages();
     }

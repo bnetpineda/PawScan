@@ -54,27 +54,12 @@ const UsersListScreen = () => {
 
   const loadUsers = async () => {
     try {
-      console.log('Loading pet owners...');
-      console.log('Current vet user ID:', user.id);
-      
       // Query user_profiles - pet owners should be visible to vets
       const { data: usersData, error: usersError } = await supabase
         .from('user_profiles')
         .select('id, name, profile_image_url, created_at');
 
-      console.log('Query response:', { 
-        data: usersData, 
-        error: usersError,
-        dataLength: usersData?.length 
-      });
-
       if (usersError) {
-        console.error('Error loading user_profiles:', usersError);
-        console.error('Error code:', usersError.code);
-        console.error('Error message:', usersError.message);
-        console.error('Error hint:', usersError.hint);
-        console.error('Error details:', usersError.details);
-        
         // Show specific error to help debug RLS issues
         Alert.alert(
           'Database Error', 
@@ -86,14 +71,10 @@ const UsersListScreen = () => {
       }
 
       if (!usersData || usersData.length === 0) {
-        console.log('No user profiles found in database');
         setUsers([]);
         setFilteredUsers([]);
         return;
       }
-
-      console.log(`Found ${usersData.length} total user profiles`);
-      console.log('Sample user:', usersData[0]);
 
       // Format the data for display
       const formattedUsers = usersData
@@ -105,13 +86,10 @@ const UsersListScreen = () => {
         }))
         .filter(petOwner => petOwner.id !== user.id)
         .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-
-      console.log(`After filtering out current user: ${formattedUsers.length} pet owners available`);
       
       setUsers(formattedUsers);
       setFilteredUsers(formattedUsers);
     } catch (error) {
-      console.error('Unexpected error loading users:', error);
       Alert.alert('Error', 'Could not load pet owners. Please try again later.');
     } finally {
       setLoading(false);

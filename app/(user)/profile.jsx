@@ -81,7 +81,6 @@ const ProfileScreen = () => {
       setNewEmail(user?.email || "");
 
       // Fetch user posts, pet scan count, and history images
-      console.log("Fetching user data...");
       fetchUserPosts();
       fetchPetScanCount();
       fetchHistoryImages();

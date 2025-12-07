@@ -7,28 +7,22 @@ import {
   useColorScheme,
   StatusBar,
 } from "react-native";
-import { router } from "expo-router";
+import { router, Redirect } from "expo-router";
 import { useAuth } from "../providers/AuthProvider";
-import { Redirect } from "expo-router";
 
 const GetStartedScreen = () => {
   const colorScheme = useColorScheme();
   const tintColor = colorScheme === "dark" ? "#fff" : "#000";
-  const { user, loading, logout } = useAuth();
+  const { user, loading } = useAuth();
 
   const handleGetStarted = () => {
     router.push("/(auth)/login");
-  };
-
-  const handleSignOut = async () => {
-    await logout();
   };
 
   if (loading) return null; // Show nothing while loading
 
   if (user && !loading) {
     const role = user.user_metadata?.options?.data?.role;
-    console.log("User role:", role);
     
     if (role === "veterinarian") {
       return <Redirect href="/(vet)/home" />;
@@ -49,10 +43,9 @@ const GetStartedScreen = () => {
           className="w-64 h-64 rounded-full mb-6 mt-24"
           style={{ tintColor }}
           accessibilityLabel="PawScan App Logo"
-          onError={(e) => console.log("Image load error:", e.nativeEvent.error)}
         />
         <Text className="text-lg font-inter-italic text-black dark:text-white mb-8 text-center leading-relaxed">
-          Your ultimate companion for pet care and management. Let's begin!
+          Your ultimate companion for pet care and management. Let&apos;s begin!
         </Text>
       </View>
       <View className="flex-1 justify-end w-full max-w-md p-6 mb-10">

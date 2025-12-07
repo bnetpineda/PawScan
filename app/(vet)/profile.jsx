@@ -89,7 +89,6 @@ const ProfileScreen = () => {
       setNewEmail(user?.email || "");
 
       // Fetch user posts, pet scan count, and history images
-      console.log('Fetching user data...');
       fetchUserPosts();
       fetchPetScanCount();
       fetchHistoryImages();
@@ -195,8 +194,6 @@ const ProfileScreen = () => {
             await logout();
             // Logout successful, navigation will be handled by AuthProvider
           } catch (error) {
-            // Even if there's an error, user will be logged out locally
-            console.log("Sign out completed with error:", error.message);
             // Don't show error alert since logout still succeeded locally
           }
         },

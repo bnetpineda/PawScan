@@ -33,17 +33,14 @@ const useVetChat = (conversationId, user, userName, userId) => {
 
   // Cleanup function for all subscriptions
   const cleanupSubscriptions = useCallback(() => {
-    console.log('Cleaning up subscriptions...');
-    
     // Remove messages channel
     if (messagesChannelRef.current) {
       try {
         supabase.removeChannel(messagesChannelRef.current);
         messagesChannelRef.current = null;
         isSubscribedRef.current.messages = false;
-        console.log('Removed messages channel');
       } catch (error) {
-        console.error('Error removing messages channel:', error);
+        // Silent cleanup
       }
     }
     
@@ -53,9 +50,8 @@ const useVetChat = (conversationId, user, userName, userId) => {
         supabase.removeChannel(typingChannelRef.current);
         typingChannelRef.current = null;
         isSubscribedRef.current.typing = false;
-        console.log('Removed typing channel');
       } catch (error) {
-        console.error('Error removing typing channel:', error);
+        // Silent cleanup
       }
     }
   }, []);
@@ -81,7 +77,6 @@ const useVetChat = (conversationId, user, userName, userId) => {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error updating typing status:', error);
       // Don't show alert for typing status errors as they're not critical
     }
   }, [conversationId, user]);
@@ -97,7 +92,6 @@ const useVetChat = (conversationId, user, userName, userId) => {
         .eq('conversation_id', conversationId)
         .eq('user_id', user.id);
     } catch (error) {
-      console.error('Error clearing typing status:', error);
       // Don't show alert for typing status errors as they're not critical
     }
   }, [conversationId, user]);
@@ -110,7 +104,6 @@ const useVetChat = (conversationId, user, userName, userId) => {
         .update({ read: true })
         .eq('id', messageId);
     } catch (error) {
-      console.error('Error marking message as read:', error);
       // Don't show alert for read status errors as they're not critical
     }
   }, []);
@@ -208,8 +201,6 @@ const useVetChat = (conversationId, user, userName, userId) => {
       setNetworkError(null);
       return data;
     } catch (error) {
-      console.error(`Error sending message (attempt ${retryCount + 1}):`, error);
-      
       if (retryCount < maxRetries) {
         // Wait before retrying (exponential backoff)
         const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
@@ -285,7 +276,6 @@ const useVetChat = (conversationId, user, userName, userId) => {
       updateTypingStatus(false);
     } catch (error) {
       // Error already handled in retrySendMessage
-      console.error('Error sending message:', error);
     } finally {
       sendingLoadingManager.stop();
     }
@@ -312,19 +302,16 @@ const useVetChat = (conversationId, user, userName, userId) => {
     // Subscribe to messages
   const subscribeToMessages = useCallback(() => {
     if (!conversationId || !user) {
-      console.log('Skipping messages subscription - missing dependencies');
       return;
     }
 
     // If there's an existing subscription, clean it up completely
     if (messagesChannelRef.current) {
-      console.log('Removing existing messages channel');
       supabase.removeChannel(messagesChannelRef.current);
       messagesChannelRef.current = null;
     }
 
     // Create new subscription
-    console.log('Creating new messages subscription');
     isSubscribedRef.current.messages = true;
     
     const channelName = `messages-${conversationId}`;
@@ -426,37 +413,25 @@ const useVetChat = (conversationId, user, userName, userId) => {
     // Store the new channel and subscribe
     messagesChannelRef.current = newChannel;
     newChannel.subscribe((status) => {
-      console.log('Messages subscription status:', status);
-      if (status === 'SUBSCRIBED') {
-        console.log('Successfully subscribed to messages channel');
-      } else if (status === 'CLOSED') {
-        console.log('Messages subscription closed');
-        isSubscribedRef.current.messages = false;
-      } else if (status === 'CHANNEL_ERROR') {
-        console.error('Messages subscription error');
+      if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
         isSubscribedRef.current.messages = false;
       }
     });
-
-    console.log('Subscribed to messages channel');
   }, [conversationId, user, userName, userId]);
 
   // Subscribe to typing
   const subscribeToTyping = useCallback(() => {
     if (!conversationId || !user) {
-      console.log('Skipping typing subscription - missing dependencies');
       return;
     }
 
     // If there's an existing subscription, clean it up completely
     if (typingChannelRef.current) {
-      console.log('Removing existing typing channel');
       supabase.removeChannel(typingChannelRef.current);
       typingChannelRef.current = null;
     }
 
     // Create new subscription for typing status
-    console.log('Creating new typing subscription');
     isSubscribedRef.current.typing = true;
     
     const channelName = `typing-${conversationId}`;
@@ -502,19 +477,10 @@ const useVetChat = (conversationId, user, userName, userId) => {
     // Store the new channel and subscribe
     typingChannelRef.current = newChannel;
     newChannel.subscribe((status) => {
-      console.log('Typing subscription status:', status);
-      if (status === 'SUBSCRIBED') {
-        console.log('Successfully subscribed to typing channel');
-      } else if (status === 'CLOSED') {
-        console.log('Typing subscription closed');
-        isSubscribedRef.current.typing = false;
-      } else if (status === 'CHANNEL_ERROR') {
-        console.error('Typing subscription error');
+      if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
         isSubscribedRef.current.typing = false;
       }
     });
-
-    console.log('Subscribed to typing channel');
   }, [conversationId, user]);
 
   const deleteMessage = useCallback(async (messageId) => {
@@ -540,7 +506,6 @@ const useVetChat = (conversationId, user, userName, userId) => {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error deleting message:', error);
       Alert.alert('Delete failed', 'Could not delete message. Please try again.');
       await loadMessages();
     }
@@ -571,7 +536,6 @@ const useVetChat = (conversationId, user, userName, userId) => {
       setMessageStatus(initialStatus);
       setNetworkError(null);
     } catch (error) {
-      console.error('Error loading messages:', error);
       setNetworkError('Failed to load messages. Please check your connection and try again.');
       Alert.alert('Error', 'Could not load messages');
     }

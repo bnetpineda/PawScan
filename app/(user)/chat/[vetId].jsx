@@ -173,7 +173,6 @@ const ChatScreen = () => {
 
     // Cleanup function to unsubscribe when component unmounts
     return () => {
-      console.log('Component unmounting, cleaning up...');
       cleanupSubscriptions();
 
       // Clear typing status when leaving chat
@@ -193,7 +192,6 @@ const ChatScreen = () => {
 
     // Cleanup subscription when conversationId changes
     return () => {
-      console.log('Conversation ID changed, cleaning up...');
       cleanupSubscriptions();
     };
   }, [conversationId, loadMessages, subscribeToMessages, subscribeToTyping, cleanupSubscriptions]);

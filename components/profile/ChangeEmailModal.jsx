@@ -85,7 +85,7 @@ const ChangeEmailModal = ({
               isDark ? "text-neutral-400" : "text-neutral-700"
             }`}
           >
-            A verification email will be sent to your new email address. You'll
+            A verification email will be sent to your new email address. You&apos;ll
             need to verify it before the change takes effect.
           </Text>
         </View>

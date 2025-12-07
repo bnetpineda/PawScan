@@ -112,7 +112,7 @@ const VetProfileViewer = ({
             No posts yet
           </Text>
           <Text className={`mt-2 text-base font-inter ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
-            This veterinarian hasn't shared any posts
+            This veterinarian hasn&apos;t shared any posts
           </Text>
         </View>
       );

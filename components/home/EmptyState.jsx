@@ -15,7 +15,7 @@ const EmptyState = ({ isDark, isEmpty }) => {
           No posts yet
         </Text>
         <Text className="text-base font-inter text-neutral-500 dark:text-neutral-400 text-center px-8">
-          Share your pet's health analysis to be the first!
+          Share your pet&apos;s health analysis to be the first!
         </Text>
       </View>
     );

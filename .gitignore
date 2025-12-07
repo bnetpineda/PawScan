@@ -8,7 +8,6 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
-.gitignore
 
 # Native
 *.orig.*
@@ -17,8 +16,12 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+
+# AI/Development context files
 QWEN.md
 GEMINI.md
+.qwen/
+
 # Metro
 .metro-health-check*
 
@@ -38,8 +41,11 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# Build artifacts
 app-example
 android
 .vscode
-google-services.json
 
+# Sensitive files
+google-services.json
+*.txt
