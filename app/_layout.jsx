@@ -1,6 +1,6 @@
 import "../global.css";
 import { Stack } from "expo-router";
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { AuthProvider } from "../providers/AuthProvider";
@@ -9,6 +9,9 @@ import { TutorialProvider } from "../providers/TutorialProvider";
 import TutorialOverlay from "../components/tutorial/TutorialOverlay";
 import { profileTutorialSteps, userTutorialSteps, vetTutorialSteps } from "../components/tutorial/tutorialSteps";
 import { useAuth } from "../providers/AuthProvider";
+import { useIdleTimeout } from "../hooks/useIdleTimeout";
+import { ActivityTracker } from "../components/ActivityTracker";
+import { IdleTimeoutWarning } from "../components/IdleTimeoutWarning";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -46,16 +49,45 @@ export default function RootLayout() {
     <AuthProvider>
       <NotificationProvider>
         <TutorialProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(user)" options={{ headerShown: false }} />
-            <Stack.Screen name="info" options={{ headerShown: false }} />
-          </Stack>
-          <AppTutorialOverlays />
+          <AppContent />
         </TutorialProvider>
       </NotificationProvider>
     </AuthProvider>
+  );
+}
+
+function AppContent() {
+  const { user, logout } = useAuth();
+  const isAuthenticated = !!user;
+
+  const handleIdleTimeout = useCallback(async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Idle logout error:', error);
+    }
+  }, [logout]);
+
+  const { resetTimer, showWarning, remainingTime, extendSession } = useIdleTimeout(
+    handleIdleTimeout,
+    isAuthenticated
+  );
+
+  return (
+    <ActivityTracker onActivity={resetTimer} enabled={isAuthenticated}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(user)" options={{ headerShown: false }} />
+        <Stack.Screen name="info" options={{ headerShown: false }} />
+      </Stack>
+      <AppTutorialOverlays />
+      <IdleTimeoutWarning
+        visible={showWarning}
+        remainingTime={remainingTime}
+        onExtend={extendSession}
+      />
+    </ActivityTracker>
   );
 }
 
