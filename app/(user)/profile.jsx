@@ -58,7 +58,7 @@ const ProfileScreen = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { startTutorial } = useTutorial();
   const {
     userPosts,
@@ -203,9 +203,11 @@ const ProfileScreen = () => {
         text: "Sign Out",
         style: "destructive",
         onPress: async () => {
-          const { error } = await supabase.auth.signOut();
-          if (error) {
-            Alert.alert("Error", error.message);
+          try {
+            await logout();
+            // Logout successful, navigation will be handled by AuthProvider
+          } catch (error) {
+            // Don't show error alert since logout still succeeded locally
           }
         },
       },
@@ -769,11 +771,6 @@ const ProfileScreen = () => {
           setSettingsVisible(false);
           startTutorial('profile');
         }}
-        onBecomeVetPress={() => {
-          setSettingsVisible(false);
-          setBecomeVetVisible(true);
-        }}
-        userRole={user?.user_metadata?.options?.data?.role}
         onSignOut={handleSignOut}
         isDark={isDark}
       />

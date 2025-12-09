@@ -24,7 +24,16 @@ const BecomeVetModal = ({ visible, onClose, isDark }) => {
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [uploading, setUploading] = useState(false);
   const cameraRef = useRef(null);
+  const isMountedRef = useRef(true);
   const { user, refreshUser } = useAuth();
+
+  // Track mounted state to prevent state updates after unmount
+  React.useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const showIdUploadAlert = (onConfirm) => {
     Alert.alert(
@@ -142,22 +151,7 @@ const BecomeVetModal = ({ visible, onClose, isDark }) => {
         throw new Error("Failed to upload ID image");
       }
 
-      // Update user metadata to pending_veterinarian
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: {
-          options: {
-            data: {
-              ...user.user_metadata?.options?.data,
-              role: "pending_veterinarian",
-              license_id_url: idUrl,
-            },
-          },
-        },
-      });
-
-      if (updateError) throw updateError;
-
-      // Create or update vet profile
+      // Create or update vet profile FIRST (before auth update triggers re-renders)
       const { error: vetProfileError } = await supabase
         .from("vet_profiles")
         .upsert(
@@ -177,27 +171,41 @@ const BecomeVetModal = ({ visible, onClose, isDark }) => {
         console.error("Error creating vet profile:", vetProfileError);
       }
 
-      // Refresh user data to get updated role
-      await refreshUser();
+      // Reset state BEFORE updating auth (which triggers re-renders via onAuthStateChange)
+      if (isMountedRef.current) {
+        setUploading(false);
+        setIdImageUri(null);
+      }
 
-      setUploading(false);
-      
+      // Show success alert before auth update (which may cause re-renders)
       Alert.alert(
-        "Application Submitted",
-        "Your veterinarian application has been submitted for review. You will receive an email once verified by an administrator.",
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              setIdImageUri(null);
-              onClose();
+        "Application Submitted! 🎉",
+        "Your veterinarian application has been submitted successfully!\n\nOur team will review your credentials and you'll receive an email notification once your account has been verified.",
+        [{ text: "OK", onPress: onClose }]
+      );
+
+      // Update user metadata to pending_veterinarian
+      // This will trigger onAuthStateChange and cause parent re-renders
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: {
+          options: {
+            data: {
+              ...user.user_metadata?.options?.data,
+              role: "pending_veterinarian",
+              license_id_url: idUrl,
             },
           },
-        ]
-      );
+        },
+      });
+
+      if (updateError) {
+        console.error("Error updating user role:", updateError);
+      }
     } catch (error) {
       console.error("Error submitting application:", error);
-      setUploading(false);
+      if (isMountedRef.current) {
+        setUploading(false);
+      }
       Alert.alert(
         "Error",
         error.message || "Failed to submit application. Please try again."

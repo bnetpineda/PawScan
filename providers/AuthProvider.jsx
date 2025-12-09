@@ -335,6 +335,20 @@ export const AuthProvider = ({ children }) => {
 
   const logout = useCallback(async () => {
     try {
+      // Sign out from Google to clear cached account (forces account picker on next sign-in)
+      try {
+        // Check if signed in with Google before attempting sign out
+        const isSignedIn = await GoogleSignin.getCurrentUser();
+        if (isSignedIn) {
+          await GoogleSignin.revokeAccess();
+          await GoogleSignin.signOut();
+          log.info("Google sign-out and revoke successful");
+        }
+      } catch (googleSignOutError) {
+        // Ignore Google sign-out errors (user might not have signed in with Google)
+        log.info("Google sign-out skipped:", googleSignOutError.message);
+      }
+
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       
       if (!currentSession) {

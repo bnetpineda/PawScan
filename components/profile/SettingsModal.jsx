@@ -13,13 +13,8 @@ const SettingsModal = ({
   onPasswordPress,
   onSignOut,
   onTutorialPress,
-  onBecomeVetPress,
-  userRole,
   isDark,
 }) => {
-  const isVet = userRole === "veterinarian";
-  const isPendingVet = userRole === "pending_veterinarian";
-  const showBecomeVet = !isVet;
 
   return (
   <Modal
@@ -128,54 +123,6 @@ const SettingsModal = ({
               />
             </View>
           </TouchableOpacity>
-
-          {/* Become a Veterinarian - Only show for non-vets */}
-          {showBecomeVet && (
-            <TouchableOpacity
-              className={`p-4 rounded-lg border mt-4 ${
-                isDark ? "bg-neutral border-neutral-700" : "bg-white border-neutral-400"
-              } ${isPendingVet ? "opacity-70" : ""}`}
-              onPress={isPendingVet ? null : onBecomeVetPress}
-              disabled={isPendingVet}
-            >
-              <View className="flex-row items-center">
-                <FontAwesome
-                  name="user-md"
-                  size={20}
-                  color={isPendingVet ? "#F59E0B" : isDark ? "white" : "black"}
-                />
-                <View className="ml-3 flex-1">
-                  <Text
-                    className={`text-base font-inter-semibold ${
-                      isDark ? "text-white" : "text-black"
-                    }`}
-                  >
-                    {isPendingVet ? "Verification Pending" : "Become a Veterinarian"}
-                  </Text>
-                  <Text
-                    className={`text-sm font-inter mt-1 ${
-                      isPendingVet
-                        ? "text-amber-500"
-                        : isDark
-                        ? "text-neutral-400"
-                        : "text-neutral-600"
-                    }`}
-                  >
-                    {isPendingVet
-                      ? "Your application is being reviewed"
-                      : "Apply for veterinarian status"}
-                  </Text>
-                </View>
-                {!isPendingVet && (
-                  <FontAwesome
-                    name="angle-right"
-                    size={20}
-                    color={isDark ? "#9CA3AF" : "#6B7280"}
-                  />
-                )}
-              </View>
-            </TouchableOpacity>
-          )}
 
           <TouchableOpacity
             className={`p-4 rounded-lg border mt-8 ${
