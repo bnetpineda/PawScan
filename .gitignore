@@ -49,3 +49,6 @@ android
 # Sensitive files
 google-services.json
 *.txt
+
+# SQL Files
+*.sql
