@@ -5,13 +5,13 @@
   
   **AI-Powered Pet Health Analysis & Veterinary Consultation Platform**
   
-  [![React Native](https://img.shields.io/badge/React_Native-0.79.5-61DAFB?logo=react&logoColor=white)](https://reactnative.dev/)
+  [![React Native](https://img.shields.io/badge/React_Native-0.79.6-61DAFB?logo=react&logoColor=white)](https://reactnative.dev/)
   [![Expo](https://img.shields.io/badge/Expo-53.0.22-000020?logo=expo&logoColor=white)](https://expo.dev/)
   [![Supabase](https://img.shields.io/badge/Supabase-2.49.5-3ECF8E?logo=supabase&logoColor=white)](https://supabase.com/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
   [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4.0-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
   
-  [Features](#-features) • [Screenshots](#-screenshots) • [Installation](#-installation) • [Tech Stack](#-tech-stack) • [Architecture](#-architecture) • [Contributing](#-contributing)
+  [Features](#-features) • [Installation](#-installation) • [Tech Stack](#-tech-stack) • [Architecture](#-architecture) • [Contributing](#-contributing)
   
 </div>
 
@@ -226,10 +226,13 @@ EXPO_PUBLIC_APP_ENV=development
 
 ### Step 5: Configure Supabase Storage
 
-Create the following storage buckets in your Supabase project:
-- `profile-images` (public)
-- `analysis-images` (private)
-- `chat-images` (private)
+1. Create the following storage buckets in your Supabase project:
+   - `profile-images` (public)
+   - `analysis-images` (private)
+   - `chat-images` (private)
+   - `vet-ids` (public)
+
+2. Run the `vet-ids-bucket.sql` script in the Supabase SQL Editor to set up policies for the `vet-ids` bucket.
 
 ### Step 6: Start the Development Server
 
@@ -254,24 +257,6 @@ npm run ios
 # Android
 npm run android
 ```
-
----
-
-## 📸 Screenshots
-
-*Coming soon - Add your app screenshots here*
-
-<div align="center">
-  
-| Home Screen | Camera Analysis | Chat |
-|-------------|----------------|------|
-| ![Home](docs/screenshots/home.png) | ![Camera](docs/screenshots/camera.png) | ![Chat](docs/screenshots/chat.png) |
-
-| Profile | Notifications | Tutorial |
-|---------|---------------|----------|
-| ![Profile](docs/screenshots/profile.png) | ![Notifications](docs/screenshots/notifications.png) | ![Tutorial](docs/screenshots/tutorial.png) |
-
-</div>
 
 ---
 
@@ -421,20 +406,11 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 **PawScan Development Team**
 
-- **Developer** - [Your Name](https://github.com/yourusername)
-- **UI/UX Designer** - [Designer Name]
-- **Project Manager** - [Manager Name]
+This project is maintained by open source contributors.
+
 
 ---
 
-## 📞 Contact & Support
-
-- 📧 **Email**: support@pawscan.app
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/yourusername/PawScan/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/yourusername/PawScan/discussions)
-- 🌐 **Website**: [www.pawscan.app](https://www.pawscan.app)
-
----
 
 ## 🗺️ Roadmap
 
