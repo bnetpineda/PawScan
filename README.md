@@ -185,7 +185,7 @@ Supabase Backend
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/PawScan.git
+git clone https://github.com/bnetpineda/PawScan.git
 cd PawScan
 ```
 
@@ -449,11 +449,11 @@ This project is maintained by open source contributors.
 
 ## 📊 Project Stats
 
-![GitHub stars](https://img.shields.io/github/stars/yourusername/PawScan?style=social)
-![GitHub forks](https://img.shields.io/github/forks/yourusername/PawScan?style=social)
-![GitHub issues](https://img.shields.io/github/issues/yourusername/PawScan)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/yourusername/PawScan)
-![GitHub last commit](https://img.shields.io/github/last-commit/yourusername/PawScan)
+![GitHub stars](https://img.shields.io/github/stars/bnetpineda/PawScan?style=social)
+![GitHub forks](https://img.shields.io/github/forks/bnetpineda/PawScan?style=social)
+![GitHub issues](https://img.shields.io/github/issues/bnetpineda/PawScan)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/bnetpineda/PawScan)
+![GitHub last commit](https://img.shields.io/github/last-commit/bnetpineda/PawScan)
 
 ---
 
@@ -463,6 +463,6 @@ This project is maintained by open source contributors.
   
   ### ⭐ If you like PawScan, give it a star!
   
-  [Report Bug](https://github.com/yourusername/PawScan/issues) • [Request Feature](https://github.com/yourusername/PawScan/issues) • [Documentation](https://github.com/yourusername/PawScan/wiki)
+  [Report Bug](https://github.com/bnetpineda/PawScan/issues) • [Request Feature](https://github.com/bnetpineda/PawScan/issues) • [Documentation](https://github.com/bnetpineda/PawScan/wiki)
   
 </div>
